@@ -678,15 +678,20 @@ measurements:
     seamly_name: highbust_circ
     seamly_code: G03
     aliases: [upper_bust, upper_bust_circumference]
-    type: planar_slice
+    type: geodesic_loop
     source_classification: body
     parameters:
       pose: measurement_default
-      plane:
-        origin: landmarks.upper_bust_level
-        normal: pose.measurement_default.vertical_axis
-      region_mask: torso
-      output: convex_hull_perimeter
+      # The dpm "upper bust elastic" sits across the chest under the armpit
+      # and around the back at the same level. Real-tape behaviour is a
+      # shortest-path closed loop touching all four armfold landmarks — NOT
+      # a horizontal planar slice (which fails in A-pose where the slice
+      # crosses the chest-arm junction). See extraction_audit.md G03.
+      waypoints:
+        - landmarks.armfold_front_left
+        - landmarks.armfold_back_left
+        - landmarks.armfold_back_right
+        - landmarks.armfold_front_right
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (revised: at the underarm)"
       - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — captioned side-by-side comparison: \"Incorrect\" (old upper-bust placement, ~1 inch below underarm) vs \"Corrected\" (at the underarm)"

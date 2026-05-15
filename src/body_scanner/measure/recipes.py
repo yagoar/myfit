@@ -363,8 +363,46 @@ def derived(
     return float(eval(expr, safe_globals, safe_locals))
 
 
+def geodesic_path(
+    verts: np.ndarray,
+    faces: np.ndarray,
+    landmarks: LandmarkSet,
+    params: dict,
+) -> float:
+    """Geodesic path through ordered waypoint landmarks.
+
+    yaml shape:
+      type: geodesic_path
+      parameters:
+        waypoints: [landmarks.A, landmarks.B, ...]    # >=2
+    """
+    from .primitives import Geodesic
+    wp = tuple(params["waypoints"])
+    return Geodesic(wp).compute(verts, faces, landmarks)
+
+
+def geodesic_loop(
+    verts: np.ndarray,
+    faces: np.ndarray,
+    landmarks: LandmarkSet,
+    params: dict,
+) -> float:
+    """Closed geodesic loop through ordered waypoints.
+
+    yaml shape:
+      type: geodesic_loop
+      parameters:
+        waypoints: [landmarks.A, landmarks.B, landmarks.C, ...]    # >=3
+    """
+    from .primitives import GeodesicLoop
+    wp = tuple(params["waypoints"])
+    return GeodesicLoop(wp).compute(verts, faces, landmarks)
+
+
 # Dispatch table — extended as more types are wired up.
 RECIPE_DISPATCH: dict[str, Callable] = {
     "planar_slice": planar_slice,
     "planar_segment": planar_segment,
+    "geodesic_path": geodesic_path,
+    "geodesic_loop": geodesic_loop,
 }
