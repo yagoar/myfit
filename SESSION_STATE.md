@@ -103,7 +103,19 @@ d98c181  chore: bootstrap repo scaffolding
 | p.179 "Taking measurements" instructions 1-20 + diagram | `aldrich_full.pdf` book p.179 | Same entries + `aldrich_p178_179_notes.md` |
 | p.13 size chart | `aldrich_full.pdf` book p.13 | `aldrich_size_chart_p13.yaml` |
 
-**Caveat:** PDF in repo is 5th edition; user owns 6th edition. Photos compared mid-session showed: size numbering shifted (-2 for the same body values), the largest 1-2 sizes have retuned hips and top-arm rows, and low_waist offset *may* be 5 cm in 6th edition instead of 6 cm (user to confirm by reading book p.215 item 2a). Treat the 6th-edition migration as an open task; the current repo is consistent with the 5th-edition PDF.
+**Edition status (resolved):** PDF in repo is 5th edition; user owns 6th edition. Three 6th-edition photos added to `references/aldrich/` (IMG_9598=p.11 size chart, IMG_9599=p.214 measurement table, IMG_9600=p.215 diagram). **6th edition is now canonical.** Key differences:
+
+| What | 5th edition | 6th edition |
+|------|-------------|-------------|
+| Size chart page | p.13 | p.11 |
+| Measurement table | p.178 | p.214 |
+| Diagram | p.179 | p.215 |
+| Low waist offset | 6cm | **5cm** (updated in merged.yaml) |
+| Size codes | 6–26, bust 76–122 (11 sizes) | 6–24, bust 80–122 (10 sizes) |
+| Smallest size | bust 76 | dropped |
+| Large-end values | original | retuned hips + top-arm |
+
+Measurement instruction text is identical between editions except item 2a (5cm vs 6cm). Body values for corresponding bust sizes are the same except the largest 1–2 sizes.
 
 ### dpm
 
@@ -125,21 +137,23 @@ This is a major addition — extracted from Seamly2D's `develop` branch (commit 
 - **`samples/`** — 4 sample `.smis` templates including `all_measurements_template.smis` (262 measurements with formulas) and **`aldrich_women_template.smis`** (an existing Aldrich-flavoured template).
 - **`docs/`** — visual PDF guide.
 - **`README.md`** — comprehensive catalog of all 262 Seamly measurements grouped A-Q with code, name, diagram, and "computed yes/no". This is the source of truth for what's a valid `seamly_name`.
+- **`extraction_audit.md`** — Phase 6 planning artifact added this session. Classifies all 245 catalog entries as `mechanical` (154; well-defined scan extraction), `computed` (56; formula-derived, free), `judgment` (32; needs textual interpretation, fuzzy landmark, or pose-specific), or `standard` (3; size-chart Q-group dart widths). Result: **210 of 245 (86%) are "free" or mechanical** once landmarks are verified, motivating a single generic Seamly extractor pass rather than 245 hand-written `merged.yaml` entries.
 
-**Implications not yet acted on (good first tasks in the next session):**
-- Validate every `seamly_name` in `merged.yaml` against the 262-entry catalog in `references/seamly/README.md`. The current 60 mappings used the 245-slot template, which is a near-subset.
-- Inspect `aldrich_women_template.smis` — it uses 7 custom `@M_1`..`@M_7` slots plus 7 named-string measurements ("Front Shoulder to Waist", "Waist to Knee", etc.) that Aldrich-specific drafting needs. Consider whether the body-scanner exporter should mirror that template's naming convention rather than the generic one.
-- Embed the matching diagram SVG inline in `review.html` per measurement card (lookup table: `seamly_name` → group code → `<group_code>.svg`).
-- Add XSD validation to `scripts/export_seamlyme.py` so any generated `.smis` is validated against `individual_measurements_v0.3.4.xsd` at write time.
+**Seamly integration tasks (status):**
+- ~~Validate every `seamly_name` in `merged.yaml` against the catalog in `references/seamly/README.md`.~~ **DONE:** all 60 mapped names valid against the 245-entry catalog. 11 expected duplicates (Aldrich+dpm → same Seamly name), 12 intentional nulls.
+- Inspect `aldrich_women_template.smis` — it uses 7 custom `@M_1`..`@M_7` slots plus 7 named-string measurements ("Front Shoulder to Waist", "Waist to Knee", etc.) that Aldrich-specific drafting needs. Consider whether the body-scanner exporter should mirror that template's naming convention rather than the generic one. **TODO.**
+- ~~Embed the matching diagram SVG in `review.html` per measurement card.~~ **DONE:** `generate_review_html.py` now parses `references/seamly/README.md` for the `seamly_name → diagram SVG` mapping (245 entries) and adds an `<img>` per card.
+- ~~Add XSD validation to `scripts/export_seamlyme.py`.~~ **DONE:** validates output against `individual_measurements_v0.3.4.xsd` via `xmllint` after every write. `--no-validate` flag to skip.
 
 ## merged.yaml — current shape
 
-72 entries, every one has a populated `sources` list:
+74 entries, every one has a populated `sources` list:
 
 - 21 Aldrich (items 1-20 + 2a Low waist) — `aldrich_*`
 - 32 dpm bodice — `dpm_bodice_*` (numbering matches the dpm worksheet items 1-32)
 - 5 dpm sleeve — `dpm_sleeve_*`
 - 14 dpm pants — `dpm_pants_*` (12 core + 2 optional added from pants_3/4/5)
+- 2 Seamly-compatibility geometric helpers (unprefixed) — `bustpoint_to_waist` (J04) and `bustpoint_to_shoulder_center` (J10). Not in Aldrich's p.178 list or any dpm video; added so the `aldrich_women_template.smis` slots and its custom @M_* formulas evaluate with real numbers. Sourced from the Seamly catalog. Both `source_classification: body` (scan-extractable as landmark-pair chords).
 
 Schema (SPEC §9): each entry carries `name`, optional `aliases`, `seamly_name`, `type`, `parameters`, `sources` (list, primary first), `source_classification` (body / standard / derived), optional `notes`, optional `superseded_by`.
 
@@ -163,7 +177,26 @@ Generated by `scripts/generate_review_html.py`. Open at `file:///<repo>/review.h
 - dpm three-point armhole-depth waypoints precision.
 - dpm bust depth B (CF) and C (FLF): along-surface or straight-line.
 - Body-rise: expected offset between Aldrich seated and standing-scan derivation.
-- **New, open**: which Aldrich edition is canonical for the project (PDF is 5th, user owns 6th). See "Source material coverage → Aldrich" above.
+- ~~Which Aldrich edition is canonical~~ **Resolved:** 6th edition is canonical. PDF (5th ed) stays as digital reference; three 6th-ed photos in `references/aldrich/`. Low waist updated from 6cm to 5cm in merged.yaml.
+
+## Parked design decisions
+
+### Per-system Seamly export (decided 2026-05-15, not yet implemented)
+
+The current `scripts/export_seamlyme.py` collapses Aldrich + dpm into a single `.smis`, resolving name collisions via a prefix-rank rule (`dpm_* > aldrich_*`, then alphabetical, see [export_seamlyme.py:89-93](scripts/export_seamlyme.py:89)). The rule is arbitrary — no rationale in code or commit `640f963`. Eleven slots collide (`bust_circ`, `waist_circ`, `hip_circ`, `shoulder_length`, `arm_upper_circ`, `arm_shoulder_tip_to_wrist_bent`, `neck_side_to_waist_bustpoint_f`, `neck_back_to_waist_b`, `across_back_b`, `across_chest_f`, `waist_to_hip_side`) and per-pair analysis showed the "dpm wins" choice is wrong for at least three (`bust_circ` anchors the Aldrich size chart, `across_back_b` / `across_chest_f` use Aldrich's reproducible fixed offsets).
+
+**Decision:** emit **one `.smis` per drafting system, no mixing**.
+
+- `aldrich.smis` — 21 `aldrich_*` entries + the 3 `aldrich_size_chart_p13.yaml` standard values (`dart_width_bust`, `armscye_length`, `waist_to_hip_side`) + the 2 Seamly-compat helpers (`bustpoint_to_waist`, `bustpoint_to_shoulder_center`). Template base: `references/seamly/samples/aldrich_women_template.smis`. Keep its 7 custom `@M_*` slots, but rewrite the @M_1 / @M_2 formulas to reference declared standard slots (`bustpoint_to_shoulder_center + bustpoint_to_waist` for @M_1; `height_waist_back - height_knee` for @M_2) — the original `@M_J10` / `@M_A23` refs are dangling (not declared in the template's `<body-measurements>` block).
+- `dpm.smis` — 32 `dpm_bodice_*` + 5 `dpm_sleeve_*` + 14 `dpm_pants_*` + the 2 Seamly-compat helpers. Template base: `references/seamly/samples/all_measurements_template.smis`. No custom @M_* slots needed.
+
+Each file fills shared Seamly slots (`bust_circ` etc.) from its own system's measurement. No conflict resolution.
+
+**Implementation deferred to Phase 6** (when the scanner actually produces values). At that point:
+
+- Rewrite `scripts/export_seamlyme.py` to take `--system aldrich|dpm`, drop the prefix-rank logic, filter entries by `name.startswith("aldrich_") or unprefixed` vs `name.startswith("dpm_") or unprefixed`, emit one `.smis` per call.
+- Decide template-selection: hard-code per system, or accept `--template <path>`.
+- Open: should the dpm `.smis` include the 3 `aldrich_size_chart_p13` standard values (`dart_width_bust`, `armscye_length`, `waist_to_hip_side`)? dpm bodice video doesn't define these; dpm drafts them as construction lines, not body measurements. Provisional: leave dpm's slots empty so SeamlyMe falls back to its formula defaults.
 
 ## Cross-cutting notes for the next session
 
@@ -172,4 +205,4 @@ Generated by `scripts/generate_review_html.py`. Open at `file:///<repo>/review.h
 - **LFS** is on, tracking `references/*.pdf` and `references/**/frame_*.jpg`. `.gitattributes` lives at repo root.
 - **`.claude/`, `data/`, `.venv/`, `review.html`, frame audio + source videos** are gitignored.
 - **Stray Scanner**: not validated against a real capture yet. Validate when iPhone is available.
-- **6th edition Aldrich migration**: deferred. Could change `aldrich_low_waist`'s `distance_cm: 6` to 5 if user confirms.
+- **6th edition Aldrich**: resolved. `aldrich_low_waist` updated to 5cm. 6th-ed photos in `references/aldrich/`. See "Source material coverage → Aldrich" for full edition diff.

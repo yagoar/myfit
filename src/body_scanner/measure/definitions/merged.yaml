@@ -121,6 +121,13 @@
 # mapping is approximate the inline `# ...` comment beside
 # seamly_name explains the difference.
 #
+# Each mapped entry also carries a `seamly_code:` field (e.g. G04,
+# L01) — the Seamly measurement catalog code from A01-Q03. The code
+# maps to a diagram SVG: code G04 is in group G page 1 → Gp1.svg.
+# Full catalog in references/seamly/README.md; diagram SVGs in
+# references/seamly/diagrams/. Descriptions validated against
+# references/seamly/docs/all_measurements_with_descriptions.pdf.
+#
 # Pipeline workflow:
 #   1. Measurement extractor produces { our_name: value_cm }
 #   2. scripts/export_seamlyme.py joins that with the seamly_name
@@ -150,6 +157,7 @@ measurements:
 
   - name: aldrich_bust
     seamly_name: bust_circ
+    seamly_code: G04
     aliases: [bust, bust_circumference]
     type: planar_slice
     source_classification: body
@@ -175,6 +183,7 @@ measurements:
 
   - name: aldrich_waist
     seamly_name: waist_circ
+    seamly_code: G07
     aliases: [waist, natural_waist, waist_circumference]
     type: planar_slice
     source_classification: body
@@ -199,7 +208,7 @@ measurements:
       Convex-hull perimeter as for the bust.
 
   - name: aldrich_low_waist
-    seamly_name: null        # no direct Seamly equivalent (6cm below natural waist)
+    seamly_name: null        # no direct Seamly equivalent (5cm below natural waist)
     aliases: [low_waist]
     type: planar_slice
     source_classification: body
@@ -209,19 +218,21 @@ measurements:
         origin: landmarks.waist_string
         offset:
           along: -pose.measurement_default.vertical_axis
-          distance_cm: 6
+          distance_cm: 5
         normal: pose.measurement_default.vertical_axis
       region_mask: torso
       output: convex_hull_perimeter
     sources:
-      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2a Low waist"
+      - "references/aldrich/IMG_9599.jpg — 6th edition p.214 item 2a Low waist (5cm)"
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2a Low waist (5th edition: 6cm)"
     notes: |
-      Aldrich text: "Take the low waist measurement 6 cm below the natural
-      waistline." Slice plane is at -6 cm along the body-down direction
-      from the waist string.
+      6th edition (canonical): 5cm below the natural waistline.
+      Changed from 6cm in the 5th edition. Slice plane is at -5 cm
+      along the body-down direction from the waist string.
 
   - name: aldrich_hips
     seamly_name: hip_circ
+    seamly_code: G09
     aliases: [hips, hip_circumference]
     type: planar_slice
     source_classification: body
@@ -254,6 +265,7 @@ measurements:
 
   - name: aldrich_back_width
     seamly_name: across_back_b        # Aldrich pins height at 15cm below C7; Seamly leaves the level unspecified
+    seamly_code: I08
     aliases: [back_width]
     type: planar_segment
     source_classification: body
@@ -284,6 +296,7 @@ measurements:
 
   - name: aldrich_chest
     seamly_name: across_chest_f        # Aldrich pins height at 7cm below front neck point; Seamly leaves the level unspecified
+    seamly_code: I03
     aliases: [chest, across_chest]
     type: planar_segment
     source_classification: body
@@ -311,6 +324,7 @@ measurements:
 
   - name: aldrich_shoulder
     seamly_name: shoulder_length
+    seamly_code: I01
     aliases: [shoulder, shoulder_length]
     type: geodesic_path
     source_classification: body
@@ -331,6 +345,7 @@ measurements:
 
   - name: aldrich_neck_size
     seamly_name: neck_circ
+    seamly_code: G02
     aliases: [neck_size, neck_base_circumference]
     type: contoured_path
     source_classification: body
@@ -354,6 +369,7 @@ measurements:
 
   - name: aldrich_dart
     seamly_name: dart_width_bust        # from Aldrich size chart (standard), not measured on body
+    seamly_code: Q02
     aliases: [dart]
     type: table_lookup
     source_classification: standard
@@ -373,6 +389,7 @@ measurements:
 
   - name: aldrich_top_arm
     seamly_name: arm_upper_circ        # Aldrich measures with arm bent; Seamly uses straight-arm by default
+    seamly_code: L11
     aliases: [top_arm, biceps]
     type: planar_slice
     source_classification: body
@@ -397,6 +414,7 @@ measurements:
 
   - name: aldrich_wrist
     seamly_name: arm_wrist_circ
+    seamly_code: L15
     aliases: [wrist]
     type: planar_slice
     source_classification: body
@@ -421,6 +439,7 @@ measurements:
 
   - name: aldrich_ankle
     seamly_name: leg_ankle_circ
+    seamly_code: M09
     aliases: [ankle]
     type: planar_slice
     source_classification: body
@@ -441,6 +460,7 @@ measurements:
 
   - name: aldrich_high_ankle
     seamly_name: leg_ankle_high_circ
+    seamly_code: M08
     aliases: [high_ankle]
     type: planar_slice
     source_classification: body
@@ -465,6 +485,7 @@ measurements:
 
   - name: aldrich_nape_to_waist
     seamly_name: neck_back_to_waist_b
+    seamly_code: H19
     aliases: [nape_to_waist, centre_back_length]
     type: geodesic_path
     source_classification: body
@@ -484,6 +505,7 @@ measurements:
 
   - name: aldrich_front_shoulder_to_waist
     seamly_name: neck_side_to_waist_bustpoint_f        # Aldrich starts at front-shoulder midpoint; Seamly starts at neck-side
+    seamly_code: H06
     aliases: [front_shoulder_to_waist, full_length_front_via_apex]
     type: geodesic_path
     source_classification: body
@@ -508,6 +530,7 @@ measurements:
 
   - name: aldrich_armscye_depth
     seamly_name: armscye_length
+    seamly_code: L20
     aliases: [armscye_depth, scye_depth]
     type: table_lookup
     source_classification: standard
@@ -550,6 +573,7 @@ measurements:
 
   - name: aldrich_waist_to_hip
     seamly_name: waist_to_hip_side
+    seamly_code: H35
     aliases: [waist_to_hip]
     type: table_lookup
     source_classification: standard
@@ -587,6 +611,7 @@ measurements:
 
   - name: aldrich_body_rise
     seamly_name: rise_length_side_sitting
+    seamly_code: N04
     aliases: [body_rise]
     type: derived
     source_classification: derived
@@ -608,6 +633,7 @@ measurements:
 
   - name: aldrich_sleeve_length
     seamly_name: arm_shoulder_tip_to_wrist_bent
+    seamly_code: L01
     aliases: [sleeve_length, sleeve_length_bent]
     type: geodesic_path
     source_classification: body
@@ -627,9 +653,10 @@ measurements:
       above the little finger." Surface path along the outer arm in
       Aldrich's bent-arm pose, forced through the back-of-elbow waypoint
       (olecranon) so the geodesic does not shortcut along the inner arm.
-      The wrist endpoint is the ulna styloid (pinky side). See SPEC.md
-      section 16 for the open question on the exact bent-arm joint
-      angles.
+      The wrist endpoint is the ulna styloid (pinky side) per Aldrich.
+      Note: Seamly L01 specifies "radial Wrist bone" (thumb side) —
+      we follow Aldrich's ulnar endpoint. See SPEC.md section 16 for
+      the open question on the exact bent-arm joint angles.
 
   # ------------------------------------------------------------------
   # dpm bodice items 1-32 (dresspatternmaking.com bodice block series).
@@ -649,6 +676,7 @@ measurements:
 
   - name: dpm_bodice_upper_bust
     seamly_name: highbust_circ
+    seamly_code: G03
     aliases: [upper_bust, upper_bust_circumference]
     type: planar_slice
     source_classification: body
@@ -681,6 +709,7 @@ measurements:
 
   - name: dpm_bodice_upper_bust_front_arc
     seamly_name: highbust_arc_f
+    seamly_code: G11
     aliases: [upper_bust_front_arc, ubf_arc]
     type: planar_segment
     source_classification: body
@@ -712,6 +741,7 @@ measurements:
 
   - name: dpm_bodice_upper_bust_back_arc
     seamly_name: highbust_arc_b
+    seamly_code: G27
     aliases: [upper_bust_back_arc, ubb_arc]
     type: planar_segment
     source_classification: body
@@ -738,6 +768,7 @@ measurements:
 
   - name: dpm_bodice_bust
     seamly_name: bust_circ
+    seamly_code: G04
     aliases: [bust, dpm_bust]
     type: planar_slice
     source_classification: body
@@ -761,6 +792,7 @@ measurements:
 
   - name: dpm_bodice_bust_front_arc
     seamly_name: bust_arc_f
+    seamly_code: G12
     aliases: [bust_front_arc, bf_arc]
     type: planar_segment
     source_classification: body
@@ -780,6 +812,7 @@ measurements:
 
   - name: dpm_bodice_bust_back_arc
     seamly_name: bust_arc_b
+    seamly_code: G28
     aliases: [bust_back_arc, bb_arc]
     type: planar_segment
     source_classification: body
@@ -798,6 +831,7 @@ measurements:
 
   - name: dpm_bodice_waist
     seamly_name: waist_circ
+    seamly_code: G07
     aliases: [waist, dpm_waist]
     type: planar_slice
     source_classification: body
@@ -819,6 +853,7 @@ measurements:
 
   - name: dpm_bodice_shoulder_length
     seamly_name: shoulder_length
+    seamly_code: I01
     aliases: [shoulder_length, dpm_shoulder]
     type: geodesic_path
     source_classification: body
@@ -842,6 +877,7 @@ measurements:
 
   - name: dpm_bodice_side_length
     seamly_name: armpit_to_waist_side
+    seamly_code: H03
     aliases: [side_length]
     type: geodesic_path
     source_classification: body
@@ -869,6 +905,7 @@ measurements:
 
   - name: dpm_bodice_full_length_front
     seamly_name: neck_side_to_waist_bustpoint_f
+    seamly_code: H06
     aliases: [full_length_front, flf]
     type: geodesic_path
     source_classification: body
@@ -889,6 +926,7 @@ measurements:
 
   - name: dpm_bodice_center_front_length
     seamly_name: neck_front_to_waist_f
+    seamly_code: H01
     aliases: [center_front_length, cf_length]
     type: geodesic_path
     source_classification: body
@@ -910,6 +948,7 @@ measurements:
 
   - name: dpm_bodice_across_shoulder_front
     seamly_name: shoulder_tip_to_shoulder_tip_half_f        # dpm value is the half-block measurement
+    seamly_code: I05
     aliases: [across_shoulder_front]
     type: planar_segment
     source_classification: body
@@ -943,6 +982,7 @@ measurements:
 
   - name: dpm_bodice_shoulder_slope_front
     seamly_name: shoulder_tip_to_waist_front
+    seamly_code: K01
     aliases: [shoulder_slope_front, ssf]
     type: geodesic_path
     source_classification: body
@@ -982,6 +1022,7 @@ measurements:
 
   - name: dpm_bodice_bust_depth_b_on_cf
     seamly_name: neck_front_to_bust_f
+    seamly_code: H09
     aliases: [bust_depth_b]
     type: derived
     source_classification: body
@@ -1030,6 +1071,7 @@ measurements:
 
   - name: dpm_bodice_bust_span
     seamly_name: bustpoint_to_bustpoint
+    seamly_code: J01
     aliases: [bust_span, apex_to_apex]
     type: planar_segment
     source_classification: body
@@ -1054,6 +1096,7 @@ measurements:
 
   - name: dpm_bodice_front_armhole_depth_a_flf
     seamly_name: shoulder_center_to_highbust_f        # approximate; dpm uses high-neck-point as the start, Seamly uses shoulder-centre
+    seamly_code: H16
     aliases: [front_armhole_depth_a]
     type: derived
     source_classification: body
@@ -1070,6 +1113,7 @@ measurements:
 
   - name: dpm_bodice_front_armhole_depth_b_cf
     seamly_name: neck_front_to_highbust_f
+    seamly_code: H07
     aliases: [front_armhole_depth_b]
     type: derived
     source_classification: body
@@ -1102,6 +1146,7 @@ measurements:
 
   - name: dpm_bodice_across_chest
     seamly_name: across_chest_f
+    seamly_code: I03
     aliases: [across_chest]
     type: planar_segment
     source_classification: body
@@ -1135,6 +1180,7 @@ measurements:
 
   - name: dpm_bodice_full_length_back
     seamly_name: neck_side_to_waist_b
+    seamly_code: H18
     aliases: [full_length_back, flb]
     type: geodesic_path
     source_classification: body
@@ -1155,6 +1201,7 @@ measurements:
 
   - name: dpm_bodice_center_back_length
     seamly_name: neck_back_to_waist_b
+    seamly_code: H19
     aliases: [center_back_length, cb_length]
     type: geodesic_path
     source_classification: body
@@ -1172,6 +1219,7 @@ measurements:
 
   - name: dpm_bodice_across_shoulder_back
     seamly_name: shoulder_tip_to_shoulder_tip_b
+    seamly_code: I07
     aliases: [across_shoulder_back]
     type: planar_segment
     source_classification: body
@@ -1193,6 +1241,7 @@ measurements:
 
   - name: dpm_bodice_shoulder_slope_back
     seamly_name: shoulder_tip_to_waist_back
+    seamly_code: K04
     aliases: [shoulder_slope_back, ssb]
     type: geodesic_path
     source_classification: body
@@ -1228,6 +1277,7 @@ measurements:
 
   - name: dpm_bodice_back_armhole_depth_b_cf
     seamly_name: neck_back_to_highbust_b
+    seamly_code: H21
     aliases: [back_armhole_depth_b]
     type: derived
     source_classification: body
@@ -1252,6 +1302,7 @@ measurements:
 
   - name: dpm_bodice_back_neck
     seamly_name: neck_arc_half_b
+    seamly_code: G34
     aliases: [back_neck]
     type: contoured_path
     source_classification: body
@@ -1278,6 +1329,7 @@ measurements:
 
   - name: dpm_bodice_across_back
     seamly_name: across_back_b
+    seamly_code: I08
     aliases: [across_back]
     type: planar_segment
     source_classification: body
@@ -1339,6 +1391,7 @@ measurements:
 
   - name: dpm_sleeve_length_bent
     seamly_name: arm_shoulder_tip_to_wrist_bent
+    seamly_code: L01
     aliases: [sleeve_length, sleeve_length_dpm]
     type: geodesic_path
     source_classification: body
@@ -1361,6 +1414,7 @@ measurements:
 
   - name: dpm_sleeve_shoulder_to_elbow
     seamly_name: arm_shoulder_tip_to_elbow_bent
+    seamly_code: L02
     aliases: [shoulder_to_elbow]
     type: geodesic_path
     source_classification: body
@@ -1379,6 +1433,7 @@ measurements:
 
   - name: dpm_sleeve_elbow_circumference
     seamly_name: arm_elbow_circ_bent
+    seamly_code: L04
     aliases: [elbow_circumference]
     type: planar_slice
     source_classification: body
@@ -1398,6 +1453,7 @@ measurements:
 
   - name: dpm_sleeve_bicep
     seamly_name: arm_upper_circ
+    seamly_code: L11
     aliases: [bicep, bicep_at_armhole_level]
     type: planar_slice
     source_classification: body
@@ -1455,6 +1511,7 @@ measurements:
 
   - name: dpm_pants_waist_to_ankle
     seamly_name: leg_waist_side_to_ankle
+    seamly_code: M13
     aliases: [waist_to_ankle]
     type: geodesic_path
     source_classification: body
@@ -1474,6 +1531,7 @@ measurements:
 
   - name: dpm_pants_waist_to_high_hip
     seamly_name: waist_to_highhip_side
+    seamly_code: H32
     aliases: [waist_to_high_hip]
     type: derived
     source_classification: body
@@ -1492,7 +1550,8 @@ measurements:
       - "references/dpm_videos/pants_1/transcript.txt:L161-164"
 
   - name: dpm_pants_high_hip
-    seamly_name: highhip_circ
+    seamly_name: highhip_circ        # Seamly: where abdomen protrusion is greatest; dpm: fixed depth below waist (4-5 in)
+    seamly_code: G08
     aliases: [high_hip, high_hip_circumference]
     type: planar_slice
     source_classification: body
@@ -1510,6 +1569,7 @@ measurements:
 
   - name: dpm_pants_waist_to_low_hip
     seamly_name: waist_to_hip_side
+    seamly_code: H35
     aliases: [waist_to_low_hip]
     type: derived
     source_classification: body
@@ -1527,6 +1587,7 @@ measurements:
 
   - name: dpm_pants_low_hip
     seamly_name: hip_circ
+    seamly_code: G09
     aliases: [low_hip, low_hip_circumference]
     type: planar_slice
     source_classification: body
@@ -1570,6 +1631,7 @@ measurements:
 
   - name: dpm_pants_crotch_depth
     seamly_name: rise_length_side
+    seamly_code: N08
     aliases: [crotch_depth, waist_to_crotch]
     type: derived
     source_classification: body
@@ -1585,6 +1647,7 @@ measurements:
 
   - name: dpm_pants_upper_thigh
     seamly_name: leg_thigh_upper_circ
+    seamly_code: M03
     aliases: [upper_thigh, thigh_at_crotch_level]
     type: planar_slice
     source_classification: body
@@ -1611,6 +1674,7 @@ measurements:
 
   - name: dpm_pants_waist_to_knee
     seamly_name: leg_waist_side_to_knee
+    seamly_code: M14
     aliases: [waist_to_knee]
     type: derived
     source_classification: body
@@ -1625,6 +1689,7 @@ measurements:
 
   - name: dpm_pants_knee
     seamly_name: leg_knee_circ_bent
+    seamly_code: M10
     aliases: [knee, knee_circumference_bent]
     type: planar_slice
     source_classification: body
@@ -1645,6 +1710,7 @@ measurements:
 
   - name: dpm_pants_crotch_length_total
     seamly_name: crotch_length
+    seamly_code: N01
     aliases: [crotch_length, total_crotch_length]
     type: geodesic_path
     source_classification: body
@@ -1668,6 +1734,7 @@ measurements:
 
   - name: dpm_pants_crotch_length_front
     seamly_name: crotch_length_f
+    seamly_code: N03
     aliases: [front_crotch_length]
     type: geodesic_path
     source_classification: body
@@ -1694,6 +1761,7 @@ measurements:
 
   - name: dpm_pants_crotch_length_back
     seamly_name: crotch_length_b
+    seamly_code: N02
     aliases: [back_crotch_length]
     type: geodesic_path
     source_classification: body
@@ -1722,6 +1790,7 @@ measurements:
 
   - name: dpm_pants_lower_thigh
     seamly_name: leg_thigh_mid_circ        # Seamly's mid-thigh roughly matches dpm's "~20cm above knee"
+    seamly_code: M04
     aliases: [lower_thigh, thigh_above_knee]
     type: planar_slice
     source_classification: body
@@ -1780,3 +1849,73 @@ measurements:
       waist and the high hip. The exact offset is figure-dependent;
       default 3.8 cm (1.5") with the allowed range covering the
       typical "between waist and high hip" band.
+
+  # ------------------------------------------------------------------
+  # Seamly-compatibility geometric measurements.
+  #
+  # Not measured by Aldrich's p.178 list or by any dpm video. Added so
+  # the `aldrich_women_template.smis` slots and its custom @M_* formulas
+  # have real values when we ship the SeamlyMe export. Scan-extractable
+  # as straight landmark-pair distances; primary source is the Seamly2D
+  # measurement catalog rather than a sewing textbook.
+  #
+  # Unprefixed names (no `aldrich_` / `dpm_` prefix) signal that these
+  # are system-agnostic geometric helpers — both per-system exports use
+  # them.
+  # ------------------------------------------------------------------
+
+  - name: bustpoint_to_waist
+    seamly_name: bustpoint_to_waist
+    seamly_code: J04
+    aliases: [bust_apex_to_waist, bp_to_waist]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_apex_midpoint
+        normal: pose.measurement_default.lateral_axis        # vertical plane through the apex midpoint
+      clip:
+        start: landmarks.bust_apex_midpoint
+        end: landmarks.waist_string        # closest point on the waist plane directly below the apex
+        side: chord
+      output: chord_distance
+    sources:
+      - "references/seamly/README.md J04 bustpoint_to_waist (diagram Jp1)"
+    notes: |
+      Vertical distance from the bust apex midpoint down to the waist
+      plane. Used by the SeamlyMe `aldrich_women_template.smis` slot
+      `bustpoint_to_waist` (line 29) and by the custom @M_1 "Front
+      Shoulder to Waist" formula. Not in Aldrich's p.178 list nor in
+      the dpm bodice-measurements video — added purely so the Aldrich
+      Seamly template evaluates with real numbers. Scan-extractable as
+      the chord between bust_apex_midpoint and the waist_string plane
+      along the body's vertical axis.
+
+  - name: bustpoint_to_shoulder_center
+    seamly_name: bustpoint_to_shoulder_center
+    seamly_code: J10
+    aliases: [bp_to_shoulder_centre, bust_apex_to_shoulder_midpoint]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      clip:
+        start: landmarks.bust_apex_right
+        end: landmarks.front_shoulder_centre_right
+        side: chord
+      output: chord_distance
+    sources:
+      - "references/seamly/README.md J10 bustpoint_to_shoulder_center (diagram Jp6)"
+    notes: |
+      Straight-line distance from the right bust apex to the right
+      front-shoulder-centre landmark (midpoint of the front shoulder
+      seam between shoulder_neck and acromion). Aldrich's item 15
+      "Front shoulder to waist" measures the *path* shoulder-midpoint →
+      bust apex → waist as one quantity; this entry separates out the
+      shoulder-midpoint → bust apex segment for the SeamlyMe
+      `bustpoint_to_shoulder_center` slot (line 39 of
+      `aldrich_women_template.smis`) and for the revised @M_1 formula
+      (`bustpoint_to_shoulder_center + bustpoint_to_waist`). Not
+      independently measured by Aldrich or dpm. Right-side is the
+      convention; the half-block draft is mirrored.
