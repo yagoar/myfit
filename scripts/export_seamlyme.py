@@ -170,6 +170,13 @@ def render_smis(seamly_values: dict[str, float], template_order: list[str]) -> s
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--values", type=Path, help="JSON dict of {our_name: value_cm}")
+    p.add_argument(
+        "--seamly-values",
+        type=Path,
+        help="JSON dict of {seamly_code: value_cm} (e.g. {'G04': 89.6}). "
+        "Resolved via the catalog code->name table in references/seamly/README.md. "
+        "Codes resolved this way are added to the value pool *after* --values.",
+    )
     p.add_argument("--output", type=Path, required=True, help=".smis output path")
     p.add_argument(
         "--template",
@@ -195,6 +202,26 @@ def main() -> int:
         print("no --values: emitting all-zeros baseline", file=sys.stderr)
 
     seamly_values = resolve_seamly_values(raw, mapping)
+
+    if args.seamly_values:
+        # Lazy import to avoid pulling smplx/torch into the export path when
+        # the user only has a pre-computed {our_name: value} JSON.
+        from body_scanner.measure.seamly_catalog import CODE_TO_NAME
+
+        raw_codes = json.loads(args.seamly_values.read_text())
+        print(
+            f"seamly_values: {len(raw_codes)} catalog codes from {args.seamly_values}",
+            file=sys.stderr,
+        )
+        for code, val in raw_codes.items():
+            name = CODE_TO_NAME.get(code)
+            if not name:
+                print(f"skip: catalog code {code!r} not in code->name table",
+                      file=sys.stderr)
+                continue
+            if name in seamly_values:
+                continue  # do not overwrite --values entries
+            seamly_values[name] = float(val)
     template_order: list[str] = []
     if args.template.is_file():
         import re

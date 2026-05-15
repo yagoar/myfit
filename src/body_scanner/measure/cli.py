@@ -1,29 +1,47 @@
 """CLI: run extractor on a fit.npz, print measurements + skipped reasons.
 
-Usage:
-    python -m body_scanner.measure.cli data/results/yaiza_smplx_fit.npz
+Two modes:
+  default        — run the merged.yaml extractor (Aldrich + dpm subset)
+  --seamly       — run the Seamly catalog extractor (all 245 codes,
+                   per references/seamly/extraction_audit.md)
+  --both         — run both and label output
 """
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import numpy as np
 import smplx
 
 from .extractor import extract
+from .seamly_extractor import extract_catalog
+
+
+def _print_table(values: dict, label: str = "measurement", unit: str = "cm") -> None:
+    print(f"{label:<40} {'value (' + unit + ')':>10}")
+    print("-" * 52)
+    for k in sorted(values):
+        print(f"{k:<40} {values[k]:>10.2f}")
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Extract measurements from a fit.")
     p.add_argument("fit_npz", type=Path)
-    p.add_argument(
-        "--model-folder", default="data/body_models",
-        help="Folder containing smplx/SMPLX_FEMALE.npz (for face indices)",
-    )
+    p.add_argument("--model-folder", default="data/body_models")
     p.add_argument("--gender", default="female")
     p.add_argument("--num-betas", type=int, default=100)
+    p.add_argument("--seamly", action="store_true",
+                   help="Run the Seamly catalog extractor (all codes).")
+    p.add_argument("--both", action="store_true",
+                   help="Run both extractors.")
     p.add_argument("--show-skipped", action="store_true")
+    p.add_argument(
+        "--save-seamly-json",
+        type=Path,
+        help="Write {seamly_code: value_cm} JSON for scripts/export_seamlyme.py",
+    )
     args = p.parse_args(argv)
 
     fit = np.load(args.fit_npz)
@@ -35,18 +53,40 @@ def main(argv: list[str] | None = None) -> int:
     )
     faces = np.asarray(bm.faces, dtype=np.int32)
 
-    report = extract(verts, faces)
+    run_named = not args.seamly or args.both
+    run_seamly = args.seamly or args.both
 
-    # Print values, sorted by name for stable output.
-    print(f"{'measurement':<40} {'value (cm)':>10}")
-    print("-" * 52)
-    for name in sorted(report.values):
-        print(f"{name:<40} {report.values[name]:>10.2f}")
-    print(f"\n{len(report.values)} extracted   {len(report.skipped)} skipped")
-    if args.show_skipped:
-        print("\nSkipped:")
-        for name, reason in sorted(report.skipped.items()):
-            print(f"  {name}: {reason}")
+    if run_named:
+        rep = extract(verts, faces)
+        print("=" * 52)
+        print("merged.yaml (Aldrich + dpm) extractor")
+        print("=" * 52)
+        _print_table(rep.values)
+        print(f"\n{len(rep.values)} extracted   {len(rep.skipped)} skipped")
+        if args.show_skipped:
+            print("\nSkipped:")
+            for k, reason in sorted(rep.skipped.items()):
+                print(f"  {k}: {reason}")
+
+    if run_seamly:
+        cat = extract_catalog(verts, faces)
+        if run_named:
+            print()
+        print("=" * 52)
+        print("Seamly catalog extractor")
+        print("=" * 52)
+        _print_table(cat.values, label="seamly_code")
+        print(f"\n{len(cat.values)} extracted   {len(cat.skipped)} skipped")
+        if args.show_skipped:
+            print("\nSkipped:")
+            for k, reason in sorted(cat.skipped.items()):
+                print(f"  {k}: {reason}")
+        if args.save_seamly_json:
+            args.save_seamly_json.parent.mkdir(parents=True, exist_ok=True)
+            args.save_seamly_json.write_text(
+                json.dumps({k: float(v) for k, v in cat.values.items()}, indent=2)
+            )
+            print(f"\nsaved {args.save_seamly_json}")
     return 0
 
 

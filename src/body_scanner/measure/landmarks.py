@@ -47,15 +47,28 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     # there). The plane it defines uses the y-coordinate of this point.
     "waist_string": ("alias", ["waist_cf"]),
 
-    # "Level" landmarks — symbolic horizontal planes referenced in merged.yaml.
-    # We represent each as a single 3D point whose y-coordinate defines the
-    # horizontal slice; x/z carry no meaning when used as a plane origin.
+    # "Level" landmarks — symbolic horizontal planes referenced in merged.yaml
+    # and the Seamly catalog. We represent each as a single 3D point whose
+    # y-coordinate defines the horizontal slice; x/z carry no meaning when
+    # used as a plane origin.
     "bust_level": ("alias", ["bust_apex_midpoint"]),
     "upper_bust_level": ("alias", ["armscye_front_midpoint"]),
+    "armpit_level": ("alias", ["upper_bust_level"]),  # per extraction_audit.md
+    "highbust_level": ("alias", ["armfold_front_left"]),  # armfold height
     "crotch_level": ("alias", ["crotch_midpoint"]),
     "mid_knee_level": ("midpoint", ["knee_back_left", "knee_back_right"]),
     "ankle_level": ("midpoint",
                     ["ankle_bone_lateral_left", "ankle_bone_lateral_right"]),
+    "lowbust_level": ("alias", ["lowbust_apex"]),
+    "mid_neck_level": ("alias", ["mid_neck_front"]),
+    # high_hip_level: rule per dpm pants_1 = 4-5" below waist (~11cm). Use a
+    # fixed mid-value here; refine when scan calibration validates.
+    # Stored as point with y = waist_cf.y - 0.11; x/z unused as plane origin.
+    "high_hip_level": ("offset_y", ["waist_string", "-0.11"]),
+    # low_hip_level: dpm "widest girth below waist". For scaffolding we use
+    # 20cm below the waist as a placeholder horizontal level; the proper
+    # implementation searches for the maximum-girth slice in a Y range.
+    "low_hip_level": ("offset_y", ["waist_string", "-0.20"]),
 }
 
 
@@ -75,6 +88,10 @@ class LandmarkSet:
 
         if leaf in COMPOUND_LANDMARKS:
             op, bases = COMPOUND_LANDMARKS[leaf]
+            if op == "offset_y":
+                base = self[bases[0]]
+                dy = float(bases[1])
+                return np.array([base[0], base[1] + dy, base[2]])
             pts = np.stack([self[b] for b in bases])
             if op == "midpoint":
                 return pts.mean(axis=0)
