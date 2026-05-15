@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 import smplx
 
+from .exports import write_csv, write_obj, write_smis_from_catalog
 from .extractor import extract
 from .seamly_extractor import extract_catalog
 
@@ -40,7 +41,29 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--save-seamly-json",
         type=Path,
-        help="Write {seamly_code: value_cm} JSON for scripts/export_seamlyme.py",
+        help="Write {seamly_code: value_cm} JSON",
+    )
+    p.add_argument(
+        "--save-csv",
+        type=Path,
+        help="Write CSV: code, seamly_name, value_cm",
+    )
+    p.add_argument(
+        "--save-obj",
+        type=Path,
+        help="Write fitted SMPL-X body mesh as Wavefront OBJ (for CLO3D)",
+    )
+    p.add_argument(
+        "--save-smis",
+        type=Path,
+        help="Write SeamlyMe .smis directly (no intermediate JSON)",
+    )
+    p.add_argument(
+        "--smis-template",
+        type=Path,
+        default=Path.home() / "seamly2d" / "templates" /
+                "all_measurements_template.smis",
+        help="Reference .smis whose measurement order is preserved",
     )
     args = p.parse_args(argv)
 
@@ -87,6 +110,19 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps({k: float(v) for k, v in cat.values.items()}, indent=2)
             )
             print(f"\nsaved {args.save_seamly_json}")
+        if args.save_csv:
+            write_csv(cat.values, args.save_csv)
+            print(f"saved {args.save_csv}")
+        if args.save_smis:
+            template = (args.smis_template
+                        if args.smis_template and args.smis_template.is_file()
+                        else None)
+            write_smis_from_catalog(cat.values, args.save_smis, template)
+            print(f"saved {args.save_smis}")
+
+    if args.save_obj:
+        write_obj(verts, faces, args.save_obj)
+        print(f"saved {args.save_obj}")
     return 0
 
 
