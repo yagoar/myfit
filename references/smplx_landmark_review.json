@@ -1,0 +1,170 @@
+{
+  "top_of_head": {
+    "vertex_id": 9011,
+    "status": "confirmed"
+  },
+  "front_neck_point": {
+    "vertex_id": 5618,
+    "status": "corrected"
+  },
+  "front_collar_bone": {
+    "vertex_id": 5621,
+    "status": "corrected"
+  },
+  "c7": {
+    "vertex_id": 5920,
+    "status": "corrected"
+  },
+  "waist_cf": {
+    "vertex_id": 3852,
+    "status": "corrected"
+  },
+  "waist_cb": {
+    "vertex_id": 5495,
+    "status": "corrected"
+  },
+  "crotch_midpoint": {
+    "vertex_id": 3879,
+    "status": "corrected"
+  },
+  "shoulder_neck_left": {
+    "vertex_id": 3950,
+    "status": "corrected"
+  },
+  "shoulder_neck_right": {
+    "vertex_id": 6698,
+    "status": "corrected"
+  },
+  "acromion_left": {
+    "vertex_id": 5627,
+    "status": "corrected"
+  },
+  "acromion_right": {
+    "vertex_id": 8321,
+    "status": "mirrored_from_acromion_left"
+  },
+  "front_shoulder_centre_left": {
+    "vertex_id": 3236,
+    "status": "corrected"
+  },
+  "front_shoulder_centre_right": {
+    "vertex_id": 5999,
+    "status": "mirrored_from_front_shoulder_centre_left"
+  },
+  "underarm_left": {
+    "vertex_id": 3922,
+    "status": "corrected"
+  },
+  "underarm_right": {
+    "vertex_id": 6670,
+    "status": "mirrored_from_underarm_left"
+  },
+  "armscye_front_left": {
+    "vertex_id": 3234,
+    "status": "confirmed"
+  },
+  "armscye_front_right": {
+    "vertex_id": 5997,
+    "status": "mirrored_from_armscye_front_left"
+  },
+  "armscye_back_left": {
+    "vertex_id": 5610,
+    "status": "confirmed"
+  },
+  "armscye_back_right": {
+    "vertex_id": 8315,
+    "status": "mirrored_from_armscye_back_left"
+  },
+  "armfold_front_left": {
+    "vertex_id": 3834,
+    "status": "confirmed"
+  },
+  "armfold_front_right": {
+    "vertex_id": 6589,
+    "status": "mirrored_from_armfold_front_left"
+  },
+  "armfold_back_left": {
+    "vertex_id": 5481,
+    "status": "confirmed"
+  },
+  "armfold_back_right": {
+    "vertex_id": 8215,
+    "status": "mirrored_from_armfold_back_left"
+  },
+  "bust_apex_left": {
+    "vertex_id": 3572,
+    "status": "corrected"
+  },
+  "bust_apex_right": {
+    "vertex_id": 6333,
+    "status": "mirrored_from_bust_apex_left"
+  },
+  "lowbust_apex": {
+    "vertex_id": 3855,
+    "status": "confirmed"
+  },
+  "waist_side_left": {
+    "vertex_id": 3273,
+    "status": "confirmed"
+  },
+  "waist_side_right": {
+    "vertex_id": 6036,
+    "status": "mirrored_from_waist_side_left"
+  },
+  "elbow_back_left": {
+    "vertex_id": 4290,
+    "status": "corrected"
+  },
+  "elbow_back_right": {
+    "vertex_id": 7032,
+    "status": "mirrored_from_elbow_back_left"
+  },
+  "wrist_ulnar_left": {
+    "vertex_id": 4722,
+    "status": "corrected"
+  },
+  "wrist_ulnar_right": {
+    "vertex_id": 7458,
+    "status": "mirrored_from_wrist_ulnar_left"
+  },
+  "bicep_max_right": {
+    "vertex_id": 6022,
+    "status": "corrected"
+  },
+  "thigh_at_crotch_left": {
+    "vertex_id": 3477,
+    "status": "corrected"
+  },
+  "thigh_at_crotch_right": {
+    "vertex_id": 6238,
+    "status": "mirrored_from_thigh_at_crotch_left"
+  },
+  "crotch_lateral_left": {
+    "vertex_id": 3866,
+    "status": "corrected"
+  },
+  "crotch_lateral_right": {
+    "vertex_id": 6617,
+    "status": "mirrored_from_crotch_lateral_left"
+  },
+  "knee_back_left": {
+    "vertex_id": 3679,
+    "status": "corrected"
+  },
+  "knee_back_right": {
+    "vertex_id": 6440,
+    "status": "mirrored_from_knee_back_left"
+  },
+  "ankle_bone_lateral_left": {
+    "vertex_id": 5881,
+    "status": "corrected"
+  },
+  "ankle_bone_lateral_right": {
+    "vertex_id": 8575,
+    "status": "mirrored_from_ankle_bone_lateral_left"
+  },
+  "mid_neck_front": {
+    "vertex_id": 5616,
+    "status": "corrected"
+  }
+}

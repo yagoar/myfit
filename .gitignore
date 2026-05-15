@@ -24,6 +24,7 @@ data/body_models/
 data/vposer/
 data/captures/
 data/results/
+data/smplx_female_tpose.obj
 
 # Video-ingest artefacts: keep transcripts and frames (citable source),
 # drop the heavy bits. Source videos are either symlinks into the user's own

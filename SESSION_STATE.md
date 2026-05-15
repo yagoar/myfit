@@ -27,7 +27,7 @@ pinned (Open3D 0.19 wheel cap).
 | 2 — Segmentation + TSDF fusion | not started | |
 | 3 — Landmarks + initial pose | not started | |
 | 4 — SMPL-X+D fitting | not started | |
-| 5 — Constructional lines | not started | Will require Blender vertex-ID verification (GUARDRAILS §3). |
+| 5 — Constructional lines | **scaffolded** | Landmark picker script + vertex-ID inventory skeleton in place. Actual Blender verification + screenshot capture pending. See `scripts/pick_smplx_landmarks.py` and `references/smplx_vertex_landmarks.md`. |
 | 6 — Measurement extraction | **partial** | `merged.yaml` has all 72 definitions with sources, frames, and Seamly cross-walk. Code in `measure/extractor.py` not yet written. |
 | 7 — Calibration | not started | User-bottlenecked (tape measurements). |
 | 8 — SQLite + worksheet | not started | FREE territory; can be scaffolded any time. |
@@ -66,6 +66,7 @@ d98c181  chore: bootstrap repo scaffolding
 
 | File / Folder | What |
 |---|---|
+| `references/smplx_vertex_landmarks.md` | Phase 5 inventory of 48 anatomical vertex landmarks (45 required + 3 audit-judgment optional) the body-scanner pipeline needs. Each row has columns for `proposed_vertex_id` (from the Open3D picker) and `verified_vertex_id` (from the Blender check, with a screenshot under `references/smplx_landmark_screenshots/`). Currently empty — all rows pending. |
 | `references/aldrich_full.pdf` | Aldrich 5th edition full book (LFS-tracked). |
 | `references/aldrich_p178_179_notes.md` | Detailed transcription + diagram description of book p.178-179. |
 | `references/dpm_bodice.pdf` | dresspatternmaking.com 2025 bodice block instructions (LFS). |
@@ -91,7 +92,8 @@ d98c181  chore: bootstrap repo scaffolding
 | `scripts/ingest_video.sh` | Bash. Ingests a video (URL via yt-dlp or local file) → ffmpeg audio + whisper.cpp transcription + ffmpeg frame extraction at a configurable interval → output under `references/<subpath>/`. Frames are renamed to `frame_HHhMMmSSs.jpg` form post-extraction. |
 | `scripts/verify_phase0.py` | Loads SMPL-X FEMALE, asserts faces.shape == (20908, 3) and vertices.shape == (1, 10475, 3), opens an Open3D viewer with the T-pose mesh. `--no-viz` for headless. |
 | `scripts/generate_review_html.py` | Reads `merged.yaml` and emits `review.html` (gitignored) at repo root: one card per measurement with inline frame thumbnails, per-entry localStorage notes, JSON + markdown export, name filter, prev/next pager with arrow-key navigation. |
-| `scripts/export_seamlyme.py` | Reads a `{our_name: value_cm}` JSON + the `seamly_name` mapping from `merged.yaml` → emits a SeamlyMe `.smis` XML file matching the slot order of `~/seamly2d/templates/all_measurements_template.smis`. Conflict resolution prefers `dpm_*` over `aldrich_*`. Smoke-tested. |
+| `scripts/export_seamlyme.py` | Reads a `{our_name: value_cm}` JSON + the `seamly_name` mapping from `merged.yaml` → emits a SeamlyMe `.smis` XML file matching the slot order of `~/seamly2d/templates/all_measurements_template.smis`. Conflict resolution prefers `dpm_*` over `aldrich_*`. Smoke-tested. **Slated for rewrite — see Parked design decisions below.** |
+| `scripts/pick_smplx_landmarks.py` | Phase 5 helper. Loads `SMPLX_FEMALE.npz` T-pose, renders mesh + 20 orientation joint spheres (torso=blue, left=red, right=green), opens Open3D `VisualizerWithEditing` for Shift+click vertex picking. Prints picks (`vertex_id` + 3D coord) after window close; `--output picks.json` to save. Per GUARDRAILS §3, picks are proposed-only; final verification happens in Blender. Smoke-tested for load + geometry build. |
 
 ## Source material coverage
 
