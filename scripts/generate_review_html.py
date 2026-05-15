@@ -64,6 +64,16 @@ def render_entry(m: dict) -> str:
     aliases = m.get("aliases") or []
     if aliases:
         add("aliases", ", ".join(str(a) for a in aliases))
+    if "seamly_name" in m:
+        sn = m["seamly_name"]
+        if sn:
+            add("seamly_name", f'<code class="seamly">{escape(str(sn))}</code>', html=True)
+        else:
+            add(
+                "seamly_name",
+                '<span class="seamly-null">null (no direct Seamly2D equivalent)</span>',
+                html=True,
+            )
     if "type" in m:
         add("type", str(m["type"]))
     if "source_classification" in m:
@@ -154,6 +164,9 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
                       border: 1px solid #bbb; border-radius: 4px; display: block; }
   .source .cite { font-family: ui-monospace, "SF Mono", Menlo, monospace;
                   font-size: 0.78rem; color: #444; }
+  code.seamly { background: #e6f4ea; color: #1a5d2c; padding: 0.15rem 0.4rem;
+                border-radius: 3px; font-size: 0.9rem; }
+  .seamly-null { color: #888; font-style: italic; font-size: 0.9rem; }
   label.review-notes { display: block; margin-top: 0.9rem; padding-top: 0.7rem;
                         border-top: 1px dashed #ddd; }
   label.review-notes .lbl { font-weight: 600; color: #555; font-size: 0.9rem;
