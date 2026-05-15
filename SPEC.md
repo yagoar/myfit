@@ -50,7 +50,13 @@ These must be in the repo under `references/` before Phase 6. The PDFs are full 
 - `references/aldrich_full.pdf` — Aldrich *Metric Pattern Cutting for Women's Wear*, full book. Canonical source for the Aldrich measurement definitions (p.178-179 figure-measurement instructions), the standard size chart (p.13), and the drafting formulas for Phase 9 (Chapter 1).
 - `references/dpm_bodice.pdf` — dresspatternmaking.com bodice block instructions (2025 edition). Canonical source for the dpm bodice measurement worksheet and Upper Bust contoured-path definition.
 - `references/dpm_pants.pdf` — dresspatternmaking.com pants block instructions (2025 edition). Canonical source for trouser-related measurements (used in later phases if pants block is in scope).
-- `references/dpm_videos/<measurement_name>/` — per-measurement folders produced by `scripts/ingest_video.sh`. Each contains `transcript.txt` and `transcript.srt` derived from the dpm measurement-taking videos via whisper.cpp. Transcripts are the citable source for any measurement definition whose spatial position is shown only in the video (cite as `references/dpm_videos/<name>/transcript.srt:<timestamp>`). Audio and symlinks to the source videos are gitignored.
+- `references/dpm_videos/<topic>/` — per-topic folders produced by `scripts/ingest_video.sh`, containing `transcript.txt`, `transcript.srt`, and periodic `frame_*.jpg` extracted via whisper.cpp + ffmpeg. Citable as `references/dpm_videos/<topic>/transcript.srt:<timestamp>` or `frame_NNNNNN.jpg`. Audio and source videos are gitignored (regenerable via yt-dlp).
+
+  Folders hold two kinds of content from the same dpm series, kept under a single root for simplicity:
+  - **Measurement-taking** videos (e.g. `bodice_measurements/`) — primary Phase 6 source for measurement definitions.
+  - **Drafting tutorial** videos (e.g. `bodice_front/`, `bodice_back/`, `sleeve/`, `pants_1/`…`pants_5/`) — primary Phase 9 source for block drafting formulas, *and* secondary Phase 6 source because the drafting tutorials sometimes **revise** measurement definitions from the earlier measurement-taking videos.
+
+  Conflict rule: when a drafting-video revision conflicts with a measurement-taking video, the drafting video wins (newer authoritative version). The conflict must be flagged in the relevant `merged.yaml` entry per the schema in Section 9: list both citations under `sources` (drafting first), set `superseded_by`, and explain in `notes`.
 - `references/smplx_vertex_landmarks.md` — built incrementally during Phase 5. For every anatomical landmark (apex, suprasternal notch, C7, etc.), records the verified SMPL-X vertex ID with a screenshot. Never extended without visual verification in Blender.
 - `references/construction_rules.md` — built during Phase 5. Documents each constructional line rule (CF, CB, SS, BL, WL, HL, neck base, etc.) with rationale.
 - `references/calibration_log.md` — built during Phase 7. Records each calibration adjustment with date, before/after values, and rationale.
@@ -167,9 +173,21 @@ Every entry in `merged.yaml` has these fields:
   type: planar_slice | geodesic_path | contoured_path | planar_segment
   parameters:
     # type-specific
-  source: <required: book page or worksheet item>
+  sources:                         # required, list, primary first
+    - <book page, worksheet item, or transcript:timestamp>
   source_classification: body | standard | derived
-  notes: <optional>
+  notes: <optional>                # required when sources has > 1 entry
+  superseded_by: <optional>        # cite the source that overrides an earlier one
+```
+
+When a dpm drafting video revises an earlier measurement-taking definition (see Section 5), `sources` must list both, the drafting-video citation goes first (precedence), and `notes` must summarize what was revised. Example:
+
+```yaml
+sources:
+  - references/dpm_videos/bodice_front/transcript.srt:00:12:34
+  - references/dpm_videos/bodice_measurements/transcript.srt:00:05:10
+notes: "Bodice-front drafting video revises the bust-depth landmark from <X> to <Y>; the older measurement-taking video shows the deprecated landmark."
+superseded_by: references/dpm_videos/bodice_front/transcript.srt:00:12:34
 ```
 
 `source_classification`:

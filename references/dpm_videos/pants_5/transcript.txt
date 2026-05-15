@@ -1,0 +1,363 @@
+ Hi, this is Maria from dresspattingmaking.com.
+ This is part 5 in the pants block series, and I'll be drafting the pants block for Anne.
+ I'm firstly comparing Anne's figure to the standard figure.
+ Anne has less difference between her waist and hips than any of the figures I've done
+ so far.
+ The standard figure has 10 inches difference between the waist and hips.
+ Mine has more Jane had less, but Anne has even less.
+ The difference between Anne's waist and hip is 6.25 inches.
+ Now Anne's thigh is actually just slightly bigger than the standard figure.
+ By which I mean, most pant block making instructions don't require the thigh measurement.
+ You don't need it to draft the block.
+ It's an assumed measurement, which works out as a percentage of the hip.
+ So the standard figure, as far as most western sewing patterns are concerned, have a thigh
+ measurement that is 60% of the hip measurement.
+ Given that Anne's thigh to hip proportion is very similar to the standard figure, that
+ is 60.2% of her hip measurement, you might then assume she'd end up with a good result
+ for her thigh using those instructions where the thigh is worked out as 60% of the hip.
+ However, the other part of those block making instructions that creates a difficulty for
+ Anne is that they say to use the widest measurement below your waist as your hip measurement.
+ So for Anne, her thigh would be worked out based on her high hip and it would end up
+ being too big for her.
+ Now, the whole purpose of these comparisons that I'm doing to the standard figure and
+ standard pants instructions was to show that these particular figure types that I'm drafting
+ pants for if they use those standard instructions would not end up with a good initial result.
+ The other problems for Anne would have been her back and front crotch lengths.
+ On the left is what Anne's block would look like if drafted using that system compared
+ to what her blocks look like on the right, taking into account her actual thigh measurement,
+ not using her upper hip as the width of her block and checking she has the crotch length
+ she needs front and back.
+ And this is the same two blocks but this time superimposed so you can more clearly see the
+ difference between them.
+ So I'm going to start drafting Anne's block from this point here, the instructions up
+ to this point were the same for everybody and that's all covered in video too.
+ I'm going to zoom in to 200% of the previous image while working on the foundation.
+ The first thing I'll do is lower the crotch, currently the crotch depth is the body crotch
+ depth and we'll need some ease.
+ From point D I will measure down 5/8 of an inch at right angles to the C to D line and
+ mark point D1.
+ I will continue the L to I line down below the body crotch depth line for about an inch
+ or so, that's shown by the pink arrow.
+ Then draw a line at right angles to touch point D1, that's shown by the blue arrow.
+ This will help later for drawing the crotch curve.
+ The horizontal line touching D1 is the depth of the crotch plus ease.
+ Wear those two lines intersect I've marked point X.
+ So now I'll do the calculation for the waist shaping.
+ I'll take Anne's waist measurement which is 39 and 3/4 inches and add 1 inch for ease.
+ I'll then take that total 40 and 3/4 inches and divide it by 4.
+ So the waist measurement for the front and back will be 10 1/8 of an inch.
+ With the other figures I started the waist shaping by coming in 1/2 an inch from point
+ L on the waist and marking point P.
+ Then drawing a straight line from P to low hip point J, this line would be the center
+ front line.
+ However, I'm not going to do that with am.
+ I want to go back and look at the waist shaping for the other three figures.
+ Here's the waist shaping for the standard figure.
+ The pink shaded areas are basically dark values.
+ They are not actually darts as in a folded piece of fabric, but those areas are acting
+ as darts.
+ That shaping, those dart equivalents go right down to the low hip.
+ My waist shaping also goes down to the low hip and because I have a proportionally smaller
+ high hip, I have more shaping or more taken out at the high hip level than the standard
+ figure did.
+ Notice that with Jane, on her side seam the shaping only goes down to her high hip.
+ It doesn't go all the way down to the low hip.
+ At the center front she does have some shaping down to her low hip.
+ Here with them all together you can see that most of the shaping is done at the side seam
+ and at the center front.
+ They all have only one dart in the center and a very similar size, despite the differences
+ in the waist and the hip.
+ Now Jane's larger circumference is at her high hip, therefore we want the shaping to
+ stop there at the high hip and not go down to the low hip.
+ If we followed the directions for the standard waist shaping and drew a line from P down
+ to the low hip, we would be cutting some off at the high hip, which is why we don't want
+ to follow those directions for shaping the waist for Anne.
+ Therefore, I'm not going to do any shaping at the center front.
+ I will draw a straight line from point L at the waist down to point J at the low hip.
+ This will be the center front line.
+ Now the issue is we do want a straight line from the waist to the low hip so we can put
+ a zip in it.
+ We don't really want a curved line there, we certainly can't go from the waist to the
+ high hip in a straight line and then down from there, that wouldn't work.
+ So I'm not going to do any shaping for Anne at the center front.
+ Doing the waist shaping at the side seam and with darts will limit that shaping down to
+ her high hip.
+ So using the result of the calculation I did earlier, I'll take 10 1/8 of an inch and
+ add 1/2 an inch for a dart.
+ From point L at the waist, I'll measure towards 0.0 at the side seam for 10 5/8 of an inch
+ and mark point P.
+ So moving on to the high hip, I'll take the high hip measurement of 46 7/16 of an inch
+ and add 1 inch ease, divide that total by 4 and I get 11 7/8 of an inch.
+ I'll measure on the high hip line from point K towards the side seam point N and mark point
+ Q.
+ As you'll notice, I actually have to go beyond point N to mark point Q, that's not a problem,
+ I was expecting that because I drafted the width of the foundation to her low hip measurement.
+ She is larger at her high hip, therefore this will extend out beyond point N.
+ Now I'll draw the dart in.
+ I've allowed for 1/2 an inch dart, I'll center it on point A and make it 3 inches long.
+ Now I've actually taken an extra measurement for Anne between her waist and her high hip
+ to help with the shaping.
+ I've taken that measurement 1 1/2 inches below the waist.
+ So doing the usual calculation, adding 1 inch ease and dividing by 4, I get an amount
+ of 10 inches and 11/16.
+ I'll measure across from point R towards the side seam and mark point S. However note
+ that this crosses the dart and that dart amount should not be included as it will be
+ closed when the dart is sewn.
+ Therefore, I need to actually measure to the dart, stop measuring, start measuring from
+ the other side of it and then mark point S.
+ Now if I try and draw a side seam using the current side seam points from P at the waist
+ to see at the hip, I do not get a good result at all.
+ I can't make that into a good side seam curve.
+ Now it would work if I could ignore point M but we don't really want to do that and
+ there's some other things we can do to get better shape.
+ What I'm actually going to do is try and draw a side seam curve concentrating on the curve
+ from the high hip down to the low hip and thigh and then trying to get that curve to
+ go up to the waist.
+ Now I'm not going to worry about trying to hit point S that extra measurement because
+ that point will change when I put a second dart in.
+ I'll have to measure around that second dart at that depth like I did the first dart.
+ So I'm actually drawing in a curve first and then working out the dart from that curve.
+ You could do it the other way.
+ There might be some twinging and throwing trying to get the right dart width but that's part
+ of the process.
+ So if I'm working with that curve as my side seam then point P to P2 will be the value
+ of my second dart otherwise that would be extra ease at the waist which we don't want.
+ Note that this side seam curve is still a bit of a guess at the moment.
+ I'll mark in that second dart and check I have enough room on the low waistline that
+ is from point R to S. It might not be right, I might have to go back and try another dart
+ width etc but this is what I'm trying first.
+ This is just an aside, it's not following on from the previous slide.
+ This is just an example of another side seam I could try, that blue arrow that's the side
+ seam.
+ If I did use this one I would have a bigger dart at the waist because point P to point O
+ is wider than point P to P2 was.
+ There is no problem with the waist being the width of the block.
+ It would just mean that there is no waist shaping at the side seam and no waist shaping
+ at the center front.
+ All of the shaping would be done by the two darts.
+ Given Ann's figure, there's no problem with all of the shaping being done by the darts
+ and no shaping being done at the center front or at the side seam.
+ So back to the previous side seam curve that I drew.
+ From P to P2 is 9/16 of an inch.
+ Now if this was actually much larger, if I was using the value that I showed you on the
+ previous slide, I would probably add the two dart values together and then divide by two
+ and change the other dart, but 9/16 of an inch is almost half an inch.
+ So I will just make this dart 9/16 of an inch wide.
+ So I've drawn a dart 9/16 of an inch wide at about 1 1/2 inches from the first dart.
+ That is of course towards the side seam.
+ I've then re-measured from point, art point S and not included those dart values, re-plotted
+ point S.
+ Now there is a little bit of extra ease there between point S and the side seam, but I'm
+ just going to go with this.
+ If this was your block, you could try and finesse it further.
+ Alternatively, you could just shape the darts differently rather than make that dart leg
+ straight, they could go out a bit wider at the bottom so that you could take that extra
+ ease in.
+ So this is where I'm up to now with the block.
+ I have the side seam and I have the two darts.
+ What's left is the crotch curve in getting the extra crotch length that's needed, later
+ on of course finishing off the leg shaping.
+ Now I'm going to draw in the crotch curve from point J on the low hip down to point D1,
+ which is the crotch depth plus some ease.
+ I'll draw an arrow one inch long from point X and that one inch line is shown by the pink
+ arrow.
+ I'll draw 45 degrees to the horizontal and vertical guidelines that the X is constructed
+ on.
+ I'll then use a French curve to draw the curve.
+ Note that if you watch my last video, this one inch guide that helps me draw the curve
+ works because Anne's thigh is almost the same proportion to her low hip as the standard
+ figure.
+ For other figures, depending on their hip thigh proportion, the length of that arrow
+ will be a bit more or less.
+ That's covered in video four, it's around nine and a half minutes or so.
+ For Anne, that one inch length arrow, which is the same as the standard figure, works
+ to get a good curve and that's because, as I said, Anne's low hip to thigh proportion
+ is very similar to the standard figure.
+ So her extension is the same proportion to her hip.
+ Now that I've drawn the curve, I can measure the front crotch length.
+ When I measure it, I will not measure right up to point L at the waistline.
+ I will stop about 3/16 or 1/4 of an inch before point L and I'll call that point L2.
+ I will measure from point L2 to point D1.
+ Note that the waistline is completely straight.
+ When we join those two pieces together, when we sew them at the center front line, that
+ waistline is still straight.
+ In the last slide, you may have thought, well, obviously.
+ But in this slide, notice that the waist is completely straight, but when the two fronts
+ are sewn together, there is a curve.
+ And that's because this block had some shaping done at the center front.
+ So the center front line is on an angle.
+ So with Anne's center front being completely vertical, with no waist shaping angle, if
+ we want a gentle curve on the waist, we need to cut a little bit off the top so we get
+ this curve instead of a completely straight waist.
+ Just a note, and I may well have missed pointing this out before, when I measure from point
+ L2 to point D1, I'm not actually measuring the front crotch length.
+ I'm measuring the front crotch length plus some ease.
+ So the pink line is a little bit longer than the body measurement.
+ So it's best to add about 3/8 of an inch to the body measurement to get the crotch length
+ you need, otherwise it will be a little tight or very fitting.
+ In my previous videos, in order to get extra length, in those videos, it was the pat back.
+ I used the cut and spread method.
+ That meant cutting the paper that you're drafting on and putting paper underneath, spreading
+ the required amount and sticking it down with sticky tape.
+ Now I'll be doing a similar thing to get the same result, but in a different way, so not
+ actually cutting the paper.
+ This time I'm going to put a piece of cardboard or paper underneath the paper I'm drafting
+ on.
+ Now cardboard is better because it's easier to trace around, but paper's fine too.
+ Obviously, in real life, you wouldn't be able to see the paper underneath, but I'm showing
+ it to you with a yellowish square that I have paper underneath the foundation.
+ Using either a tracing wheel to trace, either just by itself, one of those tracing wheels
+ that leaves little puncture marks or with tracing paper that leaves colored dots.
+ You can use the tracing wheel or an all to mark key points.
+ When you later pull that piece of paper out, you join up those dots that you've made with
+ a ruler and a pencil or a French curve and a pencil.
+ So I'm showing you in green what I want imprinted onto the cardboard below.
+ I want the outline in green and the lines in green.
+ So definitely I need to mark the low hip, the high hip, the low waist.
+ Need to mark the darts, the dart points, not the legs on the waistline.
+ So the green shape and the green lines are what is being marked through from the paper
+ to the cardboard or paper underneath.
+ What I don't want to mark, what I want to exclude is the front crotch curve.
+ So when I pull the cardboard out, I use a pencil and draw those lines in.
+ If you use a tracing wheel and colored tracing paper, then you don't need to draw the lines
+ in.
+ They're already there.
+ And then you cut this shape out and be very accurate in the cutting.
+ So here it is cut out.
+ I'll make sure it's correct by placing it on top of my draft and checking it.
+ So now I will hinge it at point C and pivot it until I have the extra inch length I need.
+ The pink arrow is the new front crotch length.
+ Now I have worked out, I need one inch extra length.
+ But I won't only just open it up one inch where you see that blue wedge.
+ I will also then double check and measure that length from D1 up to the waist to make sure
+ I have the correct length.
+ Now just in case anyone looks at this and thinks, well, now we've tilted it.
+ Did we need to actually stop short of the waist?
+ That 3/16 we cut off top of the waist.
+ Did we need to do that?
+ Since it's now on an angle, does that mean we didn't have to stop short of the waist
+ to get that waist curve?
+ Well yes we did.
+ I'm just showing you here the final block.
+ And notice we still only have a gentle curve, very gentle.
+ If we had a continued straight up to the waist and not cut that bit off, then we would again
+ have a very straight line.
+ So now that I have the length I need for the crotch, I will trace around the rest of the
+ cutout cardboard.
+ And I need to mark all those lines, including the wedge that's been added.
+ I need to add the darts, the dart points.
+ I will also, when I lift it up, erase the other lines so I don't get confused.
+ Now as far as the lines go, you don't need a tracing wheel to get the lower hip, the
+ crotch and the high hip.
+ You just mark the edges and use a ruler to join up the notches when you lift it up.
+ So this is what I have when I've drawn in the lines with the ruler.
+ And as I said, erase the lines underneath so they don't confuse me too much.
+ Then all we need to do is the leg shaping and the front is finished.
+ I'll keep that cardboard, definitely not thrown away, I'll use it again to draft the back.
+ So for the final block, I'll also need to extend the grain line up from the crotch level
+ because when it got cut, it would have skewed off.
+ So extend that straight up to the waistline.
+ Make sure you don't rub out the crotch point, that's circled in yellow and the two intersecting
+ lines that it's based on, this information should be kept on the block.
+ That's not obvious from my image, but there should be notches on the edges to mark the
+ dark legs and all of those key points, the low hip, the high hip, etc.
+ Well, yes, it's a case of do as I say, not as I do.
+ The leg shaping needs to be done from the crotch point to the knee with a French curve.
+ You may not get at the curve in one pass.
+ You may need to draw part of the curve, move the French curve and draw in the second part
+ and blend those two lines together.
+ And you can always take an extra measurement between the upper thigh and the knee to help
+ to do the shaping.
+ A good place is the lower thigh, seven and a half or eight inches above the knee.
+ So this is Anne's front finished and I'll be starting the back from this point that's
+ showing with all the guidelines drawn.
+ The plotting of these points is covered in video two from about 18 minutes onwards.
+ That applies to all figures, so I'm not going to cover that again.
+ Now these next few steps were also covered in video two from about 20 minutes to 23 minutes,
+ but I'll cover them again quickly for Anne.
+ So I'll draw straight lines from the knee to the ankle, from knee point E to ankle point
+ G and from knee point F to ankle point H.
+ I'll draw a short guideline, about two inches long, down from point C and at right angles
+ to the C to D line.
+ I'll take Anne's block and turn it upside down and match the inseam knee point of the
+ front block with the knee line of the pants back at point E.
+ I'll rotate the front block until the crotch point touches that guideline I drew in the
+ last step.
+ I'll name the point where the back crotch touches the guideline point C2 and I'll trace the
+ front inner leg curve from the crotch point down to the knee or from the knee up to the
+ crotch point.
+ Same difference.
+ I'll draw the guidelines for the back crotch curve.
+ I'll extend the L to I line down for a few inches below the crotch level then at right
+ angles draw another line to touch point C2.
+ I'll mark the intersection of those two lines with an X.
+ I'll set aside the pants front for the minute and measuring quarter of an inch from point
+ D at mark point D2.
+ So I'll bring the front block back again and flip it over to match the out seam point
+ of the front with a knee point F of the back.
+ I'll rotate the front block until it touches D2.
+ I'll trace that front block from point F to point D2.
+ So I'm going to use that traced off section of cardboard I used earlier to help to extend
+ the front crotch and the first thing I'll do is erase the darts.
+ Now I'll be turning this upside down but because I have it translucent I don't want the front
+ darts to be confusing things.
+ If you're doing this when you turn it upside down you won't see the darts you'll see the
+ notches on the edge and you do want to ignore those notches.
+ So the front waist darts are not relevant for the back.
+ So firstly I flipped it over vertically.
+ I still have the waistline on top and the crotch line at the bottom and I'm going to
+ measure across from the side seam that is from right to left for the back waist value
+ which is ten and one-eighth of an inch plus three-quarters inch dart the total is ten and thirteen-sixteenths.
+ So I'll measure from the side seam and mark where the waist ends.
+ I'll then draw a line from that point on the waist to the low hip line with a ruler and
+ pencil then cut that bit off.
+ I have to say here that I find the imperial system extremely painful.
+ Is America ever going to get on the same page as every other country and move to the decimal
+ system?
+ That's my winge.
+ So I'm going to draw a line starting at point X and at 45 degrees to the two guidelines where
+ X is the intersection and that line indicated by the arrow is two inches long that's going
+ to help draw a curve from point C to the tip of that arrow.
+ Now this might seem odd but firstly I'm going to draw a curve just from point C2 to the
+ tip of the arrow with the help of the French curve.
+ We haven't got the other points yet for the rest of the back curve but I am starting with
+ just that little bit of the back curve from point C to the arrow tip.
+ Ants back crotch length is 17 inches and 15/16ths.
+ So I've measured that little curve that I've drawn from C2 to the arrow tip and it's four
+ and 3/8ths of an inch.
+ Now I'm going to measure from the waist to the crotch depth on the cardboard that I'm
+ using.
+ Now this should be the crotch depth from the front but it is minus that little bit that
+ was taken off at the center front waist.
+ So rather than going and finding the crotch depth measurement on the table and remembering
+ how much we came down just measure the cardboard.
+ So I have to work out how much to tilt the foundation shape of the cardboard up to get
+ the length that I need.
+ Ants back crotch length is 17 and 15/16ths minus what we have which is the curve measurement
+ and the cardboard measurement.
+ So I'm short about four and one-eighths of an inch that's how much needs to be inserted.
+ So I'll tilt that cardboard up to get that length and then I'll draw a curve with a
+ French curve of course making sure that from C to up to the waist is 17 and 15/16ths of
+ an inch.
+ So after checking that back crotch length is correct I will lastly trace around that
+ cardboard shape to get my final foundation shape for the back.
+ Now I'll make sure that I transfer all the lines and make markings to the paper underneath.
+ So the low hip line, the high hip etc and actually I haven't drawn the dart in, we'll
+ have to do it that at some point.
+ So a bit of finessing of the side seam will be needed and also this will need to be true
+ to the front.
+ The shape of the side seam doesn't have to be identical to the front just the same length.
+ So I've got to put in the back dart.
+ Midway on the waist I'll put in the dart at right angles to the waistline.
+ I've allowed for 3/4 inch wide dart and it's about 4 1/2 inches long.
+ So here it is finished, back and front.
+ As I said it needs to be true, they need to be true to each other, crotch curve in seam,
+ out seam, waistline etc.
+ I've covered that in previous videos, I won't go through that again.
+ I've got the grain line, I've marked the block, I haven't shown notches but yes they would
+ all need to be notched.
+ All of those key points need to be notched, the darts need to have little holes put through
+ them so you can put your pencil through to mark the paper underneath.
+ So that's it, that's Anne's block finished.
+ My next videos are going to be pattern making bust cups and then why upper bust?
+ This is Maria from Dress Pappen Making, ciao.

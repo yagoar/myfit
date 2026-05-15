@@ -25,10 +25,11 @@ data/vposer/
 data/captures/
 data/results/
 
-# DPM video artefacts: keep transcripts (citable source), drop the heavy bits.
-# Source videos are symlinks into the user's own filesystem; audio is regenerable.
-references/dpm_videos/**/audio.wav
-references/dpm_videos/**/source.*
+# Video-ingest artefacts: keep transcripts and frames (citable source),
+# drop the heavy bits. Source videos are either symlinks into the user's own
+# filesystem or yt-dlp downloads; audio is regenerable from either.
+references/**/audio.wav
+references/**/source.*
 
 # Whisper model cache (per-machine, not part of repo)
 .whisper-models/

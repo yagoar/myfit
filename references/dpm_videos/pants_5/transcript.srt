@@ -1,0 +1,1452 @@
+1
+00:00:00,000 --> 00:00:07,880
+ Hi, this is Maria from dresspattingmaking.com.
+
+2
+00:00:07,880 --> 00:00:13,640
+ This is part 5 in the pants block series, and I'll be drafting the pants block for Anne.
+
+3
+00:00:13,640 --> 00:00:16,880
+ I'm firstly comparing Anne's figure to the standard figure.
+
+4
+00:00:16,880 --> 00:00:20,360
+ Anne has less difference between her waist and hips than any of the figures I've done
+
+5
+00:00:20,360 --> 00:00:21,360
+ so far.
+
+6
+00:00:21,360 --> 00:00:24,780
+ The standard figure has 10 inches difference between the waist and hips.
+
+7
+00:00:24,780 --> 00:00:29,040
+ Mine has more Jane had less, but Anne has even less.
+
+8
+00:00:29,040 --> 00:00:32,520
+ The difference between Anne's waist and hip is 6.25 inches.
+
+9
+00:00:32,520 --> 00:00:37,680
+ Now Anne's thigh is actually just slightly bigger than the standard figure.
+
+10
+00:00:37,680 --> 00:00:41,960
+ By which I mean, most pant block making instructions don't require the thigh measurement.
+
+11
+00:00:41,960 --> 00:00:43,720
+ You don't need it to draft the block.
+
+12
+00:00:43,720 --> 00:00:47,360
+ It's an assumed measurement, which works out as a percentage of the hip.
+
+13
+00:00:47,360 --> 00:00:51,560
+ So the standard figure, as far as most western sewing patterns are concerned, have a thigh
+
+14
+00:00:51,560 --> 00:00:54,920
+ measurement that is 60% of the hip measurement.
+
+15
+00:00:54,920 --> 00:00:58,880
+ Given that Anne's thigh to hip proportion is very similar to the standard figure, that
+
+16
+00:00:58,880 --> 00:01:03,840
+ is 60.2% of her hip measurement, you might then assume she'd end up with a good result
+
+17
+00:01:03,840 --> 00:01:09,360
+ for her thigh using those instructions where the thigh is worked out as 60% of the hip.
+
+18
+00:01:09,360 --> 00:01:13,640
+ However, the other part of those block making instructions that creates a difficulty for
+
+19
+00:01:13,640 --> 00:01:19,480
+ Anne is that they say to use the widest measurement below your waist as your hip measurement.
+
+20
+00:01:19,480 --> 00:01:24,400
+ So for Anne, her thigh would be worked out based on her high hip and it would end up
+
+21
+00:01:24,400 --> 00:01:25,400
+ being too big for her.
+
+22
+00:01:25,400 --> 00:01:29,720
+ Now, the whole purpose of these comparisons that I'm doing to the standard figure and
+
+23
+00:01:29,720 --> 00:01:34,040
+ standard pants instructions was to show that these particular figure types that I'm drafting
+
+24
+00:01:34,040 --> 00:01:40,760
+ pants for if they use those standard instructions would not end up with a good initial result.
+
+25
+00:01:40,760 --> 00:01:45,000
+ The other problems for Anne would have been her back and front crotch lengths.
+
+26
+00:01:45,000 --> 00:01:50,040
+ On the left is what Anne's block would look like if drafted using that system compared
+
+27
+00:01:50,040 --> 00:01:55,100
+ to what her blocks look like on the right, taking into account her actual thigh measurement,
+
+28
+00:01:55,100 --> 00:01:59,560
+ not using her upper hip as the width of her block and checking she has the crotch length
+
+29
+00:01:59,560 --> 00:02:02,080
+ she needs front and back.
+
+30
+00:02:02,080 --> 00:02:06,360
+ And this is the same two blocks but this time superimposed so you can more clearly see the
+
+31
+00:02:06,360 --> 00:02:08,320
+ difference between them.
+
+32
+00:02:08,320 --> 00:02:12,600
+ So I'm going to start drafting Anne's block from this point here, the instructions up
+
+33
+00:02:12,600 --> 00:02:17,720
+ to this point were the same for everybody and that's all covered in video too.
+
+34
+00:02:17,720 --> 00:02:23,120
+ I'm going to zoom in to 200% of the previous image while working on the foundation.
+
+35
+00:02:23,120 --> 00:02:27,040
+ The first thing I'll do is lower the crotch, currently the crotch depth is the body crotch
+
+36
+00:02:27,040 --> 00:02:29,680
+ depth and we'll need some ease.
+
+37
+00:02:29,680 --> 00:02:35,120
+ From point D I will measure down 5/8 of an inch at right angles to the C to D line and
+
+38
+00:02:35,120 --> 00:02:37,400
+ mark point D1.
+
+39
+00:02:37,400 --> 00:02:42,520
+ I will continue the L to I line down below the body crotch depth line for about an inch
+
+40
+00:02:42,520 --> 00:02:45,600
+ or so, that's shown by the pink arrow.
+
+41
+00:02:45,600 --> 00:02:51,160
+ Then draw a line at right angles to touch point D1, that's shown by the blue arrow.
+
+42
+00:02:51,160 --> 00:02:53,680
+ This will help later for drawing the crotch curve.
+
+43
+00:02:53,680 --> 00:02:59,320
+ The horizontal line touching D1 is the depth of the crotch plus ease.
+
+44
+00:02:59,320 --> 00:03:03,360
+ Wear those two lines intersect I've marked point X.
+
+45
+00:03:03,360 --> 00:03:06,160
+ So now I'll do the calculation for the waist shaping.
+
+46
+00:03:06,160 --> 00:03:12,400
+ I'll take Anne's waist measurement which is 39 and 3/4 inches and add 1 inch for ease.
+
+47
+00:03:12,400 --> 00:03:18,400
+ I'll then take that total 40 and 3/4 inches and divide it by 4.
+
+48
+00:03:18,400 --> 00:03:23,600
+ So the waist measurement for the front and back will be 10 1/8 of an inch.
+
+49
+00:03:23,600 --> 00:03:27,800
+ With the other figures I started the waist shaping by coming in 1/2 an inch from point
+
+50
+00:03:27,800 --> 00:03:31,400
+ L on the waist and marking point P.
+
+51
+00:03:31,400 --> 00:03:37,040
+ Then drawing a straight line from P to low hip point J, this line would be the center
+
+52
+00:03:37,040 --> 00:03:38,040
+ front line.
+
+53
+00:03:38,040 --> 00:03:41,720
+ However, I'm not going to do that with am.
+
+54
+00:03:41,720 --> 00:03:45,280
+ I want to go back and look at the waist shaping for the other three figures.
+
+55
+00:03:45,280 --> 00:03:47,280
+ Here's the waist shaping for the standard figure.
+
+56
+00:03:47,280 --> 00:03:50,920
+ The pink shaded areas are basically dark values.
+
+57
+00:03:50,920 --> 00:03:55,560
+ They are not actually darts as in a folded piece of fabric, but those areas are acting
+
+58
+00:03:55,560 --> 00:03:56,800
+ as darts.
+
+59
+00:03:56,800 --> 00:04:01,120
+ That shaping, those dart equivalents go right down to the low hip.
+
+60
+00:04:01,120 --> 00:04:05,120
+ My waist shaping also goes down to the low hip and because I have a proportionally smaller
+
+61
+00:04:05,120 --> 00:04:11,080
+ high hip, I have more shaping or more taken out at the high hip level than the standard
+
+62
+00:04:11,080 --> 00:04:13,000
+ figure did.
+
+63
+00:04:13,000 --> 00:04:17,680
+ Notice that with Jane, on her side seam the shaping only goes down to her high hip.
+
+64
+00:04:17,680 --> 00:04:19,800
+ It doesn't go all the way down to the low hip.
+
+65
+00:04:19,800 --> 00:04:23,600
+ At the center front she does have some shaping down to her low hip.
+
+66
+00:04:23,600 --> 00:04:27,480
+ Here with them all together you can see that most of the shaping is done at the side seam
+
+67
+00:04:27,480 --> 00:04:28,880
+ and at the center front.
+
+68
+00:04:28,880 --> 00:04:34,720
+ They all have only one dart in the center and a very similar size, despite the differences
+
+69
+00:04:34,720 --> 00:04:36,880
+ in the waist and the hip.
+
+70
+00:04:36,880 --> 00:04:41,720
+ Now Jane's larger circumference is at her high hip, therefore we want the shaping to
+
+71
+00:04:41,720 --> 00:04:45,760
+ stop there at the high hip and not go down to the low hip.
+
+72
+00:04:45,760 --> 00:04:49,920
+ If we followed the directions for the standard waist shaping and drew a line from P down
+
+73
+00:04:49,920 --> 00:04:54,480
+ to the low hip, we would be cutting some off at the high hip, which is why we don't want
+
+74
+00:04:54,480 --> 00:04:57,840
+ to follow those directions for shaping the waist for Anne.
+
+75
+00:04:57,840 --> 00:05:01,480
+ Therefore, I'm not going to do any shaping at the center front.
+
+76
+00:05:01,480 --> 00:05:06,520
+ I will draw a straight line from point L at the waist down to point J at the low hip.
+
+77
+00:05:06,520 --> 00:05:08,920
+ This will be the center front line.
+
+78
+00:05:08,920 --> 00:05:13,600
+ Now the issue is we do want a straight line from the waist to the low hip so we can put
+
+79
+00:05:13,600 --> 00:05:14,600
+ a zip in it.
+
+80
+00:05:14,600 --> 00:05:18,320
+ We don't really want a curved line there, we certainly can't go from the waist to the
+
+81
+00:05:18,320 --> 00:05:22,520
+ high hip in a straight line and then down from there, that wouldn't work.
+
+82
+00:05:22,520 --> 00:05:25,600
+ So I'm not going to do any shaping for Anne at the center front.
+
+83
+00:05:25,600 --> 00:05:30,080
+ Doing the waist shaping at the side seam and with darts will limit that shaping down to
+
+84
+00:05:30,080 --> 00:05:31,640
+ her high hip.
+
+85
+00:05:31,640 --> 00:05:36,880
+ So using the result of the calculation I did earlier, I'll take 10 1/8 of an inch and
+
+86
+00:05:36,880 --> 00:05:39,040
+ add 1/2 an inch for a dart.
+
+87
+00:05:39,040 --> 00:05:46,000
+ From point L at the waist, I'll measure towards 0.0 at the side seam for 10 5/8 of an inch
+
+88
+00:05:46,000 --> 00:05:48,640
+ and mark point P.
+
+89
+00:05:48,640 --> 00:05:54,200
+ So moving on to the high hip, I'll take the high hip measurement of 46 7/16 of an inch
+
+90
+00:05:54,200 --> 00:06:00,160
+ and add 1 inch ease, divide that total by 4 and I get 11 7/8 of an inch.
+
+91
+00:06:00,160 --> 00:06:06,240
+ I'll measure on the high hip line from point K towards the side seam point N and mark point
+
+92
+00:06:06,240 --> 00:06:07,240
+ Q.
+
+93
+00:06:07,240 --> 00:06:11,880
+ As you'll notice, I actually have to go beyond point N to mark point Q, that's not a problem,
+
+94
+00:06:11,880 --> 00:06:17,360
+ I was expecting that because I drafted the width of the foundation to her low hip measurement.
+
+95
+00:06:17,360 --> 00:06:23,080
+ She is larger at her high hip, therefore this will extend out beyond point N.
+
+96
+00:06:23,080 --> 00:06:24,080
+ Now I'll draw the dart in.
+
+97
+00:06:24,080 --> 00:06:29,760
+ I've allowed for 1/2 an inch dart, I'll center it on point A and make it 3 inches long.
+
+98
+00:06:29,760 --> 00:06:34,040
+ Now I've actually taken an extra measurement for Anne between her waist and her high hip
+
+99
+00:06:34,040 --> 00:06:35,780
+ to help with the shaping.
+
+100
+00:06:35,780 --> 00:06:39,440
+ I've taken that measurement 1 1/2 inches below the waist.
+
+101
+00:06:39,440 --> 00:06:44,800
+ So doing the usual calculation, adding 1 inch ease and dividing by 4, I get an amount
+
+102
+00:06:44,800 --> 00:06:48,080
+ of 10 inches and 11/16.
+
+103
+00:06:48,080 --> 00:06:54,120
+ I'll measure across from point R towards the side seam and mark point S. However note
+
+104
+00:06:54,120 --> 00:06:58,680
+ that this crosses the dart and that dart amount should not be included as it will be
+
+105
+00:06:58,680 --> 00:07:01,480
+ closed when the dart is sewn.
+
+106
+00:07:01,480 --> 00:07:06,960
+ Therefore, I need to actually measure to the dart, stop measuring, start measuring from
+
+107
+00:07:06,960 --> 00:07:10,760
+ the other side of it and then mark point S.
+
+108
+00:07:10,760 --> 00:07:16,240
+ Now if I try and draw a side seam using the current side seam points from P at the waist
+
+109
+00:07:16,240 --> 00:07:19,520
+ to see at the hip, I do not get a good result at all.
+
+110
+00:07:19,520 --> 00:07:22,880
+ I can't make that into a good side seam curve.
+
+111
+00:07:22,880 --> 00:07:27,480
+ Now it would work if I could ignore point M but we don't really want to do that and
+
+112
+00:07:27,480 --> 00:07:30,760
+ there's some other things we can do to get better shape.
+
+113
+00:07:30,760 --> 00:07:35,920
+ What I'm actually going to do is try and draw a side seam curve concentrating on the curve
+
+114
+00:07:35,920 --> 00:07:41,160
+ from the high hip down to the low hip and thigh and then trying to get that curve to
+
+115
+00:07:41,160 --> 00:07:43,160
+ go up to the waist.
+
+116
+00:07:43,160 --> 00:07:48,320
+ Now I'm not going to worry about trying to hit point S that extra measurement because
+
+117
+00:07:48,320 --> 00:07:51,280
+ that point will change when I put a second dart in.
+
+118
+00:07:51,280 --> 00:07:56,600
+ I'll have to measure around that second dart at that depth like I did the first dart.
+
+119
+00:07:56,600 --> 00:08:01,320
+ So I'm actually drawing in a curve first and then working out the dart from that curve.
+
+120
+00:08:01,320 --> 00:08:02,720
+ You could do it the other way.
+
+121
+00:08:02,720 --> 00:08:09,280
+ There might be some twinging and throwing trying to get the right dart width but that's part
+
+122
+00:08:09,280 --> 00:08:11,000
+ of the process.
+
+123
+00:08:11,000 --> 00:08:16,640
+ So if I'm working with that curve as my side seam then point P to P2 will be the value
+
+124
+00:08:16,640 --> 00:08:21,720
+ of my second dart otherwise that would be extra ease at the waist which we don't want.
+
+125
+00:08:21,720 --> 00:08:24,800
+ Note that this side seam curve is still a bit of a guess at the moment.
+
+126
+00:08:24,800 --> 00:08:29,120
+ I'll mark in that second dart and check I have enough room on the low waistline that
+
+127
+00:08:29,120 --> 00:08:33,840
+ is from point R to S. It might not be right, I might have to go back and try another dart
+
+128
+00:08:33,840 --> 00:08:37,480
+ width etc but this is what I'm trying first.
+
+129
+00:08:37,480 --> 00:08:40,840
+ This is just an aside, it's not following on from the previous slide.
+
+130
+00:08:40,840 --> 00:08:46,000
+ This is just an example of another side seam I could try, that blue arrow that's the side
+
+131
+00:08:46,000 --> 00:08:47,000
+ seam.
+
+132
+00:08:47,000 --> 00:08:51,720
+ If I did use this one I would have a bigger dart at the waist because point P to point O
+
+133
+00:08:51,720 --> 00:08:54,600
+ is wider than point P to P2 was.
+
+134
+00:08:54,600 --> 00:08:57,280
+ There is no problem with the waist being the width of the block.
+
+135
+00:08:57,280 --> 00:09:01,000
+ It would just mean that there is no waist shaping at the side seam and no waist shaping
+
+136
+00:09:01,000 --> 00:09:02,300
+ at the center front.
+
+137
+00:09:02,300 --> 00:09:05,080
+ All of the shaping would be done by the two darts.
+
+138
+00:09:05,080 --> 00:09:09,000
+ Given Ann's figure, there's no problem with all of the shaping being done by the darts
+
+139
+00:09:09,000 --> 00:09:14,320
+ and no shaping being done at the center front or at the side seam.
+
+140
+00:09:14,320 --> 00:09:18,560
+ So back to the previous side seam curve that I drew.
+
+141
+00:09:18,560 --> 00:09:22,320
+ From P to P2 is 9/16 of an inch.
+
+142
+00:09:22,320 --> 00:09:27,120
+ Now if this was actually much larger, if I was using the value that I showed you on the
+
+143
+00:09:27,120 --> 00:09:32,920
+ previous slide, I would probably add the two dart values together and then divide by two
+
+144
+00:09:32,920 --> 00:09:39,120
+ and change the other dart, but 9/16 of an inch is almost half an inch.
+
+145
+00:09:39,120 --> 00:09:44,360
+ So I will just make this dart 9/16 of an inch wide.
+
+146
+00:09:44,360 --> 00:09:51,480
+ So I've drawn a dart 9/16 of an inch wide at about 1 1/2 inches from the first dart.
+
+147
+00:09:51,480 --> 00:09:53,640
+ That is of course towards the side seam.
+
+148
+00:09:53,640 --> 00:10:00,000
+ I've then re-measured from point, art point S and not included those dart values, re-plotted
+
+149
+00:10:00,000 --> 00:10:01,520
+ point S.
+
+150
+00:10:01,520 --> 00:10:05,800
+ Now there is a little bit of extra ease there between point S and the side seam, but I'm
+
+151
+00:10:05,800 --> 00:10:07,520
+ just going to go with this.
+
+152
+00:10:07,520 --> 00:10:10,400
+ If this was your block, you could try and finesse it further.
+
+153
+00:10:10,400 --> 00:10:15,480
+ Alternatively, you could just shape the darts differently rather than make that dart leg
+
+154
+00:10:15,480 --> 00:10:19,840
+ straight, they could go out a bit wider at the bottom so that you could take that extra
+
+155
+00:10:19,840 --> 00:10:21,760
+ ease in.
+
+156
+00:10:21,760 --> 00:10:23,560
+ So this is where I'm up to now with the block.
+
+157
+00:10:23,560 --> 00:10:26,320
+ I have the side seam and I have the two darts.
+
+158
+00:10:26,320 --> 00:10:30,880
+ What's left is the crotch curve in getting the extra crotch length that's needed, later
+
+159
+00:10:30,880 --> 00:10:34,240
+ on of course finishing off the leg shaping.
+
+160
+00:10:34,240 --> 00:10:39,840
+ Now I'm going to draw in the crotch curve from point J on the low hip down to point D1,
+
+161
+00:10:39,840 --> 00:10:42,280
+ which is the crotch depth plus some ease.
+
+162
+00:10:42,280 --> 00:10:48,080
+ I'll draw an arrow one inch long from point X and that one inch line is shown by the pink
+
+163
+00:10:48,080 --> 00:10:49,080
+ arrow.
+
+164
+00:10:49,080 --> 00:10:54,080
+ I'll draw 45 degrees to the horizontal and vertical guidelines that the X is constructed
+
+165
+00:10:54,080 --> 00:10:55,080
+ on.
+
+166
+00:10:55,080 --> 00:10:57,640
+ I'll then use a French curve to draw the curve.
+
+167
+00:10:57,640 --> 00:11:01,840
+ Note that if you watch my last video, this one inch guide that helps me draw the curve
+
+168
+00:11:01,840 --> 00:11:08,200
+ works because Anne's thigh is almost the same proportion to her low hip as the standard
+
+169
+00:11:08,200 --> 00:11:09,920
+ figure.
+
+170
+00:11:09,920 --> 00:11:13,560
+ For other figures, depending on their hip thigh proportion, the length of that arrow
+
+171
+00:11:13,560 --> 00:11:15,520
+ will be a bit more or less.
+
+172
+00:11:15,520 --> 00:11:21,800
+ That's covered in video four, it's around nine and a half minutes or so.
+
+173
+00:11:21,800 --> 00:11:26,040
+ For Anne, that one inch length arrow, which is the same as the standard figure, works
+
+174
+00:11:26,040 --> 00:11:30,680
+ to get a good curve and that's because, as I said, Anne's low hip to thigh proportion
+
+175
+00:11:30,680 --> 00:11:33,200
+ is very similar to the standard figure.
+
+176
+00:11:33,200 --> 00:11:37,600
+ So her extension is the same proportion to her hip.
+
+177
+00:11:37,600 --> 00:11:40,680
+ Now that I've drawn the curve, I can measure the front crotch length.
+
+178
+00:11:40,680 --> 00:11:43,960
+ When I measure it, I will not measure right up to point L at the waistline.
+
+179
+00:11:43,960 --> 00:11:50,680
+ I will stop about 3/16 or 1/4 of an inch before point L and I'll call that point L2.
+
+180
+00:11:50,680 --> 00:11:55,040
+ I will measure from point L2 to point D1.
+
+181
+00:11:55,040 --> 00:11:58,000
+ Note that the waistline is completely straight.
+
+182
+00:11:58,000 --> 00:12:03,220
+ When we join those two pieces together, when we sew them at the center front line, that
+
+183
+00:12:03,220 --> 00:12:05,920
+ waistline is still straight.
+
+184
+00:12:05,920 --> 00:12:09,600
+ In the last slide, you may have thought, well, obviously.
+
+185
+00:12:09,600 --> 00:12:14,680
+ But in this slide, notice that the waist is completely straight, but when the two fronts
+
+186
+00:12:14,680 --> 00:12:17,480
+ are sewn together, there is a curve.
+
+187
+00:12:17,480 --> 00:12:21,400
+ And that's because this block had some shaping done at the center front.
+
+188
+00:12:21,400 --> 00:12:24,920
+ So the center front line is on an angle.
+
+189
+00:12:24,920 --> 00:12:30,360
+ So with Anne's center front being completely vertical, with no waist shaping angle, if
+
+190
+00:12:30,360 --> 00:12:35,400
+ we want a gentle curve on the waist, we need to cut a little bit off the top so we get
+
+191
+00:12:35,400 --> 00:12:41,000
+ this curve instead of a completely straight waist.
+
+192
+00:12:41,000 --> 00:12:45,600
+ Just a note, and I may well have missed pointing this out before, when I measure from point
+
+193
+00:12:45,600 --> 00:12:50,360
+ L2 to point D1, I'm not actually measuring the front crotch length.
+
+194
+00:12:50,360 --> 00:12:54,080
+ I'm measuring the front crotch length plus some ease.
+
+195
+00:12:54,080 --> 00:12:58,720
+ So the pink line is a little bit longer than the body measurement.
+
+196
+00:12:58,720 --> 00:13:02,960
+ So it's best to add about 3/8 of an inch to the body measurement to get the crotch length
+
+197
+00:13:02,960 --> 00:13:08,080
+ you need, otherwise it will be a little tight or very fitting.
+
+198
+00:13:08,080 --> 00:13:13,640
+ In my previous videos, in order to get extra length, in those videos, it was the pat back.
+
+199
+00:13:13,640 --> 00:13:16,040
+ I used the cut and spread method.
+
+200
+00:13:16,040 --> 00:13:21,000
+ That meant cutting the paper that you're drafting on and putting paper underneath, spreading
+
+201
+00:13:21,000 --> 00:13:24,040
+ the required amount and sticking it down with sticky tape.
+
+202
+00:13:24,040 --> 00:13:28,760
+ Now I'll be doing a similar thing to get the same result, but in a different way, so not
+
+203
+00:13:28,760 --> 00:13:31,720
+ actually cutting the paper.
+
+204
+00:13:31,720 --> 00:13:36,680
+ This time I'm going to put a piece of cardboard or paper underneath the paper I'm drafting
+
+205
+00:13:36,680 --> 00:13:37,680
+ on.
+
+206
+00:13:37,680 --> 00:13:41,800
+ Now cardboard is better because it's easier to trace around, but paper's fine too.
+
+207
+00:13:41,800 --> 00:13:45,560
+ Obviously, in real life, you wouldn't be able to see the paper underneath, but I'm showing
+
+208
+00:13:45,560 --> 00:13:51,880
+ it to you with a yellowish square that I have paper underneath the foundation.
+
+209
+00:13:51,880 --> 00:13:56,280
+ Using either a tracing wheel to trace, either just by itself, one of those tracing wheels
+
+210
+00:13:56,280 --> 00:14:02,480
+ that leaves little puncture marks or with tracing paper that leaves colored dots.
+
+211
+00:14:02,480 --> 00:14:05,840
+ You can use the tracing wheel or an all to mark key points.
+
+212
+00:14:05,840 --> 00:14:11,260
+ When you later pull that piece of paper out, you join up those dots that you've made with
+
+213
+00:14:11,260 --> 00:14:16,680
+ a ruler and a pencil or a French curve and a pencil.
+
+214
+00:14:16,680 --> 00:14:21,120
+ So I'm showing you in green what I want imprinted onto the cardboard below.
+
+215
+00:14:21,120 --> 00:14:25,360
+ I want the outline in green and the lines in green.
+
+216
+00:14:25,360 --> 00:14:29,660
+ So definitely I need to mark the low hip, the high hip, the low waist.
+
+217
+00:14:29,660 --> 00:14:33,960
+ Need to mark the darts, the dart points, not the legs on the waistline.
+
+218
+00:14:33,960 --> 00:14:38,280
+ So the green shape and the green lines are what is being marked through from the paper
+
+219
+00:14:38,280 --> 00:14:41,320
+ to the cardboard or paper underneath.
+
+220
+00:14:41,320 --> 00:14:46,600
+ What I don't want to mark, what I want to exclude is the front crotch curve.
+
+221
+00:14:46,600 --> 00:14:50,520
+ So when I pull the cardboard out, I use a pencil and draw those lines in.
+
+222
+00:14:50,520 --> 00:14:54,240
+ If you use a tracing wheel and colored tracing paper, then you don't need to draw the lines
+
+223
+00:14:54,240 --> 00:14:55,240
+ in.
+
+224
+00:14:55,240 --> 00:14:56,240
+ They're already there.
+
+225
+00:14:56,240 --> 00:15:00,240
+ And then you cut this shape out and be very accurate in the cutting.
+
+226
+00:15:00,240 --> 00:15:01,240
+ So here it is cut out.
+
+227
+00:15:01,240 --> 00:15:05,800
+ I'll make sure it's correct by placing it on top of my draft and checking it.
+
+228
+00:15:05,800 --> 00:15:12,880
+ So now I will hinge it at point C and pivot it until I have the extra inch length I need.
+
+229
+00:15:12,880 --> 00:15:16,680
+ The pink arrow is the new front crotch length.
+
+230
+00:15:16,680 --> 00:15:20,240
+ Now I have worked out, I need one inch extra length.
+
+231
+00:15:20,240 --> 00:15:26,240
+ But I won't only just open it up one inch where you see that blue wedge.
+
+232
+00:15:26,240 --> 00:15:32,040
+ I will also then double check and measure that length from D1 up to the waist to make sure
+
+233
+00:15:32,040 --> 00:15:34,360
+ I have the correct length.
+
+234
+00:15:34,360 --> 00:15:38,520
+ Now just in case anyone looks at this and thinks, well, now we've tilted it.
+
+235
+00:15:38,520 --> 00:15:41,760
+ Did we need to actually stop short of the waist?
+
+236
+00:15:41,760 --> 00:15:44,360
+ That 3/16 we cut off top of the waist.
+
+237
+00:15:44,360 --> 00:15:45,840
+ Did we need to do that?
+
+238
+00:15:45,840 --> 00:15:49,480
+ Since it's now on an angle, does that mean we didn't have to stop short of the waist
+
+239
+00:15:49,480 --> 00:15:51,560
+ to get that waist curve?
+
+240
+00:15:51,560 --> 00:15:52,560
+ Well yes we did.
+
+241
+00:15:52,560 --> 00:15:54,640
+ I'm just showing you here the final block.
+
+242
+00:15:54,640 --> 00:15:57,480
+ And notice we still only have a gentle curve, very gentle.
+
+243
+00:15:57,480 --> 00:16:01,760
+ If we had a continued straight up to the waist and not cut that bit off, then we would again
+
+244
+00:16:01,760 --> 00:16:04,120
+ have a very straight line.
+
+245
+00:16:04,120 --> 00:16:07,640
+ So now that I have the length I need for the crotch, I will trace around the rest of the
+
+246
+00:16:07,640 --> 00:16:10,440
+ cutout cardboard.
+
+247
+00:16:10,440 --> 00:16:13,840
+ And I need to mark all those lines, including the wedge that's been added.
+
+248
+00:16:13,840 --> 00:16:16,280
+ I need to add the darts, the dart points.
+
+249
+00:16:16,280 --> 00:16:20,760
+ I will also, when I lift it up, erase the other lines so I don't get confused.
+
+250
+00:16:20,760 --> 00:16:25,120
+ Now as far as the lines go, you don't need a tracing wheel to get the lower hip, the
+
+251
+00:16:25,120 --> 00:16:26,600
+ crotch and the high hip.
+
+252
+00:16:26,600 --> 00:16:32,760
+ You just mark the edges and use a ruler to join up the notches when you lift it up.
+
+253
+00:16:32,760 --> 00:16:36,080
+ So this is what I have when I've drawn in the lines with the ruler.
+
+254
+00:16:36,080 --> 00:16:40,440
+ And as I said, erase the lines underneath so they don't confuse me too much.
+
+255
+00:16:40,440 --> 00:16:44,800
+ Then all we need to do is the leg shaping and the front is finished.
+
+256
+00:16:44,800 --> 00:16:52,320
+ I'll keep that cardboard, definitely not thrown away, I'll use it again to draft the back.
+
+257
+00:16:52,320 --> 00:16:57,640
+ So for the final block, I'll also need to extend the grain line up from the crotch level
+
+258
+00:16:57,640 --> 00:17:01,240
+ because when it got cut, it would have skewed off.
+
+259
+00:17:01,240 --> 00:17:05,560
+ So extend that straight up to the waistline.
+
+260
+00:17:05,560 --> 00:17:09,480
+ Make sure you don't rub out the crotch point, that's circled in yellow and the two intersecting
+
+261
+00:17:09,480 --> 00:17:14,320
+ lines that it's based on, this information should be kept on the block.
+
+262
+00:17:14,320 --> 00:17:19,360
+ That's not obvious from my image, but there should be notches on the edges to mark the
+
+263
+00:17:19,360 --> 00:17:24,280
+ dark legs and all of those key points, the low hip, the high hip, etc.
+
+264
+00:17:24,280 --> 00:17:29,600
+ Well, yes, it's a case of do as I say, not as I do.
+
+265
+00:17:29,600 --> 00:17:33,960
+ The leg shaping needs to be done from the crotch point to the knee with a French curve.
+
+266
+00:17:33,960 --> 00:17:36,640
+ You may not get at the curve in one pass.
+
+267
+00:17:36,640 --> 00:17:41,200
+ You may need to draw part of the curve, move the French curve and draw in the second part
+
+268
+00:17:41,200 --> 00:17:43,600
+ and blend those two lines together.
+
+269
+00:17:43,600 --> 00:17:46,560
+ And you can always take an extra measurement between the upper thigh and the knee to help
+
+270
+00:17:46,560 --> 00:17:47,760
+ to do the shaping.
+
+271
+00:17:47,760 --> 00:17:53,560
+ A good place is the lower thigh, seven and a half or eight inches above the knee.
+
+272
+00:17:53,560 --> 00:17:58,480
+ So this is Anne's front finished and I'll be starting the back from this point that's
+
+273
+00:17:58,480 --> 00:18:01,600
+ showing with all the guidelines drawn.
+
+274
+00:18:01,600 --> 00:18:07,240
+ The plotting of these points is covered in video two from about 18 minutes onwards.
+
+275
+00:18:07,240 --> 00:18:10,800
+ That applies to all figures, so I'm not going to cover that again.
+
+276
+00:18:10,800 --> 00:18:16,240
+ Now these next few steps were also covered in video two from about 20 minutes to 23 minutes,
+
+277
+00:18:16,240 --> 00:18:18,960
+ but I'll cover them again quickly for Anne.
+
+278
+00:18:18,960 --> 00:18:23,520
+ So I'll draw straight lines from the knee to the ankle, from knee point E to ankle point
+
+279
+00:18:23,520 --> 00:18:27,400
+ G and from knee point F to ankle point H.
+
+280
+00:18:27,400 --> 00:18:32,200
+ I'll draw a short guideline, about two inches long, down from point C and at right angles
+
+281
+00:18:32,200 --> 00:18:33,760
+ to the C to D line.
+
+282
+00:18:33,760 --> 00:18:38,280
+ I'll take Anne's block and turn it upside down and match the inseam knee point of the
+
+283
+00:18:38,280 --> 00:18:42,240
+ front block with the knee line of the pants back at point E.
+
+284
+00:18:42,240 --> 00:18:47,240
+ I'll rotate the front block until the crotch point touches that guideline I drew in the
+
+285
+00:18:47,240 --> 00:18:48,240
+ last step.
+
+286
+00:18:48,240 --> 00:18:54,120
+ I'll name the point where the back crotch touches the guideline point C2 and I'll trace the
+
+287
+00:18:54,120 --> 00:18:58,960
+ front inner leg curve from the crotch point down to the knee or from the knee up to the
+
+288
+00:18:58,960 --> 00:19:00,120
+ crotch point.
+
+289
+00:19:00,120 --> 00:19:01,120
+ Same difference.
+
+290
+00:19:01,120 --> 00:19:04,000
+ I'll draw the guidelines for the back crotch curve.
+
+291
+00:19:04,000 --> 00:19:09,320
+ I'll extend the L to I line down for a few inches below the crotch level then at right
+
+292
+00:19:09,320 --> 00:19:12,840
+ angles draw another line to touch point C2.
+
+293
+00:19:12,840 --> 00:19:16,080
+ I'll mark the intersection of those two lines with an X.
+
+294
+00:19:16,080 --> 00:19:20,600
+ I'll set aside the pants front for the minute and measuring quarter of an inch from point
+
+295
+00:19:20,600 --> 00:19:23,480
+ D at mark point D2.
+
+296
+00:19:23,480 --> 00:19:27,280
+ So I'll bring the front block back again and flip it over to match the out seam point
+
+297
+00:19:27,280 --> 00:19:30,200
+ of the front with a knee point F of the back.
+
+298
+00:19:30,200 --> 00:19:34,640
+ I'll rotate the front block until it touches D2.
+
+299
+00:19:34,640 --> 00:19:39,320
+ I'll trace that front block from point F to point D2.
+
+300
+00:19:39,320 --> 00:19:44,080
+ So I'm going to use that traced off section of cardboard I used earlier to help to extend
+
+301
+00:19:44,080 --> 00:19:47,400
+ the front crotch and the first thing I'll do is erase the darts.
+
+302
+00:19:47,400 --> 00:19:51,880
+ Now I'll be turning this upside down but because I have it translucent I don't want the front
+
+303
+00:19:51,880 --> 00:19:53,440
+ darts to be confusing things.
+
+304
+00:19:53,440 --> 00:19:58,520
+ If you're doing this when you turn it upside down you won't see the darts you'll see the
+
+305
+00:19:58,520 --> 00:20:02,040
+ notches on the edge and you do want to ignore those notches.
+
+306
+00:20:02,040 --> 00:20:06,760
+ So the front waist darts are not relevant for the back.
+
+307
+00:20:06,760 --> 00:20:09,760
+ So firstly I flipped it over vertically.
+
+308
+00:20:09,760 --> 00:20:14,120
+ I still have the waistline on top and the crotch line at the bottom and I'm going to
+
+309
+00:20:14,120 --> 00:20:20,080
+ measure across from the side seam that is from right to left for the back waist value
+
+310
+00:20:20,080 --> 00:20:29,240
+ which is ten and one-eighth of an inch plus three-quarters inch dart the total is ten and thirteen-sixteenths.
+
+311
+00:20:29,240 --> 00:20:32,160
+ So I'll measure from the side seam and mark where the waist ends.
+
+312
+00:20:32,160 --> 00:20:36,960
+ I'll then draw a line from that point on the waist to the low hip line with a ruler and
+
+313
+00:20:36,960 --> 00:20:39,640
+ pencil then cut that bit off.
+
+314
+00:20:39,640 --> 00:20:43,860
+ I have to say here that I find the imperial system extremely painful.
+
+315
+00:20:43,860 --> 00:20:47,520
+ Is America ever going to get on the same page as every other country and move to the decimal
+
+316
+00:20:47,520 --> 00:20:48,520
+ system?
+
+317
+00:20:48,520 --> 00:20:50,320
+ That's my winge.
+
+318
+00:20:50,320 --> 00:20:55,360
+ So I'm going to draw a line starting at point X and at 45 degrees to the two guidelines where
+
+319
+00:20:55,360 --> 00:21:01,520
+ X is the intersection and that line indicated by the arrow is two inches long that's going
+
+320
+00:21:01,520 --> 00:21:05,600
+ to help draw a curve from point C to the tip of that arrow.
+
+321
+00:21:05,600 --> 00:21:10,520
+ Now this might seem odd but firstly I'm going to draw a curve just from point C2 to the
+
+322
+00:21:10,520 --> 00:21:13,160
+ tip of the arrow with the help of the French curve.
+
+323
+00:21:13,160 --> 00:21:17,480
+ We haven't got the other points yet for the rest of the back curve but I am starting with
+
+324
+00:21:17,480 --> 00:21:22,160
+ just that little bit of the back curve from point C to the arrow tip.
+
+325
+00:21:22,160 --> 00:21:26,480
+ Ants back crotch length is 17 inches and 15/16ths.
+
+326
+00:21:26,480 --> 00:21:30,840
+ So I've measured that little curve that I've drawn from C2 to the arrow tip and it's four
+
+327
+00:21:30,840 --> 00:21:32,920
+ and 3/8ths of an inch.
+
+328
+00:21:32,920 --> 00:21:36,680
+ Now I'm going to measure from the waist to the crotch depth on the cardboard that I'm
+
+329
+00:21:36,680 --> 00:21:37,680
+ using.
+
+330
+00:21:37,680 --> 00:21:41,960
+ Now this should be the crotch depth from the front but it is minus that little bit that
+
+331
+00:21:41,960 --> 00:21:44,840
+ was taken off at the center front waist.
+
+332
+00:21:44,840 --> 00:21:48,400
+ So rather than going and finding the crotch depth measurement on the table and remembering
+
+333
+00:21:48,400 --> 00:21:52,840
+ how much we came down just measure the cardboard.
+
+334
+00:21:52,840 --> 00:21:56,960
+ So I have to work out how much to tilt the foundation shape of the cardboard up to get
+
+335
+00:21:56,960 --> 00:21:58,680
+ the length that I need.
+
+336
+00:21:58,680 --> 00:22:04,200
+ Ants back crotch length is 17 and 15/16ths minus what we have which is the curve measurement
+
+337
+00:22:04,200 --> 00:22:06,400
+ and the cardboard measurement.
+
+338
+00:22:06,400 --> 00:22:11,400
+ So I'm short about four and one-eighths of an inch that's how much needs to be inserted.
+
+339
+00:22:11,400 --> 00:22:17,120
+ So I'll tilt that cardboard up to get that length and then I'll draw a curve with a
+
+340
+00:22:17,120 --> 00:22:24,480
+ French curve of course making sure that from C to up to the waist is 17 and 15/16ths of
+
+341
+00:22:24,480 --> 00:22:26,000
+ an inch.
+
+342
+00:22:26,000 --> 00:22:30,440
+ So after checking that back crotch length is correct I will lastly trace around that
+
+343
+00:22:30,440 --> 00:22:34,520
+ cardboard shape to get my final foundation shape for the back.
+
+344
+00:22:34,520 --> 00:22:39,960
+ Now I'll make sure that I transfer all the lines and make markings to the paper underneath.
+
+345
+00:22:39,960 --> 00:22:46,160
+ So the low hip line, the high hip etc and actually I haven't drawn the dart in, we'll
+
+346
+00:22:46,160 --> 00:22:48,040
+ have to do it that at some point.
+
+347
+00:22:48,040 --> 00:22:53,720
+ So a bit of finessing of the side seam will be needed and also this will need to be true
+
+348
+00:22:53,720 --> 00:22:55,200
+ to the front.
+
+349
+00:22:55,200 --> 00:22:59,960
+ The shape of the side seam doesn't have to be identical to the front just the same length.
+
+350
+00:22:59,960 --> 00:23:01,760
+ So I've got to put in the back dart.
+
+351
+00:23:01,760 --> 00:23:06,080
+ Midway on the waist I'll put in the dart at right angles to the waistline.
+
+352
+00:23:06,080 --> 00:23:13,200
+ I've allowed for 3/4 inch wide dart and it's about 4 1/2 inches long.
+
+353
+00:23:13,200 --> 00:23:15,560
+ So here it is finished, back and front.
+
+354
+00:23:15,560 --> 00:23:19,880
+ As I said it needs to be true, they need to be true to each other, crotch curve in seam,
+
+355
+00:23:19,880 --> 00:23:21,840
+ out seam, waistline etc.
+
+356
+00:23:21,840 --> 00:23:25,560
+ I've covered that in previous videos, I won't go through that again.
+
+357
+00:23:25,560 --> 00:23:30,800
+ I've got the grain line, I've marked the block, I haven't shown notches but yes they would
+
+358
+00:23:30,800 --> 00:23:31,800
+ all need to be notched.
+
+359
+00:23:31,800 --> 00:23:36,060
+ All of those key points need to be notched, the darts need to have little holes put through
+
+360
+00:23:36,060 --> 00:23:40,960
+ them so you can put your pencil through to mark the paper underneath.
+
+361
+00:23:40,960 --> 00:23:43,480
+ So that's it, that's Anne's block finished.
+
+362
+00:23:43,480 --> 00:23:49,640
+ My next videos are going to be pattern making bust cups and then why upper bust?
+
+363
+00:23:49,640 --> 00:23:55,480
+ This is Maria from Dress Pappen Making, ciao.
+

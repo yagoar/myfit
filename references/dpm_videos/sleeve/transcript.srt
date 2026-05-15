@@ -1,0 +1,1204 @@
+1
+00:00:00,000 --> 00:00:14,080
+ [Music]
+
+2
+00:00:14,080 --> 00:00:16,560
+ Hello, this is Maria from dresspapandmaking.com.
+
+3
+00:00:16,560 --> 00:00:19,920
+ In this video I'm going to walk you through how to draft the sleeve block.
+
+4
+00:00:19,920 --> 00:00:25,120
+ You will need to have your bodice block front and back completed before you can draft the sleeve
+
+5
+00:00:25,120 --> 00:00:28,800
+ as we need the armhole measurements from those blocks.
+
+6
+00:00:28,800 --> 00:00:32,600
+ On the left is what the sleeve block will look like when I have finished drafting it.
+
+7
+00:00:32,600 --> 00:00:35,680
+ I will be using standard measurements to draft this block.
+
+8
+00:00:35,680 --> 00:00:40,080
+ On the right in orange is the bodice front and back, which would complete this block set.
+
+9
+00:00:40,080 --> 00:00:44,000
+ I have already created the videos for bodice front and back instructions.
+
+10
+00:00:44,000 --> 00:00:49,280
+ Note that this is the basic one-piece sleeve and it has a dart in the elbow.
+
+11
+00:00:49,280 --> 00:00:53,040
+ The green sleeve block on the right is my block, which as you may be able to see
+
+12
+00:00:53,040 --> 00:00:55,760
+ is a bit different in shape to the standard block on the left.
+
+13
+00:00:55,760 --> 00:00:59,040
+ If you are using your own individual measurements to draft your own custom block
+
+14
+00:00:59,040 --> 00:01:02,640
+ it may look a little different or significantly different to the one that I'm drafting.
+
+15
+00:01:02,640 --> 00:01:07,120
+ I actually want to cover a few things before we start drafting the sleeve block.
+
+16
+00:01:07,120 --> 00:01:10,880
+ Firstly, I want to talk about the seven measurements you need to draft this sleeve block.
+
+17
+00:01:10,880 --> 00:01:15,760
+ The first measurement is the length of the sleeve from the shoulder tip to the wrist with the arm bent.
+
+18
+00:01:15,760 --> 00:01:18,880
+ The second measurement is from the shoulder tip to the elbow,
+
+19
+00:01:18,880 --> 00:01:21,600
+ the third around the elbow with the arm bent.
+
+20
+00:01:21,600 --> 00:01:24,480
+ These three measurements are fairly straightforward.
+
+21
+00:01:24,480 --> 00:01:27,520
+ If your sleeve ends up short it's obvious and you add some length.
+
+22
+00:01:27,520 --> 00:01:31,440
+ If it ends up too tight in the elbow when you bend your arm you add to the elbow width.
+
+23
+00:01:31,440 --> 00:01:36,560
+ The other four measurements needed to draft the sleeve are the front armhole measurement
+
+24
+00:01:36,560 --> 00:01:41,280
+ from your front bodice block, the back armhole measurement from your back bodice block,
+
+25
+00:01:41,280 --> 00:01:45,280
+ the bicep measurement, which is around your bicep at the armhole level
+
+26
+00:01:45,280 --> 00:01:48,240
+ and the cap height from the shoulder tip to the bicep level.
+
+27
+00:01:48,240 --> 00:01:52,560
+ Now these four measurements are the building blocks of the sleeve cap.
+
+28
+00:01:52,560 --> 00:01:55,280
+ Taking these four measurements aren't necessarily difficult,
+
+29
+00:01:55,280 --> 00:01:59,520
+ except maybe the cap height can be because it's not necessarily that obvious,
+
+30
+00:01:59,520 --> 00:02:02,560
+ but it is the relationship between these four measurements
+
+31
+00:02:02,560 --> 00:02:08,080
+ that cause the most problem in drafting a well fitting one-piece fitted sleeve block.
+
+32
+00:02:08,080 --> 00:02:11,920
+ So let's first look at the definition of a fitted sleeve.
+
+33
+00:02:11,920 --> 00:02:14,800
+ There are two aspects to the fitted sleeve.
+
+34
+00:02:14,800 --> 00:02:19,920
+ The first one is the look, it follows the contours of the arm rather than flaring out.
+
+35
+00:02:19,920 --> 00:02:24,160
+ Minimal ease is added to the bicep to accommodate the arm in a close fit.
+
+36
+00:02:24,160 --> 00:02:27,680
+ The second aspect is the smooth head of the sleeve,
+
+37
+00:02:27,680 --> 00:02:30,320
+ so it also has minimal ease in the cap.
+
+38
+00:02:30,320 --> 00:02:32,480
+ It means there are no tucks and gathers.
+
+39
+00:02:32,480 --> 00:02:36,400
+ Only enough ease is put in to sew the sleeve into the curve of the armhole.
+
+40
+00:02:36,400 --> 00:02:40,400
+ So in the graphics shown, only A is a fitted sleeve,
+
+41
+00:02:40,400 --> 00:02:43,520
+ B has gathers in the sleeve cap, C flares out,
+
+42
+00:02:43,520 --> 00:02:47,440
+ D and E have gathers either or both in the bicep and the cap.
+
+43
+00:02:48,080 --> 00:02:50,320
+ Now, as I've said, the key for a fitted sleeve
+
+44
+00:02:50,320 --> 00:02:53,760
+ is having minimal ease in both the cap and the bicep.
+
+45
+00:02:53,760 --> 00:02:56,720
+ Now let's go back and have another look at the four measurements
+
+46
+00:02:56,720 --> 00:02:59,040
+ that we use to draft the sleeve cap.
+
+47
+00:02:59,040 --> 00:03:00,960
+ If you look at the graphic at the top right,
+
+48
+00:03:00,960 --> 00:03:04,000
+ you can see that the sleeve curve is built around a triangle.
+
+49
+00:03:04,000 --> 00:03:06,720
+ The three sides of the triangle are the back armhole,
+
+50
+00:03:06,720 --> 00:03:08,560
+ the front armhole and the bicep.
+
+51
+00:03:08,560 --> 00:03:10,720
+ The height of the triangle is the cap height.
+
+52
+00:03:10,720 --> 00:03:14,160
+ Now I have just enlarged the sleeve cap,
+
+53
+00:03:14,160 --> 00:03:15,840
+ so we can focus on the triangle,
+
+54
+00:03:15,840 --> 00:03:18,160
+ but I have not enlarged the inch grid,
+
+55
+00:03:18,160 --> 00:03:20,160
+ so the sleeve is not in proportion to the grid.
+
+56
+00:03:20,160 --> 00:03:24,080
+ The sleeve cap is shown by the black curved outline.
+
+57
+00:03:24,080 --> 00:03:26,720
+ The curve is built, as I said in the last slide,
+
+58
+00:03:26,720 --> 00:03:29,040
+ upon the triangle underneath.
+
+59
+00:03:29,040 --> 00:03:30,880
+ Now it should be obvious when you think about it,
+
+60
+00:03:30,880 --> 00:03:34,720
+ that you cannot draw this triangle using four measurements.
+
+61
+00:03:34,720 --> 00:03:37,280
+ There are actually three different combinations of these measurements
+
+62
+00:03:37,280 --> 00:03:39,600
+ that you could use to draw this triangle.
+
+63
+00:03:39,600 --> 00:03:43,280
+ Firstly, the back armhole, the front armhole and the bicep.
+
+64
+00:03:43,280 --> 00:03:47,200
+ Secondly, the back armhole, the front armhole and the cap height.
+
+65
+00:03:47,200 --> 00:03:49,680
+ Or thirdly, the bicep and the cap height.
+
+66
+00:03:49,680 --> 00:03:52,720
+ Now if you have a standard figure, or if you're lucky,
+
+67
+00:03:52,720 --> 00:03:55,040
+ the relationship between the cap height and the bicep
+
+68
+00:03:55,040 --> 00:03:59,280
+ just happened to magically work together to give you the right result.
+
+69
+00:03:59,280 --> 00:04:01,040
+ But if you're unlucky, it doesn't.
+
+70
+00:04:01,040 --> 00:04:04,080
+ Now on the left hand side, in example A,
+
+71
+00:04:04,080 --> 00:04:06,400
+ you have a triangle created with the three measurements
+
+72
+00:04:06,400 --> 00:04:09,200
+ back armhole, front armhole and bicep.
+
+73
+00:04:09,200 --> 00:04:12,320
+ In this case, in figure A, the cap height is what it is.
+
+74
+00:04:13,120 --> 00:04:15,680
+ Now if this was actually your back armhole measurement,
+
+75
+00:04:15,680 --> 00:04:18,080
+ your front armhole measurement and your bicep,
+
+76
+00:04:18,080 --> 00:04:19,760
+ all including some E's,
+
+77
+00:04:19,760 --> 00:04:24,000
+ but the cap height did not match the cap height on your body,
+
+78
+00:04:24,000 --> 00:04:25,520
+ well what would that mean?
+
+79
+00:04:25,520 --> 00:04:29,120
+ Well firstly, if that cap height was longer than your cap height,
+
+80
+00:04:29,120 --> 00:04:31,680
+ and so you had to reduce that cap height,
+
+81
+00:04:31,680 --> 00:04:34,240
+ you would have to extend the bicep,
+
+82
+00:04:34,240 --> 00:04:37,600
+ make that bicep larger and have more ease in the bicep.
+
+83
+00:04:37,600 --> 00:04:41,280
+ Otherwise, you wouldn't have enough room in that curve
+
+84
+00:04:41,280 --> 00:04:42,720
+ to sew it into the armhole.
+
+85
+00:04:42,720 --> 00:04:46,080
+ On the other hand, if this cap height was too low
+
+86
+00:04:46,080 --> 00:04:48,160
+ and you needed a higher cap height,
+
+87
+00:04:48,160 --> 00:04:52,080
+ you would have to make the back and front armhole lines longer,
+
+88
+00:04:52,080 --> 00:04:54,160
+ and in that case you'll have more ease
+
+89
+00:04:54,160 --> 00:04:57,760
+ than you need for a fitted sleeve in the sleeve cap.
+
+90
+00:04:57,760 --> 00:04:59,600
+ So you would either have to have gathers
+
+91
+00:04:59,600 --> 00:05:02,000
+ or you could put a dart in the sleeve cap.
+
+92
+00:05:02,000 --> 00:05:04,480
+ On the right, in example B,
+
+93
+00:05:04,480 --> 00:05:06,880
+ the triangle is created using the cap height
+
+94
+00:05:06,880 --> 00:05:09,200
+ and the front and back armhole measurements.
+
+95
+00:05:09,200 --> 00:05:11,520
+ Again, if this was your back armhole measurement,
+
+96
+00:05:11,520 --> 00:05:14,080
+ your front armhole measurement in your cap height,
+
+97
+00:05:14,080 --> 00:05:15,600
+ then the bicep is what it is.
+
+98
+00:05:15,600 --> 00:05:19,600
+ In this case, if your bicep was smaller than this measurement,
+
+99
+00:05:19,600 --> 00:05:22,000
+ you would just have to have extra ease in your bicep.
+
+100
+00:05:22,000 --> 00:05:24,560
+ If your bicep was larger than this,
+
+101
+00:05:24,560 --> 00:05:25,920
+ then you'd have to make the adjustment
+
+102
+00:05:25,920 --> 00:05:27,680
+ to the back and front armholes,
+
+103
+00:05:27,680 --> 00:05:29,920
+ and you'd end up with more ease in the sleeve cap
+
+104
+00:05:29,920 --> 00:05:32,240
+ than is ideal and you'd have to put in gathers
+
+105
+00:05:32,240 --> 00:05:33,920
+ or a dart in the cap.
+
+106
+00:05:33,920 --> 00:05:36,800
+ Now just a final note about the ideal amount of ease
+
+107
+00:05:36,800 --> 00:05:39,200
+ that you want in the sleeve cap to be able to ease it
+
+108
+00:05:39,200 --> 00:05:40,240
+ into the armhole.
+
+109
+00:05:40,240 --> 00:05:43,040
+ Most pattern making books I've referred to
+
+110
+00:05:43,040 --> 00:05:45,360
+ say that you need between one and a quarter
+
+111
+00:05:45,360 --> 00:05:48,400
+ and one and three quarter inches ease in the sleeve cap.
+
+112
+00:05:48,400 --> 00:05:50,640
+ But many fitting books I've read,
+
+113
+00:05:50,640 --> 00:05:52,560
+ written by dressmakers or solers,
+
+114
+00:05:52,560 --> 00:05:55,040
+ say that three quarters of an inch is sufficient
+
+115
+00:05:55,040 --> 00:05:56,960
+ and one inch is the maximum.
+
+116
+00:05:56,960 --> 00:05:59,360
+ So it seems pattern makers say more
+
+117
+00:05:59,360 --> 00:06:01,680
+ and dressmakers seem to think a little less.
+
+118
+00:06:01,680 --> 00:06:04,320
+ Now just a couple more notes before we start drafting the sleeve.
+
+119
+00:06:04,800 --> 00:06:07,600
+ The standard amount of ease you add to the bicep is two inches.
+
+120
+00:06:07,600 --> 00:06:10,800
+ If you have the upright posture of a standard figure,
+
+121
+00:06:10,800 --> 00:06:13,440
+ adding two inches ease to the bicep will help you,
+
+122
+00:06:13,440 --> 00:06:15,360
+ one end up with a desirable cap height,
+
+123
+00:06:15,360 --> 00:06:17,680
+ and two will also result in a comfortable sleeve.
+
+124
+00:06:17,680 --> 00:06:21,360
+ Now the issue of the ease in the bicep
+
+125
+00:06:21,360 --> 00:06:24,400
+ is that it's not only for bicep ease,
+
+126
+00:06:24,400 --> 00:06:26,480
+ it's ease for movement as well.
+
+127
+00:06:26,480 --> 00:06:28,560
+ When you stand with your arms straight down,
+
+128
+00:06:28,560 --> 00:06:30,560
+ the two inches ease in the bicep might be plenty.
+
+129
+00:06:30,560 --> 00:06:33,920
+ But then when you move your arms forward and up,
+
+130
+00:06:33,920 --> 00:06:37,760
+ the sleeve might become constrictive, uncomfortable or even painful.
+
+131
+00:06:37,760 --> 00:06:40,560
+ That's because garments behave differently with movement
+
+132
+00:06:40,560 --> 00:06:42,480
+ than they do when you're standing still.
+
+133
+00:06:42,480 --> 00:06:44,640
+ So depending on your body shape,
+
+134
+00:06:44,640 --> 00:06:46,560
+ your posture and other issues,
+
+135
+00:06:46,560 --> 00:06:49,280
+ it may mean that you need more than the standard
+
+136
+00:06:49,280 --> 00:06:51,280
+ two inches ease in the bicep.
+
+137
+00:06:51,280 --> 00:06:54,240
+ If sleeves and ready to wear clothing are generally
+
+138
+00:06:54,240 --> 00:06:56,720
+ constrictive when you move your arms forward and up,
+
+139
+00:06:56,720 --> 00:06:59,360
+ then you will probably have to add more than two inches
+
+140
+00:06:59,360 --> 00:07:00,880
+ standard ease in the bicep.
+
+141
+00:07:00,880 --> 00:07:03,280
+ You may need three inches, you may need more.
+
+142
+00:07:03,840 --> 00:07:06,480
+ I recommend that if you find ready to wear
+
+143
+00:07:06,480 --> 00:07:09,680
+ sleeves quite constrictive that you start with three inches.
+
+144
+00:07:09,680 --> 00:07:12,000
+ The issue with adding the three inches instead of two
+
+145
+00:07:12,000 --> 00:07:14,560
+ is that chances are you're going to end up with more ease
+
+146
+00:07:14,560 --> 00:07:16,640
+ than is desirable in the sleeve cap.
+
+147
+00:07:16,640 --> 00:07:18,480
+ And so you're going to end up with gathers
+
+148
+00:07:18,480 --> 00:07:20,800
+ or have to put a dart in the cap.
+
+149
+00:07:20,800 --> 00:07:24,640
+ So let's start drafting the sleeve.
+
+150
+00:07:24,640 --> 00:07:27,600
+ Draw a horizontal line from A to B
+
+151
+00:07:27,600 --> 00:07:30,720
+ that is eight inches longer than your bicep measurement.
+
+152
+00:07:30,720 --> 00:07:33,360
+ Note that I'm only showing you the top of the sleeve at the moment.
+
+153
+00:07:33,360 --> 00:07:35,280
+ You'll need a lot more paper below.
+
+154
+00:07:35,280 --> 00:07:38,560
+ Your paper needs to be a few inches longer than the length of your sleeve.
+
+155
+00:07:38,560 --> 00:07:41,360
+ In the middle of that A to B line,
+
+156
+00:07:41,360 --> 00:07:45,040
+ mark point C and draw a vertical guideline at right angles
+
+157
+00:07:45,040 --> 00:07:47,760
+ to the A to B line about seven inches high.
+
+158
+00:07:47,760 --> 00:07:50,800
+ Add your bicep measurement plus ease.
+
+159
+00:07:50,800 --> 00:07:53,040
+ The amount of ease will vary per person.
+
+160
+00:07:53,040 --> 00:07:55,040
+ Two inches ease for standard figures,
+
+161
+00:07:55,040 --> 00:07:58,080
+ but if sleeves and ready to wear clothing are usually constrictive,
+
+162
+00:07:58,080 --> 00:07:59,440
+ start with three inches ease.
+
+163
+00:07:59,440 --> 00:08:02,960
+ On the A to B line with point C at the centre,
+
+164
+00:08:03,360 --> 00:08:08,000
+ measure out your bicep measurement plus ease and mark points E and F.
+
+165
+00:08:08,000 --> 00:08:13,680
+ Add together your back armhole measurement plus a quarter inch ease
+
+166
+00:08:13,680 --> 00:08:18,240
+ to your front armhole measurement plus a quarter inch ease,
+
+167
+00:08:18,240 --> 00:08:20,320
+ then divide the total by two.
+
+168
+00:08:20,320 --> 00:08:23,440
+ Using that measurement, measure from point E
+
+169
+00:08:23,440 --> 00:08:27,040
+ up to touch the C to D line, mark point G.
+
+170
+00:08:27,040 --> 00:08:30,080
+ Don't draw a line, you're just measuring up and marking point G.
+
+171
+00:08:31,120 --> 00:08:36,880
+ Now starting at point G, take your back armhole measurement plus a quarter inch ease
+
+172
+00:08:36,880 --> 00:08:39,840
+ and measure towards the A to B line.
+
+173
+00:08:39,840 --> 00:08:43,280
+ If your back armhole measurement is smaller than the front,
+
+174
+00:08:43,280 --> 00:08:47,440
+ you're going to end up with a point to the right of point E.
+
+175
+00:08:47,440 --> 00:08:50,880
+ If your back armhole measurement is larger than your front,
+
+176
+00:08:50,880 --> 00:08:53,920
+ the point will end up to the left of point E.
+
+177
+00:08:53,920 --> 00:08:57,280
+ So mark that and label it point H.
+
+178
+00:08:59,600 --> 00:09:03,280
+ Now using your front armhole measurement plus quarter inch ease,
+
+179
+00:09:03,280 --> 00:09:05,920
+ measure from point G to touch the A to B line.
+
+180
+00:09:05,920 --> 00:09:09,440
+ If your front armhole measurement is smaller than the back,
+
+181
+00:09:09,440 --> 00:09:14,000
+ the point will end up as shown in the example to the left of point F.
+
+182
+00:09:14,000 --> 00:09:18,320
+ If your front armhole is larger, it will end up to the right of point F.
+
+183
+00:09:18,320 --> 00:09:20,560
+ Mark that new point I.
+
+184
+00:09:20,560 --> 00:09:25,840
+ Your bicep line is now from point H to point I.
+
+185
+00:09:26,880 --> 00:09:32,320
+ Using your body cap height measurement, measure up from point C and mark point J.
+
+186
+00:09:32,320 --> 00:09:35,920
+ If G and J are the same or very, very close,
+
+187
+00:09:35,920 --> 00:09:38,960
+ you won't have to do anything for this slide.
+
+188
+00:09:38,960 --> 00:09:43,600
+ If your point J is below point G as an example A,
+
+189
+00:09:43,600 --> 00:09:47,120
+ you will need to redraw the front and back armhole lines.
+
+190
+00:09:47,120 --> 00:09:54,320
+ So maintaining their same length, measure from point J towards the A to B line
+
+191
+00:09:54,320 --> 00:09:57,360
+ and mark new points H2 and I2.
+
+192
+00:09:57,360 --> 00:10:02,080
+ In this case, you have increased your bicep measurement.
+
+193
+00:10:02,080 --> 00:10:05,200
+ If J is above G as an example B on the right,
+
+194
+00:10:05,200 --> 00:10:11,360
+ redraw your front and back armholes from J to H and from J to I.
+
+195
+00:10:11,360 --> 00:10:18,080
+ In this case, an additional mount has been added on to the ease in the sleeve cap.
+
+196
+00:10:18,080 --> 00:10:22,960
+ If that's a large amount, you might not be able to actually ease it into the armhole
+
+197
+00:10:22,960 --> 00:10:25,280
+ and you may have to have gathers or a dart.
+
+198
+00:10:25,280 --> 00:10:33,840
+ Find the center of the H to I line and mark the point at the center C2.
+
+199
+00:10:33,840 --> 00:10:36,400
+ This is the center of your bicep line now.
+
+200
+00:10:36,400 --> 00:10:42,720
+ Draw a vertical line down from point C2 at right angles to the bicep line.
+
+201
+00:10:42,720 --> 00:10:47,280
+ The length of that line is the sleeve length minus the cap height.
+
+202
+00:10:47,840 --> 00:10:54,560
+ Mark the end point K and draw a wrist guideline at right angles to the C2 to K line.
+
+203
+00:10:54,560 --> 00:10:59,760
+ Using the shoulder tip to elbow measurement minus the cap height,
+
+204
+00:10:59,760 --> 00:11:04,960
+ measure down from C2 on the C2 to K line and mark point L.
+
+205
+00:11:04,960 --> 00:11:11,360
+ With point L at the center, draw a horizontal line at right angles to the C2 to K line.
+
+206
+00:11:11,360 --> 00:11:16,560
+ The length of this line is the elbow measurement, that is bent elbow plus ease.
+
+207
+00:11:16,560 --> 00:11:20,640
+ The amount of ease you will use will depend on how much ease you added to the bicep.
+
+208
+00:11:20,640 --> 00:11:26,960
+ If you added two inches ease to the bicep, add one and a quarter inch ease to the elbow.
+
+209
+00:11:26,960 --> 00:11:31,680
+ If you added three inches ease to the bicep, add one and three quarter inches to the elbow.
+
+210
+00:11:31,680 --> 00:11:36,320
+ If you added four inches ease to the bicep, add two inches ease to the elbow.
+
+211
+00:11:36,320 --> 00:11:41,200
+ This is just a note explaining why we added a proportional amount of ease to the elbow,
+
+212
+00:11:41,200 --> 00:11:44,000
+ depending on the ease added to the bicep.
+
+213
+00:11:44,000 --> 00:11:46,800
+ Otherwise, we might end up with a very tapered sleeve.
+
+214
+00:11:46,800 --> 00:11:51,360
+ If you add a lot of ease to say the bicep and not much to the elbow, it tapers
+
+215
+00:11:51,360 --> 00:11:57,920
+ and it can end up tapering down to an extreme so that you can't actually fit your hand in.
+
+216
+00:11:57,920 --> 00:12:00,080
+ It is best to add proportional ease.
+
+217
+00:12:00,080 --> 00:12:04,160
+ We will now draw the seam lines in.
+
+218
+00:12:04,160 --> 00:12:10,480
+ Draw a line from H at the bicep passing through point M at the elbow to meet the wrist line.
+
+219
+00:12:10,480 --> 00:12:16,160
+ Mark that point O. Draw another line from F through point N at the elbow
+
+220
+00:12:16,160 --> 00:12:18,720
+ to touch the wrist line and mark point P.
+
+221
+00:12:18,720 --> 00:12:23,120
+ Now we're going to start creating a dart at the elbow.
+
+222
+00:12:23,120 --> 00:12:29,920
+ Measure out from point M on the M to N elbow line for a quarter of an inch and mark point Q.
+
+223
+00:12:29,920 --> 00:12:37,120
+ Now measure down from M on the M to O line for one inch and mark point R.
+
+224
+00:12:37,120 --> 00:12:43,200
+ This is the dart width. Measure five eighths of an inch from point O on the O to P wrist line
+
+225
+00:12:43,200 --> 00:12:47,280
+ and mark point S. Now we're going to draw one of the dart legs.
+
+226
+00:12:47,280 --> 00:12:52,480
+ Measure the distance from Q to L on the elbow line and divide that by two.
+
+227
+00:12:52,480 --> 00:12:57,920
+ Using that value, measure from Q and mark the elbow point dart.
+
+228
+00:12:57,920 --> 00:13:03,760
+ Draw the second dart leg, the same length as the first one, starting at the dart point
+
+229
+00:13:03,760 --> 00:13:07,280
+ and going through point R and marking point T.
+
+230
+00:13:07,280 --> 00:13:13,040
+ Now draw a line from H to Q. Note that there may be a very slight difference
+
+231
+00:13:13,040 --> 00:13:17,520
+ between the length of this line to the length of F to N,
+
+232
+00:13:17,520 --> 00:13:20,880
+ but it will be very very minimal and it can be eased when stolen.
+
+233
+00:13:20,880 --> 00:13:30,320
+ Measure N to P and using that measurement, draw a line from T through point S and mark point U.
+
+234
+00:13:31,600 --> 00:13:35,520
+ Just to be clear here, we will be sewing. When we sew the sleeve up,
+
+235
+00:13:35,520 --> 00:13:43,280
+ we will be sewing the H to Q line to the F to N line and the T to S line to the N to P line,
+
+236
+00:13:43,280 --> 00:13:48,240
+ so they need to match in length. We need to draw the wrist line from U to P.
+
+237
+00:13:48,240 --> 00:13:53,520
+ You can draw it curved as shown or you can draw a straight line because a curved line is going to
+
+238
+00:13:53,520 --> 00:13:59,680
+ be much harder to hem. I'll leave that up to you. Now we're moving back up to the sleeve cap to
+
+239
+00:13:59,680 --> 00:14:04,880
+ drawing the curve or to prepare to drawing the curve at least. First, measure the back armhole line
+
+240
+00:14:04,880 --> 00:14:13,200
+ from G to H and divide it by four. Mark the three points, V, W and X as shown, moving from the bicep
+
+241
+00:14:13,200 --> 00:14:20,160
+ up to the head. Also divide the front armhole by four and mark the points Y, Z and A2 as shown,
+
+242
+00:14:20,160 --> 00:14:26,160
+ starting at the top and moving down to the bicep line. At point V, measure inwards at right angles
+
+243
+00:14:26,160 --> 00:14:32,160
+ to the straight line for quarter of an inch. At point W, measure out at right angles to the straight
+
+244
+00:14:32,160 --> 00:14:37,920
+ line for five sixteenths of an inch. At point X, measure out at right angles to the straight line
+
+245
+00:14:37,920 --> 00:14:43,520
+ for three-quarters of an inch. That's the back. For the front, at point Y, measure out at right
+
+246
+00:14:43,520 --> 00:14:49,200
+ angles to the straight line for seven-eighths of an inch. At point Z or Z, measure out at right
+
+247
+00:14:49,200 --> 00:14:55,280
+ angles to the straight line for a quarter of an inch. At point A2, measure inwards at right angles
+
+248
+00:14:55,280 --> 00:15:01,440
+ to the straight line for a half an inch. Using a French curve, draw the sleeve curve to touch
+
+249
+00:15:01,440 --> 00:15:06,800
+ the points as shown. You'll need to move the French curve and blend the lines together.
+
+250
+00:15:06,800 --> 00:15:11,840
+ Now we want to measure the sleeve cap curve and compare it to the armhole measurements.
+
+251
+00:15:11,840 --> 00:15:16,560
+ So measure the curve from A to G and check that against the back armhole measurement.
+
+252
+00:15:16,560 --> 00:15:21,040
+ Then measure from G to F and check that against the front armhole measurement.
+
+253
+00:15:21,040 --> 00:15:26,560
+ The measurement of the sleeve cap ideally will be between the whole sleeve cap from A to F,
+
+254
+00:15:26,560 --> 00:15:30,720
+ will ideally be between three-quarters of an inch and one-and-three-quarters of an inch,
+
+255
+00:15:30,720 --> 00:15:34,880
+ more than the total measurements of the back and front armhole added together.
+
+256
+00:15:34,880 --> 00:15:40,800
+ Now if the curve is a lot more than one-and-three-quarters of an inch or more than that,
+
+257
+00:15:40,800 --> 00:15:47,120
+ you won't be able to ease that into the curve of the armhole. So if you do have a lot more
+
+258
+00:15:47,120 --> 00:15:51,680
+ than the ideal, then you'll end up with gathers or you'll need to put in a dart if you don't
+
+259
+00:15:51,680 --> 00:15:57,680
+ want those gathers. If you do decide to go with the dart, you might want to leave just one-inch
+
+260
+00:15:57,680 --> 00:16:04,160
+ ease and incorporate the rest that's left over into the dart. The length of your dart, how far
+
+261
+00:16:04,160 --> 00:16:09,920
+ down your arm you need it to go, that's something you'll need to test at the 12 stage.
+
+262
+00:16:13,040 --> 00:16:18,320
+ Where the sleeve head curve crosses the straight lines, front and back mark notches,
+
+263
+00:16:18,320 --> 00:16:23,840
+ two notches in the back armhole and one in the front. We've now finished the sleeve block but
+
+264
+00:16:23,840 --> 00:16:28,880
+ we've got a few other things to do such as marking these notches at the front and back armhole onto
+
+265
+00:16:28,880 --> 00:16:33,840
+ the bodice front and bodice black and a couple of other things before we finish up. If you have
+
+266
+00:16:33,840 --> 00:16:38,560
+ drafted the block onto paper and are going to transfer it to cardboard, don't cut it out yet.
+
+267
+00:16:38,560 --> 00:16:42,240
+ You might need to make a slight change to the curve of the sleeve around the armhole,
+
+268
+00:16:42,240 --> 00:16:47,120
+ we'll do that in the upcoming slide when we bring in the bodice front and the bodice back.
+
+269
+00:16:47,120 --> 00:16:50,720
+ When you do have your final block, make sure you notch the sleeve head, the back and front
+
+270
+00:16:50,720 --> 00:16:56,560
+ armhole, the dart legs. Mark the elbow line and draw in the grain line at right angles to the bicep
+
+271
+00:16:56,560 --> 00:17:04,000
+ line and don't forget to label your block. Bring in your bodice back. Firstly, as shown in example A,
+
+272
+00:17:04,000 --> 00:17:09,520
+ check the beginning of the curve of the armhole, see that it matches the curve of the sleeve.
+
+273
+00:17:09,520 --> 00:17:14,560
+ You can fine tune the sleeve curve here. For example, shave a bit off or add a bit to match
+
+274
+00:17:14,560 --> 00:17:20,800
+ the curve of the armhole just for the first few inches. Then, as shown in example B, walk that
+
+275
+00:17:20,800 --> 00:17:27,520
+ bodice block along the sleeve until you reach the notches on the sleeve and transfer those notch
+
+276
+00:17:27,520 --> 00:17:32,320
+ markings onto the bodice back or not transfer so much. Yes, put it onto the bodice black so they
+
+277
+00:17:32,320 --> 00:17:38,080
+ appear on both the sleeve and the bodice back. You could if you wanted keep walking the bodice back
+
+278
+00:17:38,080 --> 00:17:43,360
+ until you reach the shoulder tip and mark that shoulder tip point on the sleeve to see how
+
+279
+00:17:43,360 --> 00:17:50,400
+ much ease there is left between that point and the shoulder notch. Now, bring in your bodice front.
+
+280
+00:17:50,400 --> 00:17:55,600
+ With the front, follow the same process as we just did with the back. Check for a similar curve for
+
+281
+00:17:55,600 --> 00:18:01,440
+ the first couple of inches and adjust the sleeve curve if necessary. After that, walk the bodice
+
+282
+00:18:01,440 --> 00:18:07,680
+ front and mark the armhole notch on the bodice front block. Then, keep walking the bodice front
+
+283
+00:18:07,680 --> 00:18:14,080
+ and mark where the shoulder tip would be on the sleeve curve and see how much ease that you have
+
+284
+00:18:14,080 --> 00:18:19,200
+ left in that sleeve curve. So, now you really have finished the sleeve block. At this point,
+
+285
+00:18:19,200 --> 00:18:25,360
+ if you've drafted onto paper, you can create a clean copy on cardboard. I do have one more thing
+
+286
+00:18:25,360 --> 00:18:30,640
+ to say though before finishing this video. Now, you may wonder what a corset has got to do with
+
+287
+00:18:30,640 --> 00:18:36,160
+ the sleeve. What I want to stress is the fit that you can get with the basic blocks are not as good
+
+288
+00:18:36,160 --> 00:18:41,920
+ a fit as you can get with added design lines. The quintessential example is the corset. You cannot
+
+289
+00:18:41,920 --> 00:18:47,520
+ get the fitting of a corset with a basic bodice block. The more design lines you add to a certain
+
+290
+00:18:47,520 --> 00:18:53,760
+ point, the better fit you can get. What I want to say is if you find it difficult to get the perfect
+
+291
+00:18:53,760 --> 00:19:00,400
+ fit in a one-piece fitted sleeve without having too much ease in the sleeve cap, without it being
+
+292
+00:19:00,400 --> 00:19:08,000
+ a bit constrictive in the armhole, don't sweat it. You'll get better result by designing clothes
+
+293
+00:19:08,000 --> 00:19:15,360
+ that fit your body. Put in the design ease that you need for comfort in the design stage rather
+
+294
+00:19:15,360 --> 00:19:21,360
+ than sweating about getting this block completely perfect because you can always add fullness in
+
+295
+00:19:21,360 --> 00:19:27,920
+ certain areas when you add a design line. You can create a two-piece sleeve. Yes, don't sweat
+
+296
+00:19:27,920 --> 00:19:33,840
+ getting a perfect fit. If you can't do it, you can't do it, design lines are your friend,
+
+297
+00:19:33,840 --> 00:19:40,320
+ added fullness is your friend, designing clothes that suit your body is the way that you need to go.
+
+298
+00:19:40,320 --> 00:19:47,120
+ So thanks for staying and watching and listening especially if you've got to the end. This is Maria
+
+299
+00:19:47,120 --> 00:19:52,160
+ from Dress Pattern Making. I will now be working on the pants block and should have that up in
+
+300
+00:19:52,160 --> 00:20:04,800
+ another week by Sunday 10th of May 2020. Ciao!
+
+301
+00:20:22,160 --> 00:20:24,420
+ ♪ Fastaway ♪
+
