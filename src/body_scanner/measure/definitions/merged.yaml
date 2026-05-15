@@ -615,7 +615,9 @@ measurements:
       output: convex_hull_perimeter
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (revised: at the underarm)"
+      - "references/dpm_videos/bodice_front/frame_000021.jpg — captioned side-by-side comparison: \"Incorrect\" (old upper-bust placement, ~1 inch below underarm) vs \"Corrected\" (at the underarm)"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L87-92 (deprecated 1-inch-below-underarm ruler trick)"
+      - "references/dpm_videos/bodice_measurements/frame_000175.jpg — ruler placed against the underarm on both body forms, with the upper-bust line marked at the ruler's bottom edge ~1 inch below the underarm (deprecated method)"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       The dpm bodice_measurements video instructs to place the upper-bust
@@ -648,6 +650,8 @@ measurements:
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L93-148 (front-arc and side-seam definition)"
+      - "references/dpm_videos/bodice_measurements/frame_000197.jpg — well-fitting underwire bra examples (front view and a comparison slide showing DD's bra fit) used to anchor the bra-side-seam landmark"
+      - "references/dpm_videos/bodice_measurements/frame_000290.jpg — \"2. Upper Bust Arc Front\" slide: body photo on the left with the front-arc highlighted, block diagram on the right showing the front-arc as a horizontal line at upper-bust level from front side seam to front side seam"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       Front-arc segment from left bra-side-seam landmark to right bra-
@@ -675,6 +679,7 @@ measurements:
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L144-147"
+      - "references/dpm_videos/bodice_measurements/frame_000211.jpg — \"3. Upper Bust Arc Back\" slide: body photos from two angles with arrows marking the side-seam endpoints on the back"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       Back-arc segment, mirror of the front arc but on the back side of
@@ -694,6 +699,7 @@ measurements:
       output: convex_hull_perimeter
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L148-150"
+      - "references/dpm_videos/bodice_measurements/frame_000295.jpg — \"4. Bust\" slide: \"Around the fullest part of the bust / Straight across from Apex to Apex then continuing in a straight line around the circumference of the body (parallel to the floor)\"; body photos from front and side angles with bust-line highlighted"
     notes: |
       Bust circumference, around the fullest part. The tape crosses both
       bust apexes and the dpm rule is for the bust plane to be parallel
@@ -718,6 +724,7 @@ measurements:
       output: arc_length_front
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L151-158"
+      - "references/dpm_videos/bodice_measurements/frame_000302.jpg — \"5. Bust Arc Front\" slide: \"From the side seam around the front to the other side seam at the Bust level (fullest part of the bust, will cross the apex)\"; body photo on the left and the same on the right with arrows marking the side-seam endpoints"
 
   - name: dpm_bodice_bust_back_arc
     aliases: [bust_back_arc, bb_arc]
@@ -749,6 +756,7 @@ measurements:
       output: convex_hull_perimeter
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L163-167"
+      - "references/dpm_videos/bodice_measurements/frame_000323.jpg — \"7. Waist — Circumference of the body around the waist / the smallest part of the torso\"; body photos from front and side with the waist line highlighted by a red arrow"
     notes: |
       "around the smallest part of the torso". The dpm worksheet halves
       this value (÷4 for the quarter) when drafting. Same body landmark
@@ -767,6 +775,7 @@ measurements:
       side: right
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L167-177"
+      - "references/dpm_videos/bodice_measurements/frame_000329.jpg — \"8. Shoulder Length — From High Neck Point to Shoulder Point\"; close-up of the shoulder area showing the pink shoulder line from the corner of the neck along the shoulder seam to the acromion, with an arrow pointing at the high neck point"
     notes: |
       "from the high neck point to the shoulder point". dpm defines the
       high neck point as where a necklace chain rests at the side of the
@@ -788,7 +797,9 @@ measurements:
       side: right
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (revised: starts at the underarm, not 2.5 cm below)"
+      - "references/dpm_videos/bodice_front/frame_000022.jpg — \"Taking Measurement: Upper Bust & The Side Seam\" slide showing the revised method: a clear ruler held against the underarm with the side-length tape running down from the underarm corner to the waist (the dashed measurement starts at the underarm, not at the upper-bust elastic)"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L177-183 (deprecated start at upper-bust elastic)"
+      - "references/dpm_videos/bodice_measurements/frame_000358.jpg — deprecated \"9. Side Length — Armhole Depth Point to waist\" slide, showing the side-length measurement starting at the upper-bust elastic (\"armhole depth point\") rather than the underarm — this is the definition that bodice_front later corrects"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       Body-measurement side seam length, from the underarm corner down
@@ -1065,6 +1076,7 @@ measurements:
       side: back
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L240-244"
+      - "references/dpm_videos/bodice_measurements/frame_000480.jpg — \"23. Full Length Back — From High Neck Point to Back Waist\"; back-view body photo with red vertical line from the high neck point straight down to the waist string, plus the back-block diagram showing the same line"
     notes: |
       "from the high neck point to the back waist". dpm recommends
       verifying by also measuring the full body length (front waist up
@@ -1177,6 +1189,7 @@ measurements:
       tape_below_neckline: true
     sources:
       - "references/dpm_videos/bodice_measurements/transcript.txt:L261-267"
+      - "references/dpm_videos/bodice_measurements/frame_000520.jpg — \"30. Back Neck — From CB Neck to High Neck Point\"; two stacked close-ups of the same shoulder/neck corner with X (incorrect, tape held above the neckline) and ✓ (correct, tape held below the neckline) markings, plus the back-block diagram with a small purple arrow segment from CB to HNP"
     notes: |
       Back half of the neck circumference, from one high_neck_point
       (shoulder_neck) around C7 to the other high_neck_point. dpm
@@ -1487,6 +1500,7 @@ measurements:
       - "references/dpm_videos/pants_1/transcript.txt:L31-32"
       - "references/dpm_videos/pants_1/transcript.txt:L121-133"
       - "references/dpm_videos/pants_1/transcript.txt:L180-184"
+      - "references/dpm_videos/pants_1/frame_000102.jpg — pants-block reference overview: female figure standing, with the body horizons labelled (Waist, High Hip, Low Hip, Crotch, Knee, Ankle) and the upper-thigh region marked with both a vertical \"depth\" arrow (from waist down to crotch level) and a horizontal \"circumference\" loop around the thigh at crotch level"
     notes: |
       Circumference of the right thigh at crotch_level. dpm makes this
       a primary measurement (rather than deriving the crotch
@@ -1538,6 +1552,7 @@ measurements:
       side: midline
     sources:
       - "references/dpm_videos/pants_1/transcript.txt:L186-193"
+      - "references/dpm_videos/pants_1/frame_000129.jpg — the dpm \"sumo nappy\" tester: a horizontal black-elastic loop sized to the waist with a red twill-tape strip sewn at the centre back, looping down through the legs and back up to the centre front, used to physically verify the total crotch length and the front/back split by wearing the device for 10 minutes"
     notes: |
       "from your center front through your legs up to the center back".
       Surface path along the body midline through the crotch. dpm
@@ -1559,6 +1574,7 @@ measurements:
     sources:
       - "references/dpm_videos/pants_1/transcript.txt:L186-188"
       - "references/dpm_videos/pants_1/transcript.txt:L221-229"
+      - "references/dpm_videos/pants_1/frame_000129.jpg — the dpm sumo-nappy tester (same device as crotch_length_total); after wearing, the front/back split is marked on the twill tape between the legs and the front segment is measured separately"
     notes: |
       Front half of the total crotch length. dpm explicitly: "it's not
       just the full crotch length divided by two" — the front and
@@ -1583,6 +1599,7 @@ measurements:
     sources:
       - "references/dpm_videos/pants_1/transcript.txt:L186-188"
       - "references/dpm_videos/pants_1/transcript.txt:L221-229"
+      - "references/dpm_videos/pants_1/frame_000129.jpg — the dpm sumo-nappy tester (same device as crotch_length_total); after wearing, the back segment from CB through the legs to the front/back split point is measured separately"
     notes: |
       Back half of the total crotch length. Generally longer than the
       front half. See crotch_length_front notes on the crotch_centre
