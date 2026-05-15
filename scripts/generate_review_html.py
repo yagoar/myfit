@@ -28,9 +28,21 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 YAML_PATH = ROOT / "src" / "body_scanner" / "measure" / "definitions" / "merged.yaml"
+SEAMLY_README = ROOT / "references" / "seamly" / "README.md"
 OUT_PATH = ROOT / "review.html"
 
 FRAME_RE = re.compile(r"(references/[^\s\"']+/frame_\d{2}h\d{2}m\d{2}s\.jpg)")
+DIAGRAM_RE = re.compile(
+    r"\|\s*[A-Q]\d+\s*\|\s*`([^`]+)`\s*\|\s*([A-Q]p\d+)\s*\|"
+)
+
+
+def load_diagram_map() -> dict[str, str]:
+    """seamly_name -> diagram SVG filename (e.g. 'bust_circ' -> 'Gp1.svg')."""
+    if not SEAMLY_README.is_file():
+        return {}
+    text = SEAMLY_README.read_text()
+    return {m.group(1): f"{m.group(2)}.svg" for m in DIAGRAM_RE.finditer(text)}
 
 
 def render_source(text: str) -> str:
@@ -49,7 +61,7 @@ def render_source(text: str) -> str:
     )
 
 
-def render_entry(m: dict) -> str:
+def render_entry(m: dict, diagram_map: dict[str, str]) -> str:
     name = m["name"]
     rows: list[str] = [
         f'<section class="measurement" id="{escape(name)}" data-name="{escape(name)}">',
@@ -66,11 +78,29 @@ def render_entry(m: dict) -> str:
         add("aliases", ", ".join(str(a) for a in aliases))
     if "seamly_name" in m:
         sn = m["seamly_name"]
+        sc = m.get("seamly_code", "")
         if sn:
-            add("seamly_name", f'<code class="seamly">{escape(str(sn))}</code>', html=True)
+            code_chip = f' <code class="seamly-code">{escape(sc)}</code>' if sc else ""
+            diagram_file = diagram_map.get(sn)
+            diagram_html = ""
+            if diagram_file:
+                dpath = f"references/seamly/diagrams/{diagram_file}"
+                diagram_html = (
+                    f'<a href="{escape(dpath)}" target="_blank" rel="noopener"'
+                    f' class="diagram-link" title="Seamly {escape(diagram_file)}">'
+                    f'<img src="{escape(dpath)}" loading="lazy"'
+                    f' alt="Seamly {escape(diagram_file)}" class="diagram-img">'
+                    f"</a>"
+                )
+            add(
+                "seamly",
+                f'<code class="seamly">{escape(str(sn))}</code>{code_chip}'
+                f'{diagram_html}',
+                html=True,
+            )
         else:
             add(
-                "seamly_name",
+                "seamly",
                 '<span class="seamly-null">null (no direct Seamly2D equivalent)</span>',
                 html=True,
             )
@@ -108,8 +138,11 @@ def main() -> int:
     with YAML_PATH.open() as f:
         doc = yaml.safe_load(f)
     measurements = doc["measurements"]
+    diagram_map = load_diagram_map()
+    if diagram_map:
+        print(f"loaded {len(diagram_map)} seamly diagram mappings")
 
-    cards = "\n".join(render_entry(m) for m in measurements)
+    cards = "\n".join(render_entry(m, diagram_map) for m in measurements)
 
     page = PAGE_TEMPLATE.replace("__COUNT__", str(len(measurements))).replace(
         "__CARDS__", cards
@@ -166,7 +199,12 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
                   font-size: 0.78rem; color: #444; }
   code.seamly { background: #e6f4ea; color: #1a5d2c; padding: 0.15rem 0.4rem;
                 border-radius: 3px; font-size: 0.9rem; }
+  code.seamly-code { background: #e0e7ff; color: #3730a3; padding: 0.15rem 0.4rem;
+                     border-radius: 3px; font-size: 0.85rem; font-weight: 600; }
   .seamly-null { color: #888; font-style: italic; font-size: 0.9rem; }
+  .diagram-link { display: inline-block; margin-left: 0.6rem; vertical-align: middle; }
+  .diagram-img { max-height: 200px; max-width: 260px; border: 1px solid #ccc;
+                 border-radius: 4px; background: #fff; vertical-align: middle; }
   label.review-notes { display: block; margin-top: 0.9rem; padding-top: 0.7rem;
                         border-top: 1px dashed #ddd; }
   label.review-notes .lbl { font-weight: 600; color: #555; font-size: 0.9rem;

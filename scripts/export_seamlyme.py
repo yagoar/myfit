@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,6 +49,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 MERGED = ROOT / "src" / "body_scanner" / "measure" / "definitions" / "merged.yaml"
 TEMPLATE = Path.home() / "seamly2d" / "templates" / "all_measurements_template.smis"
+XSD = ROOT / "references" / "seamly" / "schema" / "individual_measurements_v0.3.4.xsd"
 
 
 def load_mapping() -> dict[str, str]:
@@ -106,6 +108,24 @@ def resolve_seamly_values(
     return resolved
 
 
+def validate_xsd(smis_path: Path, xsd_path: Path = XSD) -> bool:
+    """Validate .smis against XSD using xmllint. Returns True if valid."""
+    if not xsd_path.is_file():
+        print(f"warn: XSD not found at {xsd_path}; skipping validation", file=sys.stderr)
+        return True
+    result = subprocess.run(
+        ["xmllint", "--noout", "--schema", str(xsd_path), str(smis_path)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        print(f"xsd: {smis_path.name} validates OK", file=sys.stderr)
+        return True
+    print(f"xsd: VALIDATION FAILED for {smis_path.name}", file=sys.stderr)
+    print(result.stderr, file=sys.stderr)
+    return False
+
+
 def render_smis(seamly_values: dict[str, float], template_order: list[str]) -> str:
     """Render the .smis XML. Uses the template's measurement order if available."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -157,6 +177,11 @@ def main() -> int:
         default=TEMPLATE,
         help=f"Reference .smis whose order is preserved (default: {TEMPLATE})",
     )
+    p.add_argument(
+        "--no-validate",
+        action="store_true",
+        help="Skip XSD validation of the output file",
+    )
     args = p.parse_args()
 
     mapping = load_mapping()
@@ -188,6 +213,10 @@ def main() -> int:
     xml = render_smis(seamly_values, template_order)
     args.output.write_text(xml)
     print(f"wrote {args.output}", file=sys.stderr)
+
+    if not args.no_validate:
+        if not validate_xsd(args.output):
+            return 1
     return 0
 
 

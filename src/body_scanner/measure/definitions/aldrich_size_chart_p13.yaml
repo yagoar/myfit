@@ -31,13 +31,24 @@
 chart_id: aldrich_size_chart_p13
 source: "references/aldrich_full.pdf p.13 (PDF page 16)"
 edition: "5th edition (Aldrich, *Metric Pattern Cutting for Women's Wear*)"
+edition_6th_note: |
+  The 6th edition size chart is on p.11 (photo: references/aldrich/IMG_9598.jpg).
+  Key differences from 5th edition:
+    - Size codes shifted -2 (5th-ed size 8 = 6th-ed size 6 for the same bust 80)
+    - Smallest size dropped (5th-ed size 6, bust 76, has no 6th-ed equivalent)
+    - 6th edition has 10 sizes (6–24, bust 80–122) vs 11 in 5th (6–26, bust 76–122)
+    - Low waist offset changed from 6cm to 5cm below natural waist
+    - Largest 1–2 sizes have retuned hips and top-arm rows
+  The 6th edition is canonical for this project. The 5th-edition values below
+  remain as the digital reference (transcribed from the PDF); the 6th-edition
+  photo can be consulted for discrepancies at the large end.
 height_range_cm: [160, 172]
 height_range_imperial: "5 ft 3 in - 5 ft 7 1/2 in"
 
 # Size codes are the chart's column headers. Bust value at each size is
 # the primary lookup key (see book p.178: bust determines the drafting
 # size).
-size_codes: [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]
+size_codes: [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]  # 5th edition; 6th edition drops size 6 (bust 76) and renumbers -2
 
 # Each row is parallel to size_codes (index N -> value at size N).
 # Names match the personal-measurement table on book p.178 so that

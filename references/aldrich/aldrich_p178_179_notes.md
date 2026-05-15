@@ -1,6 +1,30 @@
 # Aldrich pages 178-179 — measurement source notes
 
-Source file: `references/aldrich_full.pdf` (5th edition).
+## Edition cross-reference
+
+| What | 5th edition (PDF in repo) | 6th edition (user's book) |
+|------|--------------------------|---------------------------|
+| Size chart | p.13 (PDF p.16) | **p.11** |
+| Measurement table | p.178 (PDF p.181) | **p.214** |
+| Measurement diagram | p.179 (PDF p.182) | **p.215** |
+| Low waist offset | 6cm below natural waist | **5cm** below natural waist |
+| Size codes | 6–26 (bust 76–122, 11 sizes) | **6–24** (bust 80–122, 10 sizes) |
+| Hip adjustment xref | p.188 | **p.222** |
+
+The **6th edition is canonical** for this project. The user owns the
+physical book; three photos are in `references/aldrich/`:
+
+- `IMG_9598.jpg` — p.11 size chart
+- `IMG_9599.jpg` — p.214 measurement table + taking-measurements items 1–4
+- `IMG_9600.jpg` — p.215 taking-measurements items 5–20 + diagram
+
+Measurement instruction text is identical between editions except item 2a
+Low waist (5cm replaces 6cm). Size chart values for corresponding bust
+sizes are the same except the largest 1–2 sizes which have retuned hips
+and top-arm rows, and the 5th edition's smallest size (size 6, bust 76)
+is dropped entirely in the 6th edition.
+
+Source file: `references/aldrich_full.pdf` (5th edition). 6th edition photos in `references/aldrich/`.
 Book pages **178-179** = PDF pages **181-182** (front-matter offset of +3).
 The Aldrich pages cited by SPEC.md section 5 are these two; the size-chart
 page (book p.13) referenced for "standard measurements" is captured in a
@@ -75,7 +99,7 @@ size-chart page.
   firmly round the waist after the measurement is taken, because that
   string then defines the reference horizon for the vertical measurements
   (items 13, 14, 16, 18).
-* **2a Low waist** — "Take the low waist measurement 6 cm below the
+* **2a Low waist** — "Take the low waist measurement 5 cm (6th edition; was 6 cm in 5th edition) below the
   natural waistline."
 * **3 Hips** — "Measure the widest part of the hips approx. 21 cm from
   the waistline." If the hips are more than 5 cm larger than the bust
