@@ -131,7 +131,9 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
            background: #fff; border-radius: 4px; cursor: pointer; }
   button:hover { background: #eee; }
   section.measurement { background: #fff; padding: 1rem 1.2rem; margin-bottom: 1rem;
-                        border: 1px solid #ddd; border-radius: 6px; scroll-margin-top: 6rem; }
+                        border: 1px solid #ddd; border-radius: 6px; scroll-margin-top: 6rem;
+                        display: none; }
+  section.measurement.current { display: block; }
   section.measurement h2 { margin: 0 0 0.7rem; font-size: 1.05rem; font-weight: 600; }
   section.measurement h2 a { color: inherit; text-decoration: none; }
   section.measurement h2 a:hover { text-decoration: underline; }
@@ -161,9 +163,15 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
              border-radius: 4px; box-sizing: border-box; resize: vertical;
              background: #fffef9; }
   textarea.has-content { background: #fff8e5; border-color: #d4a017; }
-  section.hidden { display: none; }
+  section.hidden { display: none !important; }
   .count-pill { background: #ddd; padding: 0.1rem 0.5rem; border-radius: 999px;
                 font-size: 0.85rem; }
+  nav.pager { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+              margin-top: 0.5rem; }
+  nav.pager button { padding: 0.35rem 0.8rem; }
+  nav.pager .pos { font-variant-numeric: tabular-nums; font-size: 0.9rem; color: #555; }
+  nav.pager select { padding: 0.3rem 0.5rem; font-size: 0.9rem; max-width: 260px; }
+  .hint { font-size: 0.8rem; color: #777; }
 </style>
 </head>
 <body>
@@ -175,6 +183,13 @@ PAGE_TEMPLATE = r"""<!DOCTYPE html>
     <button id="export-md">export as markdown</button>
     <button id="clear">clear all notes</button>
   </div>
+  <nav class="pager">
+    <button id="prev" type="button">← prev</button>
+    <button id="next" type="button">next →</button>
+    <span class="pos" id="pos">1 / __COUNT__</span>
+    <select id="jump"></select>
+    <span class="hint">←/→ keys to navigate</span>
+  </nav>
 </header>
 <main>
 __CARDS__
@@ -202,16 +217,64 @@ document.querySelectorAll('textarea[data-entry]').forEach(ta => {
 
 const filterEl = document.getElementById('filter');
 const visibleCountEl = document.getElementById('visible-count');
-filterEl.addEventListener('input', () => {
+const sections = Array.from(document.querySelectorAll('section.measurement'));
+const posEl = document.getElementById('pos');
+const jumpEl = document.getElementById('jump');
+
+// Build jump dropdown
+sections.forEach((s, i) => {
+  const opt = document.createElement('option');
+  opt.value = String(i);
+  opt.textContent = (i + 1) + '. ' + s.dataset.name;
+  jumpEl.appendChild(opt);
+});
+
+let visibleIndices = sections.map((_, i) => i);
+let cursor = 0;
+
+function render() {
+  sections.forEach(s => s.classList.remove('current'));
+  if (visibleIndices.length === 0) {
+    posEl.textContent = '0 / 0';
+    return;
+  }
+  cursor = Math.max(0, Math.min(cursor, visibleIndices.length - 1));
+  const idx = visibleIndices[cursor];
+  const cur = sections[idx];
+  cur.classList.add('current');
+  posEl.textContent = (cursor + 1) + ' / ' + visibleIndices.length;
+  jumpEl.value = String(idx);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function applyFilter() {
   const q = filterEl.value.toLowerCase().trim();
-  let visible = 0;
-  document.querySelectorAll('section.measurement').forEach(s => {
+  visibleIndices = [];
+  sections.forEach((s, i) => {
     const match = !q || s.dataset.name.toLowerCase().includes(q);
     s.classList.toggle('hidden', !match);
-    if (match) visible++;
+    if (match) visibleIndices.push(i);
   });
-  visibleCountEl.textContent = visible;
+  visibleCountEl.textContent = visibleIndices.length;
+  cursor = 0;
+  render();
+}
+
+filterEl.addEventListener('input', applyFilter);
+document.getElementById('prev').addEventListener('click', () => { cursor--; render(); });
+document.getElementById('next').addEventListener('click', () => { cursor++; render(); });
+jumpEl.addEventListener('change', () => {
+  const target = parseInt(jumpEl.value, 10);
+  const pos = visibleIndices.indexOf(target);
+  if (pos >= 0) { cursor = pos; render(); }
 });
+document.addEventListener('keydown', e => {
+  if (e.target.matches('textarea, input')) return;
+  if (e.key === 'ArrowRight') { cursor++; render(); }
+  else if (e.key === 'ArrowLeft') { cursor--; render(); }
+});
+
+applyFilter();
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
