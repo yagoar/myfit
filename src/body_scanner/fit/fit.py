@@ -38,7 +38,7 @@ from .vposer import VPoserWrapper
 class FitConfig:
     model_folder: str = "data/body_models"
     gender: str = "female"
-    num_betas: int = 100
+    num_betas: int = 200
     device: str = "cpu"
     vposer_ckpt: str | None = "data/vposer/vposer_v1_0/snapshots/TR00_E096.pt"
     # Crop hair/floor from the chamfer target — see losses.crop_scan_for_chamfer.
@@ -60,6 +60,11 @@ class FitConfig:
              unfreeze=("global_orient", "transl", "betas", "z"), use_vposer=True),
         # Stage 5 — release into raw body_pose with very loose prior
         dict(chamfer=1.0, shape=0.0001, pose=0.0002, angle=10.0, iters=80,
+             unfreeze=("global_orient", "transl", "betas", "body_pose"),
+             use_vposer=False),
+        # Stage 6 — final tighten, almost free shape, mainly to chase
+        # the last few mm on a naked scan
+        dict(chamfer=1.0, shape=0.00002, pose=0.00005, angle=10.0, iters=120,
              unfreeze=("global_orient", "transl", "betas", "body_pose"),
              use_vposer=False),
     ])
