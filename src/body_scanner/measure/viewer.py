@@ -61,6 +61,14 @@ def _load_fit(npz_path: Path, model_folder: str, gender: str,
     return verts, faces, joints
 
 
+def _load_obj(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Read a Wavefront OBJ with trimesh, return (verts, faces) as numpy."""
+    import trimesh
+    m = trimesh.load(path, process=False)
+    return (np.asarray(m.vertices, dtype=np.float32),
+            np.asarray(m.faces, dtype=np.int32))
+
+
 def _build_polylines(verts, faces, landmarks):
     """Map code -> (N, 3) polyline. Skips codes without a visualisable shape."""
     out: dict[str, np.ndarray] = {}
@@ -200,12 +208,20 @@ def _header(catalog_values: dict[str, float], npz_path: Path) -> html.Div:
 
 
 def build_app(npz_path: Path, model_folder: str, gender: str,
-              num_betas: int) -> Dash:
+              num_betas: int, scan_obj: Path | None = None) -> Dash:
     verts, faces, joints = _load_fit(npz_path, model_folder, gender, num_betas)
     landmarks = build_landmark_set(verts, joints=joints)
     report = extract_catalog(verts, faces, joints=joints)
     polylines = _build_polylines(verts, faces, landmarks)
-    body_trace = _body_mesh_trace(verts, faces)
+    # Render the original scan as the visible body if given. The SMPL-X fit
+    # shares the scan's coordinate frame (we fit to it), so polylines
+    # computed on SMPL-X surface render adjacent to scan surface — offset
+    # by the per-vertex fit error (~6-15mm for clothed scans).
+    if scan_obj is not None:
+        body_verts, body_faces = _load_obj(scan_obj)
+    else:
+        body_verts, body_faces = verts, faces
+    body_trace = _body_mesh_trace(body_verts, body_faces)
     initial_fig = _figure(body_trace, {})
 
     app = Dash(__name__, title="body-scanner viewer")
@@ -267,10 +283,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--gender", default="female")
     p.add_argument("--num-betas", type=int, default=100)
     p.add_argument("--port", type=int, default=8050)
+    p.add_argument(
+        "--scan-obj",
+        type=Path,
+        help="Render this OBJ as the visible body (e.g. the original scan). "
+        "Polylines are still computed on the fitted SMPL-X but render in "
+        "the shared coordinate frame.",
+    )
     args = p.parse_args(argv)
 
     app = build_app(args.fit_npz, args.model_folder, args.gender,
-                    args.num_betas)
+                    args.num_betas, scan_obj=args.scan_obj)
     app.run(debug=False, port=args.port)
     return 0
 
