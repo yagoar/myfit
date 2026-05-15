@@ -38,7 +38,7 @@ AI must not generate the content from memory. These must come from source materi
 
 - Aldrich measurement definitions: must be transcribed from the book pages in `references/aldrich_*.pdf`. Each entry in `measure/definitions/merged.yaml` requires a `source` field citing the page.
 - dresspatternmaking.com measurement definitions: from `references/dpm_worksheet.png` and `references/dpm_upper_bust_photo.png`. Each entry cites the worksheet item.
-- SMPL-X vertex IDs claimed as anatomical landmarks (apex, suprasternal notch, C7, etc.): proposed candidates only, requiring visual verification in Blender by the user. Verified IDs go into `references/smplx_vertex_landmarks.md` with screenshots.
+- SMPL-X vertex IDs claimed as anatomical landmarks (apex, suprasternal notch, C7, etc.): proposed candidates only, requiring visual verification in Blender by the user. Verified IDs go into `references/smplx_vertex_landmarks.md`; raw audit trail (per-landmark confirmed/corrected/mirrored status) in `references/smplx_landmark_review.json`.
 - Aldrich drafting formulas (Phase 9): transcribed from `references/aldrich_drafting_ch1.pdf`. Each formula in code requires a comment with the page number.
 - Physical measurement values: only the user with a tape measure produces these. AI does not invent calibration targets.
 
@@ -60,10 +60,13 @@ SMPL-X has 10475 vertices. AI often produces vertex IDs that are plausible-sound
 
 Workflow:
 
-1. AI proposes a vertex ID for a landmark (e.g. "apex left = vertex 3500")
-2. User opens the T-posed SMPL-X mesh in Blender (with the SMPL-X addon), jumps to vertex 3500, takes a screenshot
-3. If it's at the claimed landmark: commit to `references/smplx_vertex_landmarks.md` with the screenshot
-4. If not: search the actual region, find a better vertex, commit the verified ID
+1. AI proposes vertex IDs algorithmically (e.g. `scripts/propose_smplx_landmarks.py` from joint positions + geometric filters)
+2. User opens the T-posed SMPL-X mesh in Blender (SMPL-X addon, v1.1 model) and runs `scripts/blender_landmark_review.py` — N-panel UI selects each proposed vertex; user confirms, corrects, or skips
+3. Right-side landmarks auto-mirrored from verified left-side picks (X→−X nearest-vertex)
+4. Results saved to `references/smplx_landmark_review.json` (audit trail with per-landmark status: confirmed / corrected / mirrored_from_X / skipped)
+5. Verified IDs flow into `references/smplx_vertex_landmarks.md` (Verified column)
+
+Screenshots no longer required as routine documentation — the interactive review session is the verification. Add screenshots only for spot-checks if a specific landmark is later questioned.
 
 Authoritative sources for SMPL-X vertex semantics:
 - `smplx` package's `vertex_ids.py`
@@ -146,7 +149,7 @@ Don't use AI for:
 These guardrails are enforced by:
 
 1. The `source` field in `merged.yaml` (Section 5)
-2. The `references/smplx_vertex_landmarks.md` file with screenshots (Section 3)
+2. The `references/smplx_vertex_landmarks.md` file + `references/smplx_landmark_review.json` audit trail (Section 3)
 3. Comments in `blocks/aldrich_*.py` citing page numbers (Section 6)
 4. Visual verification at Phase 4 (fitting) and Phase 5 (constructional lines)
 5. Tape measurement calibration at Phase 7
