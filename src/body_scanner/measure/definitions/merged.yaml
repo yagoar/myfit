@@ -9,11 +9,16 @@
 #     (in sibling file aldrich_size_chart_p13.yaml)
 #   - dpm bodice items 1-32 from bodice_measurements + the
 #     drafting-video revisions in bodice_front               DONE
+#   - dpm bodice_back drafting-video revisions               DONE (no
+#     measurement-definition changes; bodice_back reaffirms that
+#     bodice_front is the canonical revision)
 #   - dpm sleeve body measurements from the sleeve drafting
 #     video                                                  DONE
 #   - dpm pants body measurements from pants_1               DONE
-#   - dpm bodice-back drafting-video revisions if any        pending pass
-#   - dpm pants_2, pants_3, etc. revisions if any            pending pass
+#   - dpm pants_2 / pants_3 / pants_4 / pants_5 review for
+#     additional body measurements + revisions               DONE
+#     (added optional lower_thigh + intermediate_waist
+#      circumference; added curvy-figure tape caveat to low_hip)
 #
 # Anatomical landmark glossary (symbolic names — vertex IDs in SMPL-X
 # are resolved later in Phase 5 by visual verification in Blender, per
@@ -649,9 +654,10 @@ measurements:
       output: arc_length_front
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
+      - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — \"Incorrect\" vs \"Corrected\" side-by-side comparison: the front-arc lives on the upper-bust horizontal plane, so this revision moves the arc's height up to the underarm (the arc length itself is taken from side seam to side seam at the new level)"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L93-148 (front-arc and side-seam definition)"
       - "references/dpm_videos/bodice_measurements/frame_00h09m51s.jpg — well-fitting underwire bra examples (front view and a comparison slide showing DD's bra fit) used to anchor the bra-side-seam landmark"
-      - "references/dpm_videos/bodice_measurements/frame_00h14m30s.jpg — \"2. Upper Bust Arc Front\" slide: body photo on the left with the front-arc highlighted, block diagram on the right showing the front-arc as a horizontal line at upper-bust level from front side seam to front side seam"
+      - "references/dpm_videos/bodice_measurements/frame_00h14m30s.jpg — \"2. Upper Bust Arc Front\" slide: body photo on the left with the front-arc highlighted, block diagram on the right showing the front-arc as a horizontal line at upper-bust level from front side seam to front side seam (slide content still applies after the revision; only the height of the plane changed)"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       Front-arc segment from left bra-side-seam landmark to right bra-
@@ -678,8 +684,9 @@ measurements:
       output: arc_length_back
     sources:
       - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
+      - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — \"Incorrect\" vs \"Corrected\" side-by-side comparison: the back-arc lives on the upper-bust horizontal plane, so this revision moves the arc's height up to the underarm as well"
       - "references/dpm_videos/bodice_measurements/transcript.txt:L144-147"
-      - "references/dpm_videos/bodice_measurements/frame_00h10m33s.jpg — \"3. Upper Bust Arc Back\" slide: body photos from two angles with arrows marking the side-seam endpoints on the back"
+      - "references/dpm_videos/bodice_measurements/frame_00h10m33s.jpg — \"3. Upper Bust Arc Back\" slide: body photos from two angles with arrows marking the side-seam endpoints on the back (slide content still applies after the revision; only the height of the plane changed)"
     superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
     notes: |
       Back-arc segment, mirror of the front arc but on the back side of
@@ -1460,6 +1467,7 @@ measurements:
       output: convex_hull_perimeter
     sources:
       - "references/dpm_videos/pants_1/transcript.txt:L165-179"
+      - "references/dpm_videos/pants_3/transcript.txt:L220-233 (curvy-figure tape caveat)"
     notes: |
       Widest girth below the waist. dpm rule: exclude high_hip and
       crotch levels from the search; if the unconstrained widest
@@ -1467,6 +1475,16 @@ measurements:
       crotch instead. This guarantees the pants block has at least
       two width measurements between waist and crotch (high hip + low
       hip).
+
+      pants_3 caveat for very curvy figures: a tape measure wants to
+      sit flat and will ride away from the body at the back, so a
+      measurement that looks correct can underestimate the true body
+      perimeter at that level. The body-scanner pipeline is not
+      subject to that tape behaviour (the convex hull of the planar
+      slice already gives the taut-perimeter equivalent), but the
+      calibration step in Phase 7 should account for the difference
+      between tape readings and convex-hull perimeters at this level
+      for curvy figures.
 
   - name: dpm_pants_crotch_depth
     aliases: [crotch_depth, waist_to_crotch]
@@ -1604,3 +1622,70 @@ measurements:
       Back half of the total crotch length. Generally longer than the
       front half. See crotch_length_front notes on the crotch_centre
       landmark.
+
+  # ------------------------------------------------------------------
+  # Optional dpm pants measurements. These do not appear on the
+  # core pants_1 measurement list but are introduced later in the
+  # drafting series for specific figure types or extra shaping help.
+  # Marked optional in `notes`. They are body measurements and obey
+  # the same source-citation rules as the rest.
+  # ------------------------------------------------------------------
+
+  - name: dpm_pants_lower_thigh
+    aliases: [lower_thigh, thigh_above_knee]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: pose.measurement_default.thigh_axis_right
+          from_origin: landmarks.mid_knee_level
+          distance_cm:
+            default_cm: 20         # ~7.5-8 inches above the knee
+            allowed_range: [18, 22]
+        normal: pose.measurement_default.thigh_axis_right
+      region_mask: thigh_right
+      output: convex_hull_perimeter
+      optional: true
+    sources:
+      - "references/dpm_videos/pants_4/transcript.txt:L126-130"
+      - "references/dpm_videos/pants_5/transcript.txt:L269-271"
+    notes: |
+      Optional. dpm bodice_measurements + pants_1 do not list it; it is
+      introduced in the drafting tutorials for Jane (pants_4) and Anne
+      (pants_5) as an additional measurement used to draw a better
+      leg-curve from the crotch level down through the knee. Maria's
+      verbal definition: "the lower thigh about 8 inches above the
+      knee" (~20 cm). Take the planar slice perpendicular to the thigh
+      axis at that level, perimeter via convex hull as for upper_thigh
+      and knee.
+
+  - name: dpm_pants_intermediate_waist_circumference
+    aliases: [waist_minus_1p5in, anne_intermediate_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.waist_string
+          distance_cm:
+            default_cm: 3.8        # 1.5 inches
+            allowed_range: [2.5, 7.5]
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+      optional: true
+    sources:
+      - "references/dpm_videos/pants_5/transcript.txt:L98-103"
+    notes: |
+      Optional. Introduced in pants_5 (drafting for the apple-shape
+      figure "Anne") to help with waist shaping when the standard
+      waist-to-high-hip transition is too steep or too shallow.
+      Maria's verbal definition: "I've taken that measurement 1 1/2
+      inches below the waist" — a planar circumference between the
+      waist and the high hip. The exact offset is figure-dependent;
+      default 3.8 cm (1.5") with the allowed range covering the
+      typical "between waist and high hip" band.

@@ -33,3 +33,6 @@ references/**/source.*
 
 # Whisper model cache (per-machine, not part of repo)
 .whisper-models/
+
+# Generated review page (regenerable from merged.yaml)
+review.html
