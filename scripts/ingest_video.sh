@@ -130,17 +130,33 @@ whisper-cli \
   -of "$OUT_DIR/transcript" \
   >/dev/null
 
-# Extract periodic frames. Naming uses elapsed time (HHMMSS) so the file order
-# matches the .srt timeline visually.
+# Extract periodic frames. Initial filenames are sequential indices
+# (frame_000000.jpg, frame_000001.jpg, ...); a second pass renames them to
+# timestamp-based names of the form frame_HHhMMmSSs.jpg so the filename matches
+# the .srt timeline directly and citations don't need index*interval math.
 if [[ "$FRAME_INTERVAL" -gt 0 ]]; then
   echo "extracting frames every ${FRAME_INTERVAL}s..." >&2
-  # %{pts}: presentation timestamp; format as HHMMSS via strftime
   ffmpeg -y -loglevel error \
     -i "$VIDEO_FILE" \
     -vf "fps=1/$FRAME_INTERVAL" \
     -frame_pts 1 \
     -q:v 3 \
     "$OUT_DIR/frame_%06d.jpg"
+
+  echo "renaming frames to timestamp form (frame_HHhMMmSSs.jpg)..." >&2
+  for f in "$OUT_DIR"/frame_[0-9]*.jpg; do
+    [[ -f "$f" ]] || continue
+    name=$(basename "$f" .jpg)
+    idx=${name#frame_}
+    # strip leading zeros so bash treats it as decimal, not octal
+    idx=$((10#$idx))
+    t=$((idx * FRAME_INTERVAL))
+    hh=$((t / 3600))
+    mm=$(((t % 3600) / 60))
+    ss=$((t % 60))
+    new=$(printf "%s/frame_%02dh%02dm%02ds.jpg" "$OUT_DIR" "$hh" "$mm" "$ss")
+    [[ "$f" != "$new" ]] && mv "$f" "$new"
+  done
 fi
 
 # Compact summary so the user sees what was produced
