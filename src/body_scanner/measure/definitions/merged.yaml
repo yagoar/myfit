@@ -1,0 +1,516 @@
+# Body measurement definitions for the body-scanner pipeline.
+#
+# Authoritative schema: SPEC.md section 9. Every entry must carry a
+# `sources` list per GUARDRAILS section 5 (no source-less entries).
+#
+# Scope of this file (incremental — populated phase by phase):
+#   - Aldrich items 1-20 from book p.178-179 (this commit)
+#   - Aldrich size-chart standard values from book p.13 (pending pass)
+#   - dpm items 1-32 from the dpm bodice transcripts/frames (pending pass)
+#   - dpm drafting-video revisions, with superseded_by where they
+#     supersede a measurement-taking-video definition (pending pass)
+#
+# Anatomical landmark glossary (symbolic names — vertex IDs in SMPL-X
+# are resolved later in Phase 5 by visual verification in Blender, per
+# GUARDRAILS section 3; see references/smplx_vertex_landmarks.md):
+#
+#   c7                          7th cervical vertebra ("neck bone at centre back")
+#   front_neck_point            mid centre-front at the neckline base
+#   front_collar_bone           suprasternal notch (jugular notch)
+#   shoulder_neck_left|right    corner where neck meets shoulder
+#   acromion_left|right         outer end of the shoulder bone
+#   armscye_front_left|right    front intersection of armhole curve with torso
+#   armscye_back_left|right     back intersection of armhole curve with torso
+#   bust_apex_left|right        fullest point of each breast
+#   bust_apex_midpoint          midpoint of left+right bust apex
+#   waist_string                the natural-waist horizontal plane established
+#                               by the user-tied string per Aldrich p.178 item 2
+#   waist_cb                    centre back at waist_string level
+#   waist_cf                    centre front at waist_string level
+#   waist_side_left|right       left/right side at waist_string level
+#   elbow_back_left|right       olecranon (back of elbow) when arm is bent
+#   wrist_ulnar_left|right      ulna styloid (pinky-side wristbone)
+#   ankle_bone_lateral_left|right  lateral malleolus
+#   crotch_lateral              lateral side of the crotch line, used for
+#                               the standing-scan body-rise approximation
+#   floor_cb                    floor point directly below waist_cb
+#
+# Pose references (also symbolic; exact joint angles fixed in Phase 6,
+# per SPEC.md section 16 open questions):
+#
+#   pose.measurement_default    canonical re-pose for most measurements
+#                               (likely "modified T" with arms slightly
+#                               lowered; TBD)
+#   pose.bent_arm_aldrich       hand-on-hip bent-arm pose for items 9
+#                               (Top arm) and 20 (Sleeve length)
+#
+# Sources cite the book page; PDF pages noted parenthetically because
+# this PDF has a +3 front-matter offset (book p.178 = PDF page 181).
+
+measurements:
+
+  # ------------------------------------------------------------------
+  # Aldrich items from book p.178-179 (5th edition).
+  # ------------------------------------------------------------------
+
+  - name: aldrich_bust
+    aliases: [bust, bust_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_apex_midpoint
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 1 Bust"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 1"
+    notes: |
+      Aldrich text: "Measure the figure at the fullest point of the bust,
+      do not allow the tape to fall at the back."
+      Horizontal slice perpendicular to the body's vertical axis after
+      un-posing, through the midpoint of the left and right bust apex
+      landmarks. Convex-hull perimeter mimics a taut tape (a tape "falls
+      at the back" only if measured along the concave dip of the back;
+      the hull avoids that). Per Aldrich, this single measurement
+      determines the drafting size used as the size-chart lookup row.
+
+  - name: aldrich_waist
+    aliases: [waist, natural_waist, waist_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.waist_string
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2 Waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 2"
+    notes: |
+      Aldrich text: "Take this measurement round the waist, make sure it
+      is comfortable." Aldrich also instructs the user to tie a string
+      firmly round the waist after measuring; that string defines the
+      reference horizon for items 13, 14, 16, 18. Implementation: the
+      "natural waist" must first be located (open question on the exact
+      rule — Aldrich does not define it geometrically; common practice
+      is the narrowest horizontal slice between ribcage and iliac crest).
+      Convex-hull perimeter as for the bust.
+
+  - name: aldrich_low_waist
+    aliases: [low_waist]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.waist_string
+        offset:
+          along: -pose.measurement_default.vertical_axis
+          distance_cm: 6
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2a Low waist"
+    notes: |
+      Aldrich text: "Take the low waist measurement 6 cm below the natural
+      waistline." Slice plane is at -6 cm along the body-down direction
+      from the waist string.
+
+  - name: aldrich_hips
+    aliases: [hips, hip_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          search:
+            region: torso
+            range:
+              along: -pose.measurement_default.vertical_axis
+              from_origin: landmarks.waist_string
+              min_cm: 15
+              max_cm: 25
+            metric: maximum_horizontal_girth
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 3 Hips"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 3"
+    notes: |
+      Aldrich text: "Measure the widest part of the hips approx. 21 cm
+      from the waistline. For hips that differ from standard measurement
+      (hips 5 cm larger than bust) see page 188 for dress blocks."
+      Implementation: search the widest horizontal girth in a band roughly
+      15-25 cm below the waist string. If the resulting hips are more
+      than 5 cm larger than the bust, the dress-block alteration on
+      Aldrich book p.188 applies (handled in Phase 9, not here).
+
+  - name: aldrich_back_width
+    aliases: [back_width]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.c7
+          distance_cm: 15
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_back_left
+        end: landmarks.armscye_back_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 4 Back width"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 4"
+    notes: |
+      Aldrich text: "Measure the back width 15 cm down from the neck bone
+      at the centre back. Measure from armscye to armscye." Width segment,
+      not a circumference. The slice is taken 15 cm vertically below C7
+      and the arc is clipped to the back half between the two back
+      armscye landmarks. Output is the arc length along the back surface
+      slice, not the chord. See SPEC.md section 16 open question on
+      whether dpm #31 "Across Back" uses the same 15 cm offset.
+
+  - name: aldrich_chest
+    aliases: [chest, across_chest]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.front_neck_point
+          distance_cm: 7
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_front_left
+        end: landmarks.armscye_front_right
+        side: front
+      output: arc_length_front
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 5 Chest"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 5"
+    notes: |
+      Aldrich text: "Measure the chest 7 cm down from the neck point at
+      the centre front (armscye to armscye)." Width segment on the front,
+      mirror of item 4 but at a 7 cm offset rather than 15 cm. The "neck
+      point" here is the centre-front-neck landmark, not C7.
+
+  - name: aldrich_shoulder
+    aliases: [shoulder, shoulder_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.shoulder_neck_right
+        - landmarks.acromion_right
+      side: right
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 6 Shoulder"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 6"
+    notes: |
+      Aldrich text: "Measure from neck to the shoulder bone." Surface
+      geodesic from the shoulder-neck corner to the acromion. Right side
+      chosen arbitrarily; left side is symmetric and only computed if
+      asymmetry calibration requires it.
+
+  - name: aldrich_neck_size
+    aliases: [neck_size, neck_base_circumference]
+    type: contoured_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      closed_loop_through:
+        - landmarks.front_collar_bone
+        - landmarks.shoulder_neck_right
+        - landmarks.c7
+        - landmarks.shoulder_neck_left
+      output: closed_geodesic_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 7 Neck size"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 7"
+    notes: |
+      Aldrich text: "Measure the base of neck touching front collar bone."
+      Closed surface loop around the neck base passing through the
+      suprasternal notch (front collar bone) at the front and the C7
+      vertebra at the back, with shoulder-neck waypoints to constrain
+      the loop to the neck base rather than slipping up the neck.
+
+  - name: aldrich_dart
+    aliases: [dart]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: dart
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 8 Dart (\"Standard measurement.\")"
+      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+    notes: |
+      Aldrich text: "Standard measurement." Not measured on the body;
+      pulled from the size chart on book p.13 indexed by the row that
+      matches the rounded bust size. Size-chart contents will be
+      transcribed in a follow-up pass and stored as a separate YAML
+      under measure/definitions/.
+
+  - name: aldrich_top_arm
+    aliases: [top_arm, biceps]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: bent_arm_aldrich
+      plane:
+        origin: landmarks.biceps_max_right
+        normal: pose.bent_arm_aldrich.upper_arm_axis_right
+      region_mask: upper_arm_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 9 Top arm"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 9"
+    notes: |
+      Aldrich text: "The arm must be bent, measure the biceps."
+      Requires the SMPL-X model to be re-posed into Aldrich's bent-arm
+      pose before measuring (hand-on-hip; the diagram on p.179 shows the
+      left arm in this position). The slice is taken perpendicular to
+      the upper-arm axis in that pose, at the biceps' maximum girth.
+      Cross-reference: SPEC.md section 16 lists the joint angles for
+      this pose as an open Phase 6 decision.
+
+  - name: aldrich_wrist
+    aliases: [wrist]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.wrist_ulnar_right
+        normal: pose.measurement_default.forearm_axis_right
+      region_mask: forearm_right
+      output: convex_hull_perimeter
+      ease_cm: 0
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 10 Wrist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 10"
+    notes: |
+      Aldrich text: "Take the wrist measurement with slight ease." The
+      "slight ease" is a tape-measurement convention (the tape is not
+      pulled taut). On a 3D mesh the convex-hull perimeter is already
+      taut; the ease term is left at 0 here and handled in the block
+      drafting code rather than at measurement time. If calibration
+      shows the scan systematically under-reports vs tape, revisit.
+
+  - name: aldrich_ankle
+    aliases: [ankle]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.ankle_bone_lateral_right
+        normal: pose.measurement_default.shin_axis_right
+      region_mask: shin_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 11 Ankle"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 11"
+    notes: |
+      Aldrich text: "Measure around the ankle over ankle bone." Plane is
+      taken at the level of the lateral malleolus, perpendicular to the
+      shin axis.
+
+  - name: aldrich_high_ankle
+    aliases: [high_ankle]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: pose.measurement_default.shin_axis_right
+          from_origin: landmarks.ankle_bone_lateral_right
+          distance_cm: 5
+        normal: pose.measurement_default.shin_axis_right
+      region_mask: shin_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 12 High ankle"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 12"
+    notes: |
+      Aldrich text: "Measure around leg just above the ankle." Aldrich
+      does not specify the exact offset; an open question is logged in
+      SPEC.md section 16. Provisional offset of 5 cm above the ankle
+      bone — revisit at calibration (Phase 7) against a tape reading.
+
+  - name: aldrich_nape_to_waist
+    aliases: [nape_to_waist, centre_back_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.c7
+        - landmarks.waist_cb
+      side: back
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 13 Nape to waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 13"
+    notes: |
+      Aldrich text: "Measure from the neck bone at the centre back to
+      the string tied around the waist." Surface geodesic down the back,
+      from C7 to the centre-back point on the waist horizon.
+
+  - name: aldrich_front_shoulder_to_waist
+    aliases: [front_shoulder_to_waist, full_length_front_via_apex]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.front_shoulder_mid_right
+        - landmarks.bust_apex_right
+        - landmarks.waist_cf
+      side: front
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 14 Front shoulder to waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 14"
+    notes: |
+      Aldrich text: "Measure from the centre of the front shoulder over
+      the bust point to waist." Surface path forced through the apex
+      waypoint. "Centre of the front shoulder" is interpreted as the
+      midpoint of the shoulder seam on the front side, between the
+      shoulder-neck corner and the acromion. Right side chosen by
+      convention; left side computed only if asymmetry calibration
+      requires it.
+
+  - name: aldrich_armscye_depth
+    aliases: [armscye_depth, scye_depth]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: armscye_depth
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 15 Armscye depth (\"Standard measurement.\")"
+      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+    notes: |
+      Aldrich text: "Standard measurement." Body-derived value can be
+      computed in parallel for comparison (vertical from neck base to
+      armscye base on the back, see diagram annotation 15), but the
+      canonical value is the size-chart row.
+
+  - name: aldrich_skirt_length
+    aliases: [skirt_length, hem_length]
+    type: user_input
+    source_classification: derived
+    parameters:
+      description: |
+        User-supplied distance from the waist string at the side of the
+        body down to the desired skirt hem level.
+      balance_check:
+        method: planar_slice_height_diff
+        front_landmark: landmarks.waist_cf
+        back_landmark: landmarks.waist_cb
+        warn_if_diff_cm_gt: 1.0
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 16 Skirt length"
+    notes: |
+      Aldrich text: "Measure the skirt length from the string at the
+      waist down to the required hem length. Note: Measure from the
+      waist to floor at the back and front to check that the balance
+      of the figure is even." Not a body measurement; user supplies the
+      hem distance. The waist-balance note is realised as an automatic
+      check on the height of waist_cf vs waist_cb after un-posing.
+
+  - name: aldrich_waist_to_hip
+    aliases: [waist_to_hip]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: waist_to_hip
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 17 Waist to hip (\"Standard measurement.\")"
+      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+    notes: |
+      Aldrich text: "Standard measurement." Body-derived equivalent is
+      the height difference between landmarks.waist_string and the hip
+      slice plane; computed for comparison but not canonical.
+
+  - name: aldrich_waist_to_floor
+    aliases: [waist_to_floor]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.waist_cb
+        - landmarks.floor_cb
+      side: back
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 18 Waist to floor"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 18"
+    notes: |
+      Aldrich text: "Measure from waist to floor at the centre back."
+      Surface path down the centre back. The floor landmark is the
+      vertical projection of waist_cb onto the ground plane in
+      measurement-pose coordinates.
+
+  - name: aldrich_body_rise
+    aliases: [body_rise]
+    type: derived
+    source_classification: derived
+    parameters:
+      expression: |
+        height(landmarks.waist_side_right) - height(landmarks.crotch_lateral)
+      sample_side: right
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 19 Body rise"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 19 (seated inset)"
+    notes: |
+      Aldrich text: "The subject should sit on a hard chair. Take the
+      measurement at the side from the waist to the chair." Aldrich's
+      definition is seated; the standing-scan derivation is the
+      vertical drop from the waist line (at the side of the body) to
+      the crotch level (at the side). Per SPEC.md section 13 risks,
+      expect a 1-2 cm offset versus a real tape measurement; calibrate
+      and document the offset in references/calibration_log.md.
+
+  - name: aldrich_sleeve_length
+    aliases: [sleeve_length, sleeve_length_bent]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: bent_arm_aldrich
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.elbow_back_right
+        - landmarks.wrist_ulnar_right
+      side: outer_arm
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 20 Sleeve length"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 20"
+    notes: |
+      Aldrich text: "Place the hand on hip so that the arm is bent.
+      Measure from the shoulder bone over the elbow to the wristbone
+      above the little finger." Surface path along the outer arm in
+      Aldrich's bent-arm pose, forced through the back-of-elbow waypoint
+      (olecranon) so the geodesic does not shortcut along the inner arm.
+      The wrist endpoint is the ulna styloid (pinky side). See SPEC.md
+      section 16 for the open question on the exact bent-arm joint
+      angles.
