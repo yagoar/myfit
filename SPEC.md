@@ -493,5 +493,9 @@ Resolve at relevant phase using source books, not AI:
 - dpm bust depth B (CF) and C (FLF): along-surface or straight-line?
 - Body rise: expected offset between Aldrich seated and standing-scan derivation
 - Optimal vertex IDs for: apex (left/right), suprasternal notch, C7, front neck point, shoulder-neck point, shoulder bone (acromion), underarm/armpit point
+- Canonical *measurement* pose for `measure/normalize.py` (re-pose target after un-posing from the A-pose fit):
+  - Default torso-and-leg pose: pure T-pose vs "modified T" with arms lowered ~10-15° to match Aldrich p.178-179 figure. Exact joint angles to fix during Phase 6.
+  - Aldrich bent-arm pose for #9 Top arm and #20 Sleeve length: shoulder + elbow joint angles to fix from Aldrich source.
+  - Whether armhole-depth measurements (#19-21, #27-29) need a third intermediate pose or work in the default. Decide once the construct/armhole.py rules are written.
 
 These get resolved during Phase 5-7, not before starting.
