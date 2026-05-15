@@ -215,3 +215,79 @@ PrimitiveRecipe = (
     Height | PlanarGirth | PlanarArc | LateralChord
     | LandmarkChord | Geodesic | GeodesicLoop
 )
+
+
+# ---------------------------------------------------------------------------
+# Polyline extraction — for visualisation. Returns an (N, 3) numpy array of
+# 3D points whose total length equals the recipe's measurement value.
+# ---------------------------------------------------------------------------
+
+
+def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+    """Return the 3D polyline that visualises a recipe on the fitted mesh.
+
+    None if the recipe is value-only (Formula) or cannot be visualised.
+    """
+    try:
+        if isinstance(recipe, Height):
+            p = landmarks[recipe.landmark]
+            return np.array([[p[0], _floor_y(verts), p[2]], p])
+
+        if isinstance(recipe, PlanarGirth):
+            origin = landmarks[recipe.landmark]
+            segs = slice_mesh(verts, faces, origin, _y_axis())
+            loops = _build_loops(segs)
+            loop = _pick_torso_loop(loops)
+            return np.vstack([loop, loop[:1]]) if loop is not None else None
+
+        if isinstance(recipe, PlanarArc):
+            origin = landmarks[recipe.landmark_plane]
+            segs = slice_mesh(verts, faces, origin, _y_axis())
+            loops = _build_loops(segs)
+            loop = _pick_torso_loop(loops)
+            if loop is None:
+                return None
+            start = landmarks[recipe.clip_start]
+            end = landmarks[recipe.clip_end]
+            i0 = int(np.argmin(np.linalg.norm(loop - start, axis=1)))
+            i1 = int(np.argmin(np.linalg.norm(loop - end, axis=1)))
+            if i0 == i1:
+                return None
+            n = len(loop)
+            a_idx = (list(range(i0, i1 + 1)) if i0 < i1
+                     else list(range(i0, n)) + list(range(0, i1 + 1)))
+            b_idx = (list(range(i1, i0 + 1)) if i1 < i0
+                     else list(range(i1, n)) + list(range(0, i0 + 1)))
+            arc_a, arc_b = loop[a_idx], loop[b_idx]
+            is_front = recipe.side == "front"
+            if (arc_a[:, 2].mean() > arc_b[:, 2].mean()) == is_front:
+                return arc_a
+            return arc_b
+
+        if isinstance(recipe, LateralChord):
+            origin = landmarks[recipe.landmark]
+            segs = slice_mesh(verts, faces, origin, _y_axis())
+            loops = _build_loops(segs)
+            loop = _pick_torso_loop(loops)
+            if loop is None:
+                return None
+            i_min = int(np.argmin(loop[:, 0]))
+            i_max = int(np.argmax(loop[:, 0]))
+            return np.array([loop[i_min], loop[i_max]])
+
+        if isinstance(recipe, LandmarkChord):
+            return np.array([landmarks[recipe.a], landmarks[recipe.b]])
+
+        if isinstance(recipe, Geodesic):
+            solver = _get_solver(verts, faces)
+            v_ids = [_nearest_vertex(verts, landmarks[w]) for w in recipe.waypoints]
+            return np.asarray(solver.find_geodesic_path_poly(v_ids))
+
+        if isinstance(recipe, GeodesicLoop):
+            solver = _get_solver(verts, faces)
+            v_ids = [_nearest_vertex(verts, landmarks[w]) for w in recipe.waypoints]
+            path = np.asarray(solver.find_geodesic_loop(v_ids))
+            return np.vstack([path, path[:1]])
+    except Exception:
+        return None
+    return None
