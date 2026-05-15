@@ -57,7 +57,8 @@ def main(argv: list[str] | None = None) -> int:
         num_betas=args.num_betas,
         device="cpu",
     )
-    result = fit_scan(scan_v, cfg=cfg, verbose=not args.quiet)
+    result = fit_scan(scan_v, cfg=cfg, verbose=not args.quiet,
+                      scan_faces=scan_f)
     save_fit(result, args.out)
     print(f"saved {args.out}")
     print(f"final chamfer (sum of bidirectional means) = {result.final_chamfer:.6f}")

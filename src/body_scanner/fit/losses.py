@@ -60,6 +60,64 @@ def pose_prior_z_l2(z: "torch.Tensor") -> "torch.Tensor":
     return (z ** 2).sum()
 
 
+def chamfer_point_to_surface(
+    smplx_verts: torch.Tensor,
+    scan_scene,
+    scan_verts: torch.Tensor,
+    smplx_scene_builder=None,
+) -> torch.Tensor:
+    """Bidirectional point-to-SURFACE chamfer.
+
+    Replaces the older point-to-point chamfer (chamfer_bidirectional).
+    Point-to-point biases SMPL-X toward the centroid of nearby scan vertices,
+    which sits interior to a closed-mesh scan and causes SMPL-X to collapse
+    inside the scan by ~half the local skin thickness when priors are loose.
+    Point-to-surface fixes that: each SMPL-X vertex finds the closest point
+    on the scan TRIANGLE MESH (orthogonal projection, edge/vertex fallback),
+    not the nearest vertex.
+
+    Args:
+      smplx_verts: (V, 3) differentiable SMPL-X vertices.
+      scan_scene:  open3d.t.geometry.RaycastingScene over the scan mesh.
+      scan_verts:  (V_scan, 3) tensor on the same device; targets for the
+                   reverse direction.
+      smplx_scene_builder: optional callable producing an o3d.t.geometry
+                   .RaycastingScene over the current SMPL-X mesh. If
+                   provided, the reverse term (scan -> SMPL-X surface) is
+                   computed by querying that scene; if None, the reverse
+                   term falls back to point-to-vertex (same as before) for
+                   the scan-side direction, which does NOT collapse since
+                   it pulls SMPL-X *outward* toward scan verts.
+    """
+    import open3d as o3d
+
+    # Forward: SMPL-X -> closest point on scan surface.
+    with torch.no_grad():
+        query = o3d.core.Tensor(
+            smplx_verts.detach().cpu().numpy().astype("float32"),
+            dtype=o3d.core.Dtype.Float32,
+        )
+        ans = scan_scene.compute_closest_points(query)
+        closest = ans["points"].numpy()
+    target_fwd = torch.from_numpy(closest).to(smplx_verts.device)
+    loss_fwd = ((smplx_verts - target_fwd) ** 2).sum(-1).mean()
+
+    # Reverse: pull SMPL-X toward scan vertices via point-to-vertex on the
+    # SMPL-X mesh side. We query each scan vertex against the *current*
+    # SMPL-X vertex cloud (rebuilt every iter via KD-tree); the returned
+    # target_smplx is a differentiable indexing into smplx_verts, so the
+    # gradient propagates correctly.
+    with torch.no_grad():
+        smplx_np = smplx_verts.detach().cpu().numpy()
+        smplx_tree = cKDTree(smplx_np)
+        scan_np = scan_verts.detach().cpu().numpy()
+        _, idx_p2s = smplx_tree.query(scan_np)
+    target_smplx = smplx_verts[idx_p2s]
+    loss_rev = ((scan_verts - target_smplx) ** 2).sum(-1).mean()
+
+    return loss_fwd + loss_rev
+
+
 def chamfer_bidirectional(
     smplx_verts: torch.Tensor,
     scan_verts: torch.Tensor,

@@ -25,7 +25,8 @@ from scipy.spatial import cKDTree
 from . import align
 from .losses import (
     angle_prior_elbow_knee,
-    chamfer_bidirectional,
+    chamfer_bidirectional,  # noqa: F401  — kept for backwards compatibility
+    chamfer_point_to_surface,
     crop_scan_for_chamfer,
     pose_prior_l2,
     pose_prior_z_l2,
@@ -58,12 +59,13 @@ class FitConfig:
         # Stage 4 — relax z prior
         dict(chamfer=1.0, shape=0.002, pose=0.001, angle=10.0, iters=60,
              unfreeze=("global_orient", "transl", "betas", "z"), use_vposer=True),
-        # Stage 5 — release into raw body_pose with very loose prior. We
-        # stop here: pushing the priors lower (or adding more betas) makes
-        # the bidirectional point-to-point chamfer collapse SMPL-X inside
-        # the scan surface. Proper fix is point-to-surface chamfer, tracked
-        # for Phase 7+.
+        # Stage 5 — release into raw body_pose with very loose prior.
         dict(chamfer=1.0, shape=0.0001, pose=0.0002, angle=10.0, iters=80,
+             unfreeze=("global_orient", "transl", "betas", "body_pose"),
+             use_vposer=False),
+        # Stage 6 — final tighten. Safe to push priors lower with
+        # point-to-surface chamfer (no inside-collapse).
+        dict(chamfer=1.0, shape=0.00002, pose=0.00005, angle=10.0, iters=120,
              unfreeze=("global_orient", "transl", "betas", "body_pose"),
              use_vposer=False),
     ])
@@ -99,6 +101,7 @@ def fit_scan(
     scan_verts: np.ndarray,
     cfg: FitConfig | None = None,
     verbose: bool = True,
+    scan_faces: np.ndarray | None = None,
 ) -> FitResult:
     cfg = cfg or FitConfig()
     device = torch.device(cfg.device)
@@ -153,6 +156,26 @@ def fit_scan(
     scan_t = torch.from_numpy(scan_cropped).to(device)
     scan_tree = cKDTree(scan_cropped)
 
+    # Build a RaycastingScene over the scan triangle mesh so the chamfer can
+    # use point-to-surface distance (instead of point-to-nearest-vertex).
+    # We need the original scan triangles for this, not just the cropped
+    # vertex subset — load via the caller-provided scan or derive from the
+    # cropped data. Caller provides only verts; faces come via scan_faces
+    # if supplied; otherwise we fall back to point-to-point chamfer.
+    import open3d as o3d
+    scan_scene = None
+    if scan_faces is not None:
+        m = o3d.t.geometry.TriangleMesh(
+            o3d.core.Tensor(scan_verts.astype("float32"),
+                            dtype=o3d.core.Dtype.Float32),
+            o3d.core.Tensor(scan_faces.astype("int32"),
+                            dtype=o3d.core.Dtype.UInt32),
+        )
+        scan_scene = o3d.t.geometry.RaycastingScene()
+        scan_scene.add_triangles(m)
+        if verbose:
+            print(f"built scan raycasting scene: {len(scan_verts)}v {len(scan_faces)}f")
+
     final_loss = float("inf")
 
     for stage_i, sw in enumerate(cfg.stage_weights):
@@ -187,7 +210,10 @@ def fit_scan(
             else:
                 out = body_model(return_full_pose=False)
             v = out.vertices[0]
-            l_chamfer = chamfer_bidirectional(v, scan_t, scan_tree)
+            if scan_scene is not None:
+                l_chamfer = chamfer_point_to_surface(v, scan_scene, scan_t)
+            else:
+                l_chamfer = chamfer_bidirectional(v, scan_t, scan_tree)
             l_shape = shape_prior(body_model.betas)
             if use_vposer:
                 l_pose = pose_prior_z_l2(z)
