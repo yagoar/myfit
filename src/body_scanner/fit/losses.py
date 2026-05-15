@@ -60,6 +60,30 @@ def pose_prior_z_l2(z: "torch.Tensor") -> "torch.Tensor":
     return (z ** 2).sum()
 
 
+def displacement_l2(d: torch.Tensor) -> torch.Tensor:
+    """L2 magnitude prior on the per-vertex displacement field D.
+    Keeps D close to zero so the parametric SMPL-X shape stays dominant."""
+    return (d ** 2).sum()
+
+
+def displacement_laplacian(d: torch.Tensor, laplacian_indices: torch.Tensor,
+                           laplacian_values: torch.Tensor) -> torch.Tensor:
+    """Cotangent-Laplacian smoothness prior on D.
+
+    `||L · D||²`, computed via a precomputed sparse Laplacian:
+        laplacian_indices: (2, nnz) int64 — sparse coo indices
+        laplacian_values:  (nnz,) float — sparse coo values
+    The Laplacian is over the SMPL-X CANONICAL mesh (10475 verts) and
+    needs to be built once at startup."""
+    L = torch.sparse_coo_tensor(
+        laplacian_indices, laplacian_values,
+        size=(d.shape[0], d.shape[0]),
+        device=d.device,
+    )
+    LD = torch.sparse.mm(L, d)   # (V, 3)
+    return (LD ** 2).sum()
+
+
 def chamfer_point_to_surface(
     smplx_verts: torch.Tensor,
     scan_scene,

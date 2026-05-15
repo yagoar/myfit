@@ -28,6 +28,8 @@ from .losses import (
     chamfer_bidirectional,  # noqa: F401  — kept for backwards compatibility
     chamfer_point_to_surface,
     crop_scan_for_chamfer,
+    displacement_l2,
+    displacement_laplacian,
     pose_prior_l2,
     pose_prior_z_l2,
     shape_prior,
@@ -68,6 +70,22 @@ class FitConfig:
         dict(chamfer=1.0, shape=0.00002, pose=0.00005, angle=10.0, iters=120,
              unfreeze=("global_orient", "transl", "betas", "body_pose"),
              use_vposer=False),
+        # Stage 7 — SMPL-X+D: add per-vertex displacement field D.
+        # Chamfer weight bumped 100x because by this stage the per-vertex
+        # mean squared distance is ~1e-4 m² and we need LBFGS gradients
+        # large enough to actually move D away from zero. Heavy Laplacian
+        # smoothness keeps D absorbing broad shape error, not scan noise.
+        dict(chamfer=100.0, shape=0.0, pose=0.0, angle=0.0, iters=60,
+             d_l2=0.1, d_lap=50.0,
+             unfreeze=("d",), use_vposer=False),
+        # Stage 8 — release more DOF: relax Laplacian, fine-tune D.
+        dict(chamfer=100.0, shape=0.0, pose=0.0, angle=0.0, iters=80,
+             d_l2=0.01, d_lap=5.0,
+             unfreeze=("d",), use_vposer=False),
+        # Stage 9 — final D polish: loose Laplacian, longer.
+        dict(chamfer=100.0, shape=0.0, pose=0.0, angle=0.0, iters=120,
+             d_l2=0.001, d_lap=0.5,
+             unfreeze=("d",), use_vposer=False),
     ])
 
 
@@ -81,18 +99,23 @@ class FitResult:
     smplx_vertices: np.ndarray
     smplx_joints: np.ndarray
     final_chamfer: float
+    displacement: np.ndarray | None = None  # per-vertex D (10475, 3)
 
 
-def _set_requires_grad(body_model, transl, z, names: tuple[str, ...]):
+def _set_requires_grad(body_model, transl, z, d, names: tuple[str, ...]):
     for p in body_model.parameters():
         p.requires_grad_(False)
     if z is not None:
         z.requires_grad_(False)
+    if d is not None:
+        d.requires_grad_(False)
     for n in names:
         if n == "transl":
             transl.requires_grad_(True)
         elif n == "z":
             z.requires_grad_(True)
+        elif n == "d":
+            d.requires_grad_(True)
         else:
             getattr(body_model, n).requires_grad_(True)
 
@@ -132,6 +155,11 @@ def fit_scan(
     if z is not None:
         z = torch.nn.Parameter(z)
 
+    # Per-vertex displacement field D (SMPL-X+D). Init zeros.
+    d_param = torch.nn.Parameter(
+        torch.zeros(body_model.v_template.shape[0], 3, device=device)
+    )
+
     # Crop chamfer target: drop hair/floor.
     keep_mask = crop_scan_for_chamfer(
         scan_verts, cfg.crop_above_y_frac, cfg.crop_below_y_frac
@@ -155,6 +183,18 @@ def fit_scan(
 
     scan_t = torch.from_numpy(scan_cropped).to(device)
     scan_tree = cKDTree(scan_cropped)
+
+    # Cotangent Laplacian over the SMPL-X canonical mesh (needed for the
+    # D smoothness regularizer). Computed once.
+    import potpourri3d as pp3d
+    smplx_template = body_model.v_template.detach().cpu().numpy().astype(np.float64)
+    smplx_faces_np = body_model.faces.astype(np.int64)
+    L_sparse = pp3d.cotan_laplacian(smplx_template, smplx_faces_np).tocoo()
+    lap_idx = torch.from_numpy(np.vstack([L_sparse.row, L_sparse.col])).long().to(device)
+    lap_val = torch.from_numpy(L_sparse.data.astype(np.float32)).to(device)
+    if verbose:
+        print(f"built cotangent Laplacian: {L_sparse.nnz} non-zeros over "
+              f"{smplx_template.shape[0]} verts")
 
     # Build a RaycastingScene over the scan triangle mesh so the chamfer can
     # use point-to-surface distance (instead of point-to-nearest-vertex).
@@ -185,11 +225,13 @@ def fit_scan(
                   "unfreeze": tuple(
                       "body_pose" if n == "z" else n for n in sw["unfreeze"])}
 
-        _set_requires_grad(body_model, transl, z, sw["unfreeze"])
+        _set_requires_grad(body_model, transl, z, d_param, sw["unfreeze"])
 
         params = [p for p in body_model.parameters() if p.requires_grad]
         if z is not None and z.requires_grad:
             params.append(z)
+        if d_param.requires_grad:
+            params.append(d_param)
 
         optimizer = torch.optim.LBFGS(
             params,
@@ -209,7 +251,7 @@ def fit_scan(
                 out = body_model(body_pose=body_pose_aa, return_full_pose=False)
             else:
                 out = body_model(return_full_pose=False)
-            v = out.vertices[0]
+            v = out.vertices[0] + d_param  # SMPL-X + per-vertex displacement
             if scan_scene is not None:
                 l_chamfer = chamfer_point_to_surface(v, scan_scene, scan_t)
             else:
@@ -223,11 +265,17 @@ def fit_scan(
                 vposer.decode(z).view(1, 63) if use_vposer
                 else body_model.body_pose
             )
+            l_d_l2 = displacement_l2(d_param) if sw.get("d_l2", 0) else \
+                torch.tensor(0.0, device=device)
+            l_d_lap = displacement_laplacian(d_param, lap_idx, lap_val) \
+                if sw.get("d_lap", 0) else torch.tensor(0.0, device=device)
             loss = (
                 sw["chamfer"] * l_chamfer
                 + sw["shape"] * l_shape
                 + sw["pose"] * l_pose
                 + sw["angle"] * l_angle
+                + sw.get("d_l2", 0) * l_d_l2
+                + sw.get("d_lap", 0) * l_d_lap
             )
             loss.backward()
             closure.last = float(loss.item())
@@ -236,18 +284,21 @@ def fit_scan(
                 float(l_shape.item()),
                 float(l_pose.item()),
                 float(l_angle.item()),
+                float(l_d_l2.item()),
+                float(l_d_lap.item()),
             )
             return loss
 
         for it in range(sw["iters"]):
             optimizer.step(closure)
             if verbose and (it % 10 == 0 or it == sw["iters"] - 1):
-                lc, ls, lp, la = closure.parts
+                lc, ls, lp, la, ldl, ldla = closure.parts
                 print(
                     f"  stage {stage_i+1} iter {it:3d}  "
                     f"loss={closure.last:.6f}  "
                     f"chamfer={lc:.6f}  shape={ls:.3f}  "
-                    f"pose={lp:.3f}  angle={la:.4f}"
+                    f"pose={lp:.3f}  angle={la:.4f}  "
+                    f"d_l2={ldl:.4f}  d_lap={ldla:.4f}"
                 )
         final_loss = closure.parts[0]
         if verbose:
@@ -274,6 +325,7 @@ def fit_scan(
         else:
             out = body_model()
             bp_out = body_model.body_pose.detach().cpu().numpy()[0].reshape(21, 3)
+        final_verts = (out.vertices[0] + d_param).detach().cpu().numpy()
 
     return FitResult(
         betas=body_model.betas.detach().cpu().numpy()[0],
@@ -281,9 +333,10 @@ def fit_scan(
         global_orient=body_model.global_orient.detach().cpu().numpy()[0],
         transl=transl.detach().cpu().numpy()[0],
         z=z.detach().cpu().numpy()[0] if z is not None else None,
-        smplx_vertices=out.vertices[0].detach().cpu().numpy(),
+        smplx_vertices=final_verts,
         smplx_joints=out.joints[0].detach().cpu().numpy(),
         final_chamfer=final_loss,
+        displacement=d_param.detach().cpu().numpy(),
     )
 
 
@@ -299,4 +352,6 @@ def save_fit(result: FitResult, out_path: Path) -> None:
         smplx_vertices=result.smplx_vertices,
         smplx_joints=result.smplx_joints,
         final_chamfer=np.array([result.final_chamfer]),
+        displacement=(result.displacement if result.displacement is not None
+                      else np.zeros((10475, 3), dtype=np.float32)),
     )
