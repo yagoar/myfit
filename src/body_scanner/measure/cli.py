@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("fit_npz", type=Path)
     p.add_argument("--model-folder", default="data/body_models")
     p.add_argument("--gender", default="female")
-    p.add_argument("--num-betas", type=int, default=200)
+    p.add_argument("--num-betas", type=int, default=100)
     p.add_argument("--seamly", action="store_true",
                    help="Run the Seamly catalog extractor (all codes).")
     p.add_argument("--both", action="store_true",

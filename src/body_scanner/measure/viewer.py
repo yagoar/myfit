@@ -318,7 +318,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("fit_npz", type=Path)
     p.add_argument("--model-folder", default="data/body_models")
     p.add_argument("--gender", default="female")
-    p.add_argument("--num-betas", type=int, default=200)
+    p.add_argument("--num-betas", type=int, default=100)
     p.add_argument("--port", type=int, default=8050)
     p.add_argument(
         "--scan-obj",
