@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.claude/
+
+# Project data (gitignored per SPEC.md Section 8)
+data/body_models/
+data/vposer/
+data/captures/
+data/results/
+
+# DPM video artefacts: keep transcripts (citable source), drop the heavy bits.
+# Source videos are symlinks into the user's own filesystem; audio is regenerable.
+references/dpm_videos/**/audio.wav
+references/dpm_videos/**/source.*
+
+# Whisper model cache (per-machine, not part of repo)
+.whisper-models/
