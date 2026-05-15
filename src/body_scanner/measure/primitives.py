@@ -260,7 +260,21 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
 
         if isinstance(recipe, PlanarGirth):
             loop = recipe._slice_loop(verts, faces, landmarks)
-            return np.vstack([loop, loop[:1]]) if loop is not None else None
+            if loop is None:
+                return None
+            # Show the convex hull (= taut tape around the body) rather than
+            # the body-surface contour. Matches the convex_hull_perimeter
+            # value the recipe computes.
+            from scipy.spatial import ConvexHull
+            xy = _loop_xz(loop, _y_axis())
+            if len(xy) < 3:
+                return np.vstack([loop, loop[:1]])
+            try:
+                hull_idx = ConvexHull(xy).vertices
+            except Exception:
+                return np.vstack([loop, loop[:1]])
+            hull_loop = loop[hull_idx]
+            return np.vstack([hull_loop, hull_loop[:1]])
 
         if isinstance(recipe, PlanarArc):
             origin = landmarks[recipe.landmark_plane]
