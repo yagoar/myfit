@@ -27,6 +27,38 @@ from .seamly_catalog import CODE_TO_NAME, FORMULAS, RECIPES
 from .seamly_extractor import extract_catalog
 
 
+def _offset_along_normals(
+    polyline: np.ndarray,
+    body_verts: np.ndarray,
+    body_normals: np.ndarray,
+    offset_m: float = 0.005,
+) -> np.ndarray:
+    """Lift a polyline 5mm outward along the body's surface normals so it
+    sits just above the mesh and isn't z-fought.
+
+    Each polyline point snaps to the nearest body vertex; its outward
+    direction is that vertex's normal."""
+    from scipy.spatial import cKDTree
+    tree = cKDTree(body_verts)
+    _, idx = tree.query(polyline)
+    return polyline + body_normals[idx] * offset_m
+
+
+def _vertex_normals(verts: np.ndarray, faces: np.ndarray) -> np.ndarray:
+    """Compute per-vertex normals by averaging face normals."""
+    v0 = verts[faces[:, 0]]
+    v1 = verts[faces[:, 1]]
+    v2 = verts[faces[:, 2]]
+    fn = np.cross(v1 - v0, v2 - v0)
+    n = np.linalg.norm(fn, axis=1, keepdims=True)
+    fn = np.divide(fn, n, where=n > 0)
+    vn = np.zeros_like(verts)
+    for k in range(3):
+        np.add.at(vn, faces[:, k], fn)
+    mag = np.linalg.norm(vn, axis=1, keepdims=True)
+    return np.divide(vn, mag, where=mag > 0)
+
+
 GROUP_LABELS = {
     "A": "Heights",
     "B": "Widths",
@@ -222,6 +254,11 @@ def build_app(npz_path: Path, model_folder: str, gender: str,
     else:
         body_verts, body_faces = verts, faces
     body_trace = _body_mesh_trace(body_verts, body_faces)
+    body_normals = _vertex_normals(body_verts, body_faces)
+    # Lift each polyline 5mm along the body's outward normal so the lines
+    # render on top of the mesh rather than z-fighting with it.
+    polylines = {code: _offset_along_normals(p, body_verts, body_normals)
+                 for code, p in polylines.items()}
     initial_fig = _figure(body_trace, {})
 
     app = Dash(__name__, title="body-scanner viewer")
