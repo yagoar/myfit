@@ -15,6 +15,17 @@ Phase 6 planning artifact. Classifies each of the 245 catalog entries in
   - geodesic surface path between landmarks with documented waypoints.
   No new textual interpretation needed beyond the landmark glossary
   already in `merged.yaml`.
+
+  > **Planar slice vs geodesic — do not conflate.**
+  > Some Seamly "circumferences" are *not* horizontal planar slices but
+  > shortest-path geodesics along the body surface between named
+  > landmarks. The Seamly diagrams are authoritative: if the tape line
+  > in the diagram is non-horizontal (e.g. dips under the bust to find
+  > the shortest path between armfolds), the recipe is geodesic, not
+  > planar. Flagged entries so far: G03 `highbust_circ`, G11
+  > `highbust_arc_f` (back-arc counterpart likely too). Check every
+  > G-group diagram against the planar-slice assumption before wiring
+  > the extractor.
 - **computed** — README marks the entry as `yes: <formula>`. Free at
   extract time: declare `type: derived`, evaluate from other entries.
   No mesh work.
@@ -156,7 +167,7 @@ all formula-derived. G42-G45 are torso variants. G46 computed.
 |------|------|-------|---------------------|
 | G01 | `neck_mid_circ` | mechanical | planar slice at mid-neck height |
 | G02 | `neck_circ` | mechanical | planar slice at neck base |
-| G03 | `highbust_circ` | mechanical | planar slice at upper_bust_level |
+| G03 | `highbust_circ` | mechanical | **geodesic shortest-path girth** between `armfold_front_left`→`armfold_front_right` across chest (high under armpits) and `armfold_back_left`→`armfold_back_right` across back; NOT a planar slice. Seamly diagram explicitly shows path dipping under bust if needed. |
 | G04 | `bust_circ` | mechanical | planar slice at bust_level |
 | G05 | `lowbust_circ` | mechanical | planar slice below bust |
 | G06 | `rib_circ` | mechanical | planar slice at lower rib |
@@ -164,7 +175,7 @@ all formula-derived. G42-G45 are torso variants. G46 computed.
 | G08 | `highhip_circ` | mechanical | planar slice at high_hip_level |
 | G09 | `hip_circ` | mechanical | planar slice at low_hip_level |
 | G10 | `neck_arc_f` | mechanical | front arc at neck base, clipped at bra_side_seam or equivalent |
-| G11 | `highbust_arc_f` | mechanical | front arc at upper_bust_level |
+| G11 | `highbust_arc_f` | mechanical | **geodesic front arc** — shortest-path across chest from `armfold_front_left` to `armfold_front_right`, high under armpits. NOT a planar arc. |
 | G12 | `bust_arc_f` | mechanical | front arc at bust_level |
 | G13 | `lowbust_arc_f` | mechanical | front arc at lowbust |
 | G14 | `rib_arc_f` | mechanical | front arc at rib |
