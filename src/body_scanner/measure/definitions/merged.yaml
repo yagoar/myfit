@@ -259,7 +259,7 @@ measurements:
       column: dart
     sources:
       - "references/aldrich_full.pdf p.179 (PDF page 182) item 8 Dart (\"Standard measurement.\")"
-      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+      - "src/body_scanner/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
     notes: |
       Aldrich text: "Standard measurement." Not measured on the body;
       pulled from the size chart on book p.13 indexed by the row that
@@ -406,7 +406,7 @@ measurements:
       column: armscye_depth
     sources:
       - "references/aldrich_full.pdf p.179 (PDF page 182) item 15 Armscye depth (\"Standard measurement.\")"
-      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+      - "src/body_scanner/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
     notes: |
       Aldrich text: "Standard measurement." Body-derived value can be
       computed in parallel for comparison (vertical from neck base to
@@ -446,7 +446,7 @@ measurements:
       column: waist_to_hip
     sources:
       - "references/aldrich_full.pdf p.179 (PDF page 182) item 17 Waist to hip (\"Standard measurement.\")"
-      - "references/aldrich_full.pdf p.13 — pending extraction pass"
+      - "src/body_scanner/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
     notes: |
       Aldrich text: "Standard measurement." Body-derived equivalent is
       the height difference between landmarks.waist_string and the hip

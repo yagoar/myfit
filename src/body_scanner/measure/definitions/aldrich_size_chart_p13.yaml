@@ -1,0 +1,114 @@
+# Aldrich standard body measurements — women's sizing chart.
+#
+# Source: references/aldrich_full.pdf book p.13 (PDF page 16, due to the
+# +3 front-matter offset). 5th edition.
+#
+# Aldrich's preamble verbatim:
+#   "This chart, constructed for women's standard sizing, differs from the
+#    size chart on page 12; it reflects a mature figure with increased
+#    measurements for the waist, hips and also front shoulder to waist
+#    measure in the larger sizes. It is based on 4 cm and 6 cm bust
+#    increments between the size codes and is compliant with the body
+#    measurement size chart given in the standard BS EN 13402-3. Despite
+#    variations in body sizes, the general trend is for body size to
+#    increase with height. See the special table below for short or tall
+#    women."
+#
+# Height range covered by the main chart: 160-172 cm
+# (5 ft 3 in - 5 ft 7 1/2 in). Adjustments for shorter (152-160 cm) and
+# taller (172-180 cm) women are in the `height_adjustments` block below.
+#
+# This is the chart referenced from `merged.yaml` table_lookup entries
+# for the three Aldrich items flagged "Standard measurement" on book
+# p.179: item 8 Dart, item 15 Armscye depth, item 17 Waist to hip.
+# Body-derived values for any other row are computed for comparison but
+# the personal-measurement column on book p.178 is the canonical value
+# for the figure being drafted.
+#
+# Units: centimetres. Where Aldrich shows a fraction (e.g. 11.75 for
+# shoulder), the decimal form is preserved.
+
+chart_id: aldrich_size_chart_p13
+source: "references/aldrich_full.pdf p.13 (PDF page 16)"
+edition: "5th edition (Aldrich, *Metric Pattern Cutting for Women's Wear*)"
+height_range_cm: [160, 172]
+height_range_imperial: "5 ft 3 in - 5 ft 7 1/2 in"
+
+# Size codes are the chart's column headers. Bust value at each size is
+# the primary lookup key (see book p.178: bust determines the drafting
+# size).
+size_codes: [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]
+
+# Each row is parallel to size_codes (index N -> value at size N).
+# Names match the personal-measurement table on book p.178 so that
+# merged.yaml entries can look up by name + size.
+measurements:
+  bust:                    [76,    80,    84,    88,    92,    96,    100,   104,   110,   116,   122]
+  waist:                   [60,    64,    68,    72,    76,    80,    84,    88,    94,    100,   106]
+  low_waist:               [70,    74,    78,    82,    86,    90,    94,    98,    104,   110,   116]
+  hips:                    [84,    88,    92,    96,    100,   104,   108,   112,   117,   122,   127]
+  back_width:              [31.4,  32.4,  33.4,  34.4,  35.4,  36.4,  37.4,  38.4,  39.8,  41.2,  42.6]
+  chest:                   [28.8,  30,    31.2,  32.4,  33.6,  34.8,  36,    37.2,  39,    40.8,  42.6]
+  shoulder:                [11.5,  11.75, 12,    12.25, 12.5,  12.75, 13,    13.25, 13.6,  13.9,  14.2]
+  neck_size:               [34,    35,    36,    37,    38,    39,    40,    41,    42.4,  43.8,  45.2]
+  dart:                    [5.2,   5.8,   6.4,   7,     7.6,   8.2,   8.8,   9.4,   10,    10.6,  11.2]
+  top_arm:                 [24.8,  26,    27.2,  28.4,  29.6,  30.8,  32,    33.2,  35.2,  37.2,  39.2]
+  wrist:                   [14.5,  15,    15.5,  16,    16.5,  17,    17.5,  18,    18.7,  19.4,  20.1]
+  ankle:                   [22.5,  23,    23.5,  24,    24.5,  25,    25.5,  26,    26.7,  27.4,  28.1]
+  high_ankle:              [19.5,  20,    20.5,  21,    21.5,  22,    22.5,  23,    23.7,  24.4,  25.1]
+  nape_to_waist:           [39.8,  40.2,  40.6,  41,    41.4,  41.8,  42.2,  42.6,  43,    43.4,  43.8]
+  front_shoulder_to_waist: [39.8,  40.2,  40.6,  41,    41.4,  42.3,  43.2,  44.1,  45,    45.9,  46.8]
+  armscye_depth:           [19.8,  20.2,  20.6,  21,    21.4,  21.8,  22.2,  22.6,  23.2,  23.8,  24.4]
+  waist_to_knee:           [57,    57.5,  58,    58.5,  59,    59.5,  60,    60.5,  61,    61.5,  62]
+  waist_to_hip:            [19.7,  20,    20.3,  20.6,  20.9,  21.2,  21.5,  21.8,  22.1,  22.4,  22.7]
+  waist_to_floor:          [101,   102,   103,   104,   105,   106,   107,   108,   109,   110,   111]
+  body_rise:               [25.9,  26.6,  27.3,  28,    28.7,  29.4,  30.1,  30.8,  31.8,  32.8,  33.8]
+  sleeve_length:           [57,    57.5,  58,    58.5,  59,    59.5,  60,    60.25, 60.5,  60.75, 61]
+  sleeve_length_jersey:    [53,    53.5,  54,    54.5,  55,    55.5,  56,    56.25, 56.5,  56.75, 57]
+
+# Garment-level rows from the same chart, labelled "Extra measurements
+# (garments)" in Aldrich. Kept here for completeness — these are NOT
+# body measurements and they are not used by the body-fit pipeline, but
+# they are part of the same source page and will be needed in Phase 9
+# when drafting cuff/trouser-hem details.
+garment_extras:
+  cuff_size_shirts:           [20.5, 21,    21,    21.5,  21.5,  22,    22.5,  23,    23.5,  24,    24.5]
+  cuff_size_two_piece_sleeve: [13,   13.25, 13.5,  13.75, 14,    14.25, 14.5,  14.75, 15,    15.25, 15.5]
+  trouser_bottom_width:       [20.5, 21,    21.5,  22,    22.5,  23,    23.5,  24,    24.5,  25,    25.5]
+  jeans_bottom_width:         [18,   18.5,  18.5,  19,    19,    19.5,  19.5,  20,    20,    21,    21]
+
+# Adjustment offsets for women outside the 160-172 cm height range, from
+# the small "Tall and short women" table on book p.13. Aldrich's text:
+#   "Size charts for tall or short women have each of the following
+#    vertical measurements adjusted as shown in the size chart."
+# Applies additively to the main-chart values; same delta across all
+# size codes.
+height_adjustments:
+  short_women:
+    height_range_cm: [152, 160]
+    height_range_imperial: "5 ft - 5 ft 3 in"
+    deltas_cm:
+      nape_to_waist: -2
+      armscye_depth: -0.8     # Aldrich labels this "scye depth" in the small table
+      sleeve_length: -2.5
+      waist_to_knee: -3
+      waist_to_floor: -5
+      body_rise: -1
+  tall_women:
+    height_range_cm: [172, 180]
+    height_range_imperial: "5 ft 7 1/2 in - 5 ft 10 1/2 in"
+    deltas_cm:
+      nape_to_waist: +2
+      armscye_depth: +0.8
+      sleeve_length: +2.5
+      waist_to_knee: +3
+      waist_to_floor: +5
+      body_rise: +1
+
+# A second chart appears on book p.14 ("Standard body measurements: XS,
+# S, M, L, XL") with 8 cm bust grades and an XS half-grade. That chart
+# is used mainly for jersey leisure wear and mail-order catalogue
+# sizing. Per SPEC.md section 5 only the p.13 chart is cited for the
+# canonical "standard measurement" lookups, so the p.14 chart is not
+# transcribed here. If a later phase needs it, capture it in a sibling
+# file named aldrich_size_chart_p14.yaml.
