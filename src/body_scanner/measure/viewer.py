@@ -49,14 +49,16 @@ GROUP_LABELS = {
 
 
 def _load_fit(npz_path: Path, model_folder: str, gender: str,
-              num_betas: int) -> tuple[np.ndarray, np.ndarray]:
+              num_betas: int) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
     fit = np.load(npz_path)
     verts = fit["smplx_vertices"].astype(np.float32)
+    joints = (fit["smplx_joints"].astype(np.float32)
+              if "smplx_joints" in fit.files else None)
     bm = smplx.create(model_path=model_folder, model_type="smplx",
                       gender=gender, num_betas=num_betas, use_pca=False,
                       batch_size=1)
     faces = np.asarray(bm.faces, dtype=np.int32)
-    return verts, faces
+    return verts, faces, joints
 
 
 def _build_polylines(verts, faces, landmarks):
@@ -199,9 +201,9 @@ def _header(catalog_values: dict[str, float], npz_path: Path) -> html.Div:
 
 def build_app(npz_path: Path, model_folder: str, gender: str,
               num_betas: int) -> Dash:
-    verts, faces = _load_fit(npz_path, model_folder, gender, num_betas)
-    landmarks = build_landmark_set(verts)
-    report = extract_catalog(verts, faces)
+    verts, faces, joints = _load_fit(npz_path, model_folder, gender, num_betas)
+    landmarks = build_landmark_set(verts, joints=joints)
+    report = extract_catalog(verts, faces, joints=joints)
     polylines = _build_polylines(verts, faces, landmarks)
     body_trace = _body_mesh_trace(verts, faces)
     initial_fig = _figure(body_trace, {})

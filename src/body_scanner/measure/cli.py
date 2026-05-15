@@ -69,6 +69,8 @@ def main(argv: list[str] | None = None) -> int:
 
     fit = np.load(args.fit_npz)
     verts = fit["smplx_vertices"].astype(np.float32)
+    joints = (fit["smplx_joints"].astype(np.float32)
+              if "smplx_joints" in fit.files else None)
     bm = smplx.create(
         model_path=args.model_folder, model_type="smplx",
         gender=args.gender, num_betas=args.num_betas,
@@ -80,7 +82,7 @@ def main(argv: list[str] | None = None) -> int:
     run_seamly = args.seamly or args.both
 
     if run_named:
-        rep = extract(verts, faces)
+        rep = extract(verts, faces, joints=joints)
         print("=" * 52)
         print("merged.yaml (Aldrich + dpm) extractor")
         print("=" * 52)
@@ -92,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  {k}: {reason}")
 
     if run_seamly:
-        cat = extract_catalog(verts, faces)
+        cat = extract_catalog(verts, faces, joints=joints)
         if run_named:
             print()
         print("=" * 52)

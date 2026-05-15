@@ -51,6 +51,7 @@ def extract(
     yaml_path: Path | str = DEFAULT_YAML,
     review_json: Path | str | None = None,
     only: set[str] | None = None,
+    joints: np.ndarray | None = None,
 ) -> ExtractionReport:
     """Run the extractor end-to-end.
 
@@ -61,10 +62,11 @@ def extract(
     only:          if set, only compute measurements whose name is in this set
     """
     spec = yaml.safe_load(Path(yaml_path).read_text())
-    if review_json is not None:
-        landmarks = build_landmark_set(fitted_verts, review_json)
-    else:
-        landmarks = build_landmark_set(fitted_verts)
+    rj = review_json if review_json is not None else None
+    landmarks = (
+        build_landmark_set(fitted_verts, rj, joints=joints) if rj is not None
+        else build_landmark_set(fitted_verts, joints=joints)
+    )
 
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}

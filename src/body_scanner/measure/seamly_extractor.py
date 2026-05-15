@@ -24,10 +24,11 @@ def extract_catalog(
     fitted_verts: np.ndarray,
     smplx_faces: np.ndarray,
     review_json: str | None = None,
+    joints: np.ndarray | None = None,
 ) -> CatalogReport:
     landmarks = (
-        build_landmark_set(fitted_verts, review_json) if review_json
-        else build_landmark_set(fitted_verts)
+        build_landmark_set(fitted_verts, review_json, joints=joints) if review_json
+        else build_landmark_set(fitted_verts, joints=joints)
     )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}

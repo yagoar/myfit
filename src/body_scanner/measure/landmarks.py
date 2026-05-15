@@ -22,6 +22,31 @@ import numpy as np
 DEFAULT_REVIEW_JSON = Path("references/smplx_landmark_review.json")
 
 
+# SMPL-X joint indices, in the order returned by smplx body_model().joints.
+# Source: smplx.body_models.SMPLX. Body joints 0..21, then jaw, eyes, hands.
+SMPLX_JOINT_INDEX = {
+    "pelvis": 0, "L_Hip": 1, "R_Hip": 2, "spine1": 3, "L_Knee": 4,
+    "R_Knee": 5, "spine2": 6, "L_Ankle": 7, "R_Ankle": 8, "spine3": 9,
+    "L_Foot": 10, "R_Foot": 11, "neck": 12, "L_Collar": 13, "R_Collar": 14,
+    "head": 15, "L_Shoulder": 16, "R_Shoulder": 17, "L_Elbow": 18,
+    "R_Elbow": 19, "L_Wrist": 20, "R_Wrist": 21,
+}
+
+
+# Landmarks whose verified vertex IDs sit on heavily arm-driven vertices.
+# Populating an entry here overrides the vertex with the named SMPL-X joint
+# position (pose-invariant rotation centre).
+#
+# WARNING: joint positions are INTERNAL (rotation centres ~5cm inboard from
+# the skin). Overriding e.g. acromion shifts surface-tape measurements like
+# B01 width inward by ~9cm. Use only for landmarks where geodesic-endpoint
+# stability under pose matters more than surface accuracy.
+#
+# Empty by default. The `joint.L_Shoulder` syntax remains available for
+# explicit opt-in inside recipes.
+JOINT_OVERRIDES: dict[str, str] = {}
+
+
 # Compound landmarks: name -> (operation, [base_names])
 # Resolved by computing on the base landmarks' 3D coordinates.
 COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
@@ -78,10 +103,17 @@ class LandmarkSet:
 
     verts: np.ndarray  # (V, 3) fitted SMPL-X vertices
     vertex_ids: dict[str, int]  # leaf name -> vertex id
+    joints: np.ndarray | None = None  # (J, 3) fitted SMPL-X joint positions
 
     def __getitem__(self, name: str) -> np.ndarray:
-        """Resolve `landmarks.<leaf>` or bare `<leaf>` to a 3D point."""
+        """Resolve `landmarks.<leaf>`, `joint.<NAME>`, or bare `<leaf>` to
+        a 3D point."""
+        if name.startswith("joint."):
+            return self._joint(name.split(".", 1)[1])
         leaf = name.split(".", 1)[1] if name.startswith("landmarks.") else name
+
+        if leaf in JOINT_OVERRIDES and self.joints is not None:
+            return self._joint(JOINT_OVERRIDES[leaf])
 
         if leaf in self.vertex_ids:
             return self.verts[self.vertex_ids[leaf]]
@@ -106,8 +138,24 @@ class LandmarkSet:
         )
 
     def has(self, name: str) -> bool:
+        if name.startswith("joint."):
+            return (self.joints is not None
+                    and name.split(".", 1)[1] in SMPLX_JOINT_INDEX)
         leaf = name.split(".", 1)[1] if name.startswith("landmarks.") else name
+        if leaf in JOINT_OVERRIDES and self.joints is not None:
+            return True
         return leaf in self.vertex_ids or leaf in COMPOUND_LANDMARKS
+
+    def _joint(self, joint_name: str) -> np.ndarray:
+        if self.joints is None:
+            raise KeyError(
+                f"joint.{joint_name} requested but LandmarkSet was built "
+                "without joints — pass `joints=fit['smplx_joints']` to "
+                "build_landmark_set."
+            )
+        if joint_name not in SMPLX_JOINT_INDEX:
+            raise KeyError(f"unknown SMPL-X joint name {joint_name!r}")
+        return self.joints[SMPLX_JOINT_INDEX[joint_name]]
 
 
 def load_vertex_ids(path: Path | str = DEFAULT_REVIEW_JSON) -> dict[str, int]:
@@ -125,6 +173,15 @@ def load_vertex_ids(path: Path | str = DEFAULT_REVIEW_JSON) -> dict[str, int]:
 def build_landmark_set(
     fitted_verts: np.ndarray,
     review_json: Path | str = DEFAULT_REVIEW_JSON,
+    joints: np.ndarray | None = None,
 ) -> LandmarkSet:
-    """Construct a LandmarkSet from a fitted SMPL-X mesh + verified IDs."""
-    return LandmarkSet(verts=fitted_verts, vertex_ids=load_vertex_ids(review_json))
+    """Construct a LandmarkSet from a fitted SMPL-X mesh + verified IDs.
+
+    `joints` is the (J, 3) array from a fit (e.g. fit['smplx_joints']);
+    when supplied, it enables `joint.X` resolution and the JOINT_OVERRIDES
+    fallback (acromion -> L_Shoulder, etc.)."""
+    return LandmarkSet(
+        verts=fitted_verts,
+        vertex_ids=load_vertex_ids(review_json),
+        joints=joints,
+    )

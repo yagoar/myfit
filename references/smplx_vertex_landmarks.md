@@ -59,8 +59,8 @@ are not stored in the table.
 |----------|-------------|----------------------|----------|
 | `shoulder_neck_left` | Corner where the left side of the neck meets the shoulder. dpm's "high neck point". Aliases: `high_neck_point_left`. | `left_collar` (13) | 3950 |
 | `shoulder_neck_right` | Right corner where neck meets shoulder. | `right_collar` (14) | 6698 |
-| `acromion_left` | Outer end of the left shoulder bone (acromion process). dpm's "shoulder point" / "shoulder tip". Alias: `shoulder_tip_left`. | `left_shoulder` (16) — lateral | 5627 |
-| `acromion_right` | Outer end of the right shoulder bone. | `right_shoulder` (17) — lateral | 8321 |
+| `acromion_left` | Outer end of the left shoulder bone (acromion process). dpm's "shoulder point" / "shoulder tip". Alias: `shoulder_tip_left`. Re-picked from 5627 → 3875 because the previous vertex had 41% L_Shoulder skinning weight and drifted with arm pose; 3875 is 81% L_Collar / 3% L_Shoulder. | `left_shoulder` (16) — lateral | 3875 |
+| `acromion_right` | Outer end of the right shoulder bone. Mirror of 3875. | `right_shoulder` (17) — lateral | 6626 |
 
 ### Front shoulder midpoints (2)
 
