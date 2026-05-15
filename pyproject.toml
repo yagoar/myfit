@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "body-scanner"
+version = "0.0.1"
+description = "Personal LiDAR-based body scanner for sewing pattern drafting (SMPL-X fit -> measurements -> blocks)."
+readme = "README.md"
+# Pinned to 3.12 because Open3D 0.19 (latest as of 2026-05) ships wheels only
+# up to 3.12. Revisit when Open3D supports 3.13+.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "torch>=2.2",
+  "smplx>=0.1.28",
+  "open3d>=0.18",
+  "trimesh>=4.0",
+  "potpourri3d>=0.0.8",
+  "opencv-python>=4.9",
+  "pillow>=10.0",
+  "scikit-image>=0.22",
+  "networkx>=3.2",
+  "pyyaml>=6.0",
+  "rich>=13.0",
+  "typer>=0.12",
+  "jinja2>=3.1",
+  "svgwrite>=1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/body_scanner"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

@@ -450,7 +450,9 @@ Stop and verify when:
 5. Set up `pyproject.toml` with dependencies from Section 15
 6. Place the source materials in `references/` (Section 5)
 7. Place SMPL-X model files in `data/body_models/smplx/`
-8. Run Phase 0 verification: `import smplx; m = smplx.create("data/body_models/smplx", model_type="smplx", gender="neutral"); assert m.faces.shape == (20908, 3)`
+8. Run Phase 0 verification: `import smplx; m = smplx.create("data/body_models", model_type="smplx", gender="female"); assert m.faces.shape == (20908, 3)`. Notes:
+   - `smplx.create()` joins `model_path` with `model_type` when `model_path` is a directory, so the path passed must be the **parent** of the `smplx/` subfolder (i.e. `data/body_models`, not `data/body_models/smplx`). The actual model files live in `data/body_models/smplx/`.
+   - The project is single-user, female-target, so the **FEMALE** gendered model is used throughout (better shape space than NEUTRAL — see Section 13 risks).
 
 ## 15. Dependencies
 
