@@ -124,7 +124,9 @@ RECIPES = {
     "B01": LandmarkChord("acromion_left", "acromion_right"),
     "B02": LateralChord("bust_level"),
     "B03": LateralChord("waist_string"),
-    "B04": LateralChord("low_hip_level"),
+    # Hip is below pelvis joint -> most verts are leg-tagged. Include legs.
+    "B04": LateralChord("low_hip_level",
+                        regions=("torso", "left_leg", "right_leg")),
 
     # ------------------------------------------------------------------
     # G — Circumferences (G01-G09) and Front Arcs (G10-G17)
@@ -141,7 +143,8 @@ RECIPES = {
     "G06": PlanarGirth("waist_string"),  # placeholder until rib_level lands
     "G07": PlanarGirth("waist_string"),
     "G08": PlanarGirth("high_hip_level"),
-    "G09": PlanarGirth("low_hip_level"),
+    "G09": PlanarGirth("low_hip_level",
+                       regions=("torso", "left_leg", "right_leg")),
 
     "G10": PlanarArc("front_neck_point", "shoulder_neck_left",
                      "shoulder_neck_right", "front"),
@@ -150,7 +153,9 @@ RECIPES = {
     "G13": PlanarArc("lowbust_level", "waist_side_left", "waist_side_right", "front"),
     "G15": PlanarArc("waist_string", "waist_side_left", "waist_side_right", "front"),
     "G16": PlanarArc("high_hip_level", "waist_side_left", "waist_side_right", "front"),
-    "G17": PlanarArc("low_hip_level", "waist_side_left", "waist_side_right", "front"),
+    "G17": PlanarArc("low_hip_level", "waist_side_left", "waist_side_right",
+                     "front",
+                     regions=("torso", "left_leg", "right_leg")),
 
     # ------------------------------------------------------------------
     # H — Vertical distances along the body (geodesic surface paths
@@ -246,9 +251,9 @@ RECIPES = {
     "L06": Geodesic(("acromion_left", "elbow_back_left")),
     "L08": Geodesic(("underarm_left", "wrist_ulnar_left")),
     "L09": Geodesic(("underarm_left", "elbow_back_left")),
-    "L11": PlanarGirth("bicep_max_right"),
-    "L13": PlanarGirth("elbow_back_left"),
-    "L15": PlanarGirth("wrist_ulnar_left"),
+    "L11": PlanarGirth("bicep_max_right", regions=("right_arm",)),
+    "L13": PlanarGirth("elbow_back_left", regions=("left_arm",)),
+    "L15": PlanarGirth("wrist_ulnar_left", regions=("left_arm",)),
     "L16": Geodesic(("acromion_left", "armfold_front_left")),
     "L19": GeodesicLoop(("acromion_left", "armscye_front_left",
                          "underarm_left", "armscye_back_left")),
@@ -264,11 +269,14 @@ RECIPES = {
     # ------------------------------------------------------------------
     "M01": Height("crotch_midpoint"),
     "M02": Height("waist_side_left"),
-    "M03": PlanarGirth("thigh_at_crotch_left"),
-    "M05": PlanarGirth("mid_knee_level"),
-    "M07": PlanarGirth("ankle_bone_lateral_left"),  # calf placeholder
+    # Thigh at crotch sits exactly at leg/torso boundary; include torso so
+    # the boundary triangles survive the mask.
+    "M03": PlanarGirth("thigh_at_crotch_left",
+                       regions=("left_leg", "torso")),
+    "M05": PlanarGirth("mid_knee_level", regions=("left_leg",)),
+    "M07": PlanarGirth("ankle_bone_lateral_left", regions=("left_leg",)),  # calf placeholder
     "M08": Height("ankle_bone_lateral_left"),
-    "M09": PlanarGirth("ankle_bone_lateral_left"),
+    "M09": PlanarGirth("ankle_bone_lateral_left", regions=("left_leg",)),
 
     # ------------------------------------------------------------------
     # N — Crotch (front-waist over crotch to back-waist)

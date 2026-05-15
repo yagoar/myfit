@@ -31,10 +31,13 @@ from .recipes import (  # reuse the slicing utilities already built
     _build_loops,
     _convex_hull_perimeter,
     _loop_xz,
+    _pick_largest_loop,
+    _pick_loop_near_point,
     _pick_torso_loop,
     _polygon_perimeter,
     slice_mesh,
 )
+from .regions import region_vertex_mask
 
 
 # ---------------------------------------------------------------------------
@@ -72,14 +75,30 @@ class Height:
 
 @dataclass(frozen=True)
 class PlanarGirth:
-    """Convex-hull perimeter of the horizontal slice at the landmark's Y."""
+    """Convex-hull perimeter of the horizontal slice at the landmark's Y.
+
+    regions: tuple of region names from regions.REGIONS. If set, only
+    triangles entirely inside those regions are sliced. Default ("torso",)
+    keeps arms/legs out of torso-circumference slices."""
     landmark: str
+    regions: tuple[str, ...] = ("torso",)
+
+    def _slice_loop(self, verts, faces, landmarks):
+        origin = landmarks[self.landmark]
+        mask = region_vertex_mask(self.regions) if self.regions else None
+        segs = slice_mesh(verts, faces, origin, _y_axis(), vertex_mask=mask)
+        loops = _build_loops(segs)
+        if not loops:
+            return None
+        # For non-torso regions (e.g. left_arm), the mask isolates the body
+        # part; if both knees survive (e.g. mid_knee slice across both legs),
+        # pick the loop closest to the landmark's actual 3D position.
+        if "torso" in self.regions:
+            return _pick_torso_loop(loops)
+        return _pick_loop_near_point(loops, origin)
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
-        origin = landmarks[self.landmark]
-        segs = slice_mesh(verts, faces, origin, _y_axis())
-        loops = _build_loops(segs)
-        loop = _pick_torso_loop(loops)
+        loop = self._slice_loop(verts, faces, landmarks)
         if loop is None:
             return float("nan")
         xy = _loop_xz(loop, _y_axis())
@@ -94,12 +113,15 @@ class PlanarArc:
     clip_start: str
     clip_end: str
     side: str  # "front" | "back"
+    regions: tuple[str, ...] = ("torso",)
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
         origin = landmarks[self.landmark_plane]
-        segs = slice_mesh(verts, faces, origin, _y_axis())
+        mask = region_vertex_mask(self.regions) if self.regions else None
+        segs = slice_mesh(verts, faces, origin, _y_axis(), vertex_mask=mask)
         loops = _build_loops(segs)
-        loop = _pick_torso_loop(loops)
+        loop = _pick_torso_loop(loops) if "torso" in self.regions \
+            else _pick_largest_loop(loops)
         if loop is None:
             return float("nan")
         start = landmarks[self.clip_start]
@@ -127,12 +149,15 @@ class PlanarArc:
 class LateralChord:
     """Maximum X-extent of the horizontal slice at the landmark plane."""
     landmark: str
+    regions: tuple[str, ...] = ("torso",)
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
         origin = landmarks[self.landmark]
-        segs = slice_mesh(verts, faces, origin, _y_axis())
+        mask = region_vertex_mask(self.regions) if self.regions else None
+        segs = slice_mesh(verts, faces, origin, _y_axis(), vertex_mask=mask)
         loops = _build_loops(segs)
-        loop = _pick_torso_loop(loops)
+        loop = _pick_torso_loop(loops) if "torso" in self.regions \
+            else _pick_largest_loop(loops)
         if loop is None:
             return float("nan")
         return float(loop[:, 0].max() - loop[:, 0].min()) * 100.0
@@ -234,17 +259,18 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             return np.array([[p[0], _floor_y(verts), p[2]], p])
 
         if isinstance(recipe, PlanarGirth):
-            origin = landmarks[recipe.landmark]
-            segs = slice_mesh(verts, faces, origin, _y_axis())
-            loops = _build_loops(segs)
-            loop = _pick_torso_loop(loops)
+            loop = recipe._slice_loop(verts, faces, landmarks)
             return np.vstack([loop, loop[:1]]) if loop is not None else None
 
         if isinstance(recipe, PlanarArc):
             origin = landmarks[recipe.landmark_plane]
-            segs = slice_mesh(verts, faces, origin, _y_axis())
+            mask = (region_vertex_mask(recipe.regions)
+                    if recipe.regions else None)
+            segs = slice_mesh(verts, faces, origin, _y_axis(),
+                              vertex_mask=mask)
             loops = _build_loops(segs)
-            loop = _pick_torso_loop(loops)
+            loop = (_pick_torso_loop(loops) if "torso" in recipe.regions
+                    else _pick_largest_loop(loops))
             if loop is None:
                 return None
             start = landmarks[recipe.clip_start]
@@ -266,9 +292,13 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
 
         if isinstance(recipe, LateralChord):
             origin = landmarks[recipe.landmark]
-            segs = slice_mesh(verts, faces, origin, _y_axis())
+            mask = (region_vertex_mask(recipe.regions)
+                    if recipe.regions else None)
+            segs = slice_mesh(verts, faces, origin, _y_axis(),
+                              vertex_mask=mask)
             loops = _build_loops(segs)
-            loop = _pick_torso_loop(loops)
+            loop = (_pick_torso_loop(loops) if "torso" in recipe.regions
+                    else _pick_largest_loop(loops))
             if loop is None:
                 return None
             i_min = int(np.argmin(loop[:, 0]))

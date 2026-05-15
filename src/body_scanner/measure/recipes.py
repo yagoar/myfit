@@ -22,6 +22,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 
 from .landmarks import LandmarkSet
+from .regions import region_vertex_mask
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +69,7 @@ def slice_mesh(
     faces: np.ndarray,
     plane_origin: np.ndarray,
     plane_normal: np.ndarray,
+    vertex_mask: np.ndarray | None = None,
 ) -> list[np.ndarray]:
     """Intersect a mesh with a plane. Returns a list of polylines, each an
     (N, 3) array of consecutive vertices on the slice. Polylines are
@@ -76,11 +78,19 @@ def slice_mesh(
     Implementation: for each triangle, compute signed distance of vertices
     to the plane; if they don't all share sign, find the two crossing
     edges and interpolate the crossing point.
+
+    vertex_mask: optional bool array over verts; triangles are kept only if
+    all 3 vertices are in the mask. Used to restrict slicing to one body
+    region (torso / left_arm / etc.).
     """
     n = plane_normal / np.linalg.norm(plane_normal)
     d = (verts - plane_origin) @ n  # signed distance per vertex
     segs: list[np.ndarray] = []
     for tri in faces:
+        if vertex_mask is not None and not (
+            vertex_mask[tri[0]] and vertex_mask[tri[1]] and vertex_mask[tri[2]]
+        ):
+            continue
         d0, d1, d2 = d[tri[0]], d[tri[1]], d[tri[2]]
         signs = np.array([d0, d1, d2]) > 0.0
         if signs.all() or (~signs).all():
@@ -184,6 +194,23 @@ def _pick_torso_loop(loops: list[np.ndarray]) -> np.ndarray | None:
     return max(candidates if candidates else loops, key=len)
 
 
+def _pick_largest_loop(loops: list[np.ndarray]) -> np.ndarray | None:
+    """Pick the longest loop. Used when a region mask has already isolated
+    the body part — typically only one loop survives."""
+    return max(loops, key=len) if loops else None
+
+
+def _pick_loop_near_point(
+    loops: list[np.ndarray], target: np.ndarray
+) -> np.ndarray | None:
+    """Pick the loop whose centroid is closest to a 3D target — useful for
+    bilateral measurements where left/right side both pass the region
+    filter (e.g. mid-knee plane cuts both knees)."""
+    if not loops:
+        return None
+    return min(loops, key=lambda lp: np.linalg.norm(lp.mean(axis=0) - target))
+
+
 def _polygon_perimeter(xy: np.ndarray) -> float:
     """Closed polygon perimeter (sum of edge lengths, wrap to start)."""
     diffs = np.diff(np.vstack([xy, xy[:1]]), axis=0)
@@ -202,6 +229,27 @@ def _convex_hull_perimeter(xy: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 
 
+_REGION_ALIAS = {
+    # merged.yaml uses singular names; expand to region tuples used by
+    # body_scanner.measure.regions.REGIONS.
+    "torso": ("torso",),
+    "torso_no_head": ("torso_no_head",),
+    "lower_body": ("torso", "left_leg", "right_leg"),
+    "left_arm": ("left_arm",),
+    "right_arm": ("right_arm",),
+    "left_leg": ("left_leg",),
+    "right_leg": ("right_leg",),
+}
+
+
+def _vertex_mask_from_params(params: dict) -> np.ndarray | None:
+    rm = params.get("region_mask")
+    if not rm:
+        return None
+    regions = _REGION_ALIAS.get(rm, (rm,))
+    return region_vertex_mask(regions)
+
+
 def planar_slice(
     verts: np.ndarray,
     faces: np.ndarray,
@@ -215,6 +263,7 @@ def planar_slice(
         plane:
           origin: landmarks.X     (or {along, from_origin, distance_cm})
           normal: pose.measurement_default.vertical_axis
+        region_mask: torso        (optional — restrict to body region)
         output: convex_hull_perimeter
     """
     origin = _resolve_origin(params["plane"]["origin"], landmarks)
@@ -223,7 +272,8 @@ def planar_slice(
         axis = _resolve_axis(off["along"])
         origin = origin + axis * (float(off["distance_cm"]) / 100.0)
     normal = _resolve_axis(params["plane"]["normal"])
-    segs = slice_mesh(verts, faces, origin, normal)
+    mask = _vertex_mask_from_params(params)
+    segs = slice_mesh(verts, faces, origin, normal, vertex_mask=mask)
     loops = _build_loops(segs)
     loop = _pick_torso_loop(loops)
     if loop is None:
@@ -263,7 +313,8 @@ def planar_segment(
             axis = _resolve_axis(off["along"])
             origin = origin + axis * (float(off["distance_cm"]) / 100.0)
         normal = _resolve_axis(params["plane"]["normal"])
-        segs = slice_mesh(verts, faces, origin, normal)
+        mask = _vertex_mask_from_params(params)
+        segs = slice_mesh(verts, faces, origin, normal, vertex_mask=mask)
         loops = _build_loops(segs)
         loop = _pick_torso_loop(loops)
         if loop is None:
