@@ -488,7 +488,7 @@ Plus Blender (with SMPL-X addon) and MeshLab for visual inspection.
 
 Resolve at relevant phase using source books, not AI:
 
-- Aldrich #4 Back Width vs dpm #31 Across Back: same height (15cm below C7) or different?
+- ~~Aldrich #4 Back Width vs dpm #31 Across Back: same height (15cm below C7) or different?~~ **Resolved:** different. Aldrich #4 is taken at a fixed 15 cm below C7 (book p.178 item 4); dpm #31 is taken at half of the C7-to-upper-bust vertical distance (dpm bodice_measurements transcript L267-269), which is figure-dependent. The two are not aliases and merged.yaml has them as separate entries.
 - dpm three-point armhole depth waypoints: exact definition from dpm source
 - dpm bust depth B (CF) and C (FLF): along-surface or straight-line?
 - Body rise: expected offset between Aldrich seated and standing-scan derivation
