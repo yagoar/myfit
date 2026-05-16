@@ -210,8 +210,13 @@ class VerticalDrop:
 class PolylineChord:
     """Sum of straight-line 3D distances between an ordered sequence of
     landmarks. Used when a tape is laid as a yardstick touching several
-    anatomical points (e.g. neck-front → bust-apex → waist-front)."""
+    anatomical points (e.g. neck-front → bust-apex → waist-front).
+
+    `straight=True` opts out of surface-drape so the line is rendered as
+    the literal chord polyline rather than a body-surface geodesic.
+    """
     landmarks: tuple[str, ...]
+    straight: bool = False
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
         pts = [landmarks[n] for n in self.landmarks]
@@ -496,6 +501,256 @@ class SmoothLoop:
 
 
 @dataclass(frozen=True)
+class SurfacePlumbThenDrop:
+    """SurfacePlumb from `start` down to `mold_y_landmark.Y` on the body
+    surface, then a STRAIGHT chord from that surface endpoint to either:
+      - a body landmark (`end_landmark` set), or
+      - a vertical drop at the surface endpoint's X/Z to `target_y_landmark.Y`
+        (default).
+
+    Mental model: tape pinned at the neck side, hugs the chest down to
+    the bust line, then continues as a straight yardstick segment to
+    either a fixed landmark (e.g. waist body point at SN's X column)
+    or a vertical drop down to a Y plane.
+    """
+    start: str
+    mold_y_landmark: str
+    target_y_landmark: str | None = None
+    end_landmark: str | None = None
+    side: str = "front"
+
+    def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        sp = SurfacePlumb(self.start, self.mold_y_landmark, side=self.side)
+        upper = sp._path(verts, faces, landmarks)
+        if upper is None or len(upper) < 2:
+            return None
+        if self.end_landmark is not None:
+            target = landmarks[self.end_landmark]
+            return np.vstack([upper, target[None]])
+        if self.target_y_landmark is None:
+            return upper
+        end = upper[-1]
+        ty = float(landmarks[self.target_y_landmark][1])
+        if abs(end[1] - ty) < 1e-4:
+            return upper
+        drop = np.array([end[0], ty, end[2]])
+        return np.vstack([upper, drop[None]])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._path(verts, faces, landmarks)
+        if path is None:
+            return float("nan")
+        return float(np.linalg.norm(np.diff(path, axis=0), axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
+class DiagonalSurfacePlumb:
+    """Surface strip between two landmarks. Slicing plane contains the
+    chord(start, end) AND is parallel to the Z axis (vertical, tilted
+    to align with the front-view diagonal).
+
+    From the front view (XY projection) the curve is the straight
+    diagonal between start and end; in 3D it follows the body contour
+    in Z. Generalisation of SurfacePlumb (X-perpendicular plane) to
+    an arbitrary XY direction.
+
+    Optional `mold_y_landmark`: contour the body above that Y, then
+    drop to `end` with a straight chord below (same idea as
+    SurfacePlumbThenDrop, used for tapes that should not mold the
+    waist concavity).
+    """
+    start: str
+    end: str
+    side: str = "front"  # "front" = highest mean Z; "back" = lowest
+    mold_y_landmark: str | None = None
+
+    def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        from .recipes import (
+            _build_loops,
+            _pick_largest_loop,
+            _pick_loop_near_point,
+            slice_mesh,
+        )
+        s = landmarks[self.start]
+        e = landmarks[self.end]
+        d = e - s
+        d_xy = np.array([float(d[0]), float(d[1]), 0.0])
+        if np.linalg.norm(d_xy) < 1e-6:
+            return None
+        normal = np.array([d_xy[1], -d_xy[0], 0.0])
+        normal /= np.linalg.norm(normal)
+        segs = slice_mesh(verts, faces, s, normal, vertex_mask=None)
+        if not segs:
+            return None
+        loops = _build_loops(segs)
+        if not loops:
+            return None
+        mid = (s + e) / 2.0
+        loop = _pick_loop_near_point(loops, mid)
+        if loop is None:
+            loop = _pick_largest_loop(loops)
+        if loop is None or len(loop) < 4:
+            return None
+        # Parameterise loop points along the chord (s → e). t=0 at s,
+        # t=1 at e. Keep only points whose t is roughly in [0, 1] AND on
+        # the correct side of the body (Z sign). Then bin by t and pick
+        # the most front (max Z) / most back (min Z) point per bin so the
+        # path stays a single-valued curve over t (no zigzag).
+        u = e - s
+        u2 = float(u @ u)
+        if u2 < 1e-9:
+            return None
+        t_param = ((loop - s) @ u) / u2
+        # Z sign filter — drop the opposite-side body crossings so the
+        # binner can't pick a near-zero point from the wrong lobe.
+        z_thresh = 0.01 if self.side == "front" else -0.01
+        z_mask = (loop[:, 2] > z_thresh) if self.side == "front" \
+            else (loop[:, 2] < z_thresh)
+        t_mask = (t_param >= -0.02) & (t_param <= 1.02)
+        mask = z_mask & t_mask
+        if mask.sum() < 3:
+            return None
+        sel = loop[mask]
+        t_sel = t_param[mask]
+        nbins = 50
+        tbins = np.linspace(0.0, 1.0, nbins + 1)
+        out = []
+        for i in range(nbins):
+            in_bin = sel[(t_sel >= tbins[i]) & (t_sel < tbins[i + 1] + 1e-9)]
+            if len(in_bin) == 0:
+                continue
+            if self.side == "front":
+                idx = int(np.argmax(in_bin[:, 2]))
+            else:
+                idx = int(np.argmin(in_bin[:, 2]))
+            out.append(in_bin[idx])
+        if len(out) < 2:
+            return None
+        arc = np.asarray(out)
+        # Order by t ascending so the path runs s → e.
+        arc_t = ((arc - s) @ u) / u2
+        arc = arc[np.argsort(arc_t)]
+        # Snap arc endpoints to exact s / e only when the first/last
+        # binned point is genuinely far from the landmark; otherwise the
+        # bin already represents the surface near the endpoint and
+        # prepending the literal s creates a kink visible in the viewer.
+        if np.linalg.norm(arc[0] - s) > 0.02:
+            arc = np.vstack([s[None], arc])
+        else:
+            arc[0] = s
+        if np.linalg.norm(arc[-1] - e) > 0.02:
+            arc = np.vstack([arc, e[None]])
+        else:
+            arc[-1] = e
+        if self.mold_y_landmark is None:
+            return arc
+        my = float(landmarks[self.mold_y_landmark][1])
+        if s[1] >= e[1]:
+            upper = arc[arc[:, 1] >= my - 0.005]
+        else:
+            upper = arc[arc[:, 1] <= my + 0.005]
+        if len(upper) < 2:
+            return arc
+        return np.vstack([upper, e[None]])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._path(verts, faces, landmarks)
+        if path is None:
+            return float("nan")
+        return float(np.linalg.norm(np.diff(path, axis=0), axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
+class DiagonalYardstick:
+    """Three-point yardstick. The middle touch point is the body surface
+    point at `mid_y_landmark.Y` nearest (in X/Z) to where the straight
+    chord(start, end) crosses that Y plane.
+
+    Mental model: tape stretched from start to end falls against the
+    body at the mid-Y level (e.g. bust line). The tape kinks at the
+    body's anterior surface where the diagonal projects onto that
+    horizontal plane — not at the bust apex itself, but wherever the
+    diagonal lands on the body at G04.
+    """
+    start: str
+    end: str
+    mid_y_landmark: str
+    side: str = "front"  # "front" (Z>0) or "back" (Z<0)
+    y_band: float = 0.012
+
+    def _touch(self, verts: np.ndarray, landmarks: LandmarkSet
+                ) -> np.ndarray | None:
+        s = landmarks[self.start]
+        e = landmarks[self.end]
+        my = float(landmarks[self.mid_y_landmark][1])
+        dy = float(e[1] - s[1])
+        if abs(dy) < 1e-6:
+            return None
+        t = (my - float(s[1])) / dy
+        mid_xz = s + t * (e - s)  # 3D point on the chord at Y=my
+        mask = np.abs(verts[:, 1] - my) < self.y_band
+        if self.side == "front":
+            mask &= verts[:, 2] > 0
+        elif self.side == "back":
+            mask &= verts[:, 2] < 0
+        if not mask.any():
+            return None
+        cand = verts[mask]
+        d = np.linalg.norm(cand[:, [0, 2]] - mid_xz[[0, 2]], axis=1)
+        return cand[int(np.argmin(d))]
+
+    def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        s = landmarks[self.start]
+        e = landmarks[self.end]
+        mid = self._touch(verts, landmarks)
+        if mid is None:
+            return np.vstack([s[None], e[None]])
+        return np.vstack([s[None], mid[None], e[None]])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._path(verts, faces, landmarks)
+        if path is None:
+            return float("nan")
+        return float(np.linalg.norm(np.diff(path, axis=0), axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
+class GeodesicThenDrop:
+    """Surface geodesic through ordered waypoints, then a STRAIGHT vertical
+    chord from the last waypoint down to `target_y_landmark.Y` at the
+    last waypoint's X/Z.
+
+    Used for tapes that follow the body curve down to one level (e.g.
+    waist→low_hip along the side) and then drop straight to a target
+    Y plane (e.g. the floor).
+    """
+    waypoints: tuple[str, ...]
+    target_y_landmark: str
+
+    def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        solver = _get_solver(verts, faces)
+        v_ids = [_nearest_vertex(verts, landmarks[w]) for w in self.waypoints]
+        try:
+            geo = np.asarray(solver.find_geodesic_path_poly(v_ids))
+        except Exception:
+            return None
+        if len(geo) < 2:
+            return None
+        end = geo[-1]
+        ty = float(landmarks[self.target_y_landmark][1])
+        if abs(end[1] - ty) < 1e-4:
+            return geo
+        drop = np.array([end[0], ty, end[2]])
+        return np.vstack([geo, drop[None]])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._path(verts, faces, landmarks)
+        if path is None:
+            return float("nan")
+        return float(np.linalg.norm(np.diff(path, axis=0), axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
 class LimbGirth:
     """Circumference perpendicular to a limb axis at a given landmark.
 
@@ -736,6 +991,8 @@ PrimitiveRecipe = (
     | LandmarkChord | VerticalDrop | PolylineChord
     | Geodesic | GeodesicLoop | HybridLoop | TapeLoop
     | LimbGirth | SmoothLoop | SurfacePlumb
+    | SurfacePlumbThenDrop | GeodesicThenDrop | DiagonalYardstick
+    | DiagonalSurfacePlumb
 )
 
 
@@ -849,6 +1106,8 @@ def should_drape(recipe) -> bool:
         return False
     if isinstance(recipe, LandmarkChord) and recipe.straight:
         return False
+    if isinstance(recipe, PolylineChord) and recipe.straight:
+        return False
     return True
 
 
@@ -961,6 +1220,18 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             return recipe._curve(verts, faces, landmarks)
 
         if isinstance(recipe, SurfacePlumb):
+            return recipe._path(verts, faces, landmarks)
+
+        if isinstance(recipe, SurfacePlumbThenDrop):
+            return recipe._path(verts, faces, landmarks)
+
+        if isinstance(recipe, GeodesicThenDrop):
+            return recipe._path(verts, faces, landmarks)
+
+        if isinstance(recipe, DiagonalYardstick):
+            return recipe._path(verts, faces, landmarks)
+
+        if isinstance(recipe, DiagonalSurfacePlumb):
             return recipe._path(verts, faces, landmarks)
 
         if isinstance(recipe, LimbGirth):

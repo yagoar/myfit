@@ -141,6 +141,21 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     # for LimbGirth so the slice plane cuts the arm tube, not the torso.
     "l_arm_at_underarm_y": ("snap_y_landmark",
                               ["joint.L_Shoulder", "underarm_left"]),
+    # acromion_left dropped to underarm Y — used as L16 endpoint so the
+    # geodesic from acromion routes along the TOP of the upper arm down
+    # to the L11 ring level (top of arm at armpit Y).
+    "acromion_left_at_underarm_y": ("snap_y_landmark",
+                                      ["acromion_left", "underarm_left"]),
+    # Projection of acromion_left onto the L11 slice plane (perpendicular
+    # to the upper-arm axis at l_arm_at_underarm_y). Used as L16 endpoint:
+    # mirror of acromion across the arm axis at L11 height — a point on
+    # the L11 ring plane lined up perpendicular to the arm.
+    "acromion_left_proj_l11": ("project_perp", [
+        "acromion_left",
+        "l_arm_at_underarm_y",
+        "joint.L_Shoulder",
+        "joint.L_Elbow",
+    ]),
     "bust_apex_left_at_lowbust_y": ("snap_y_landmark",
                                       ["bust_apex_left", "lowbust_level"]),
     "bust_apex_left_at_waist_y": ("snap_y_landmark",
@@ -193,6 +208,17 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
         "search": "body_at_xy",
         "x_ref": "shoulder_neck_left",
         "y_ref": "armfold_front_left",
+        "x_band": 0.02,
+        "y_band": 0.01,
+        "front_only": True,
+    },
+    # Body surface point on the G07 (waist) line at SN_L's X column.
+    # Used as the lower endpoint of H05 (neck side straight down to
+    # waist front) so the line drops vertically from SN at SN_x.
+    "waist_front_at_sn_x_left": {
+        "search": "body_at_xy",
+        "x_ref": "shoulder_neck_left",
+        "y_ref": "waist_string",
         "x_band": 0.02,
         "y_band": 0.01,
         "front_only": True,
@@ -268,6 +294,20 @@ class LandmarkSet:
                 a = self[bases[0]]
                 b = self[bases[1]]
                 return np.array([a[0], b[1], a[2]])
+            if op == "project_perp":
+                # Project `point_landmark` onto the plane through
+                # `origin_landmark` with normal = axis_to - axis_from.
+                # bases: [point, origin, axis_from, axis_to]
+                p = self[bases[0]]
+                o = self[bases[1]]
+                a = self[bases[2]]
+                b = self[bases[3]]
+                n = b - a
+                nn = float(np.linalg.norm(n))
+                if nn < 1e-9:
+                    return p.copy()
+                n = n / nn
+                return p - ((p - o) @ n) * n
             pts = np.stack([self[b] for b in bases])
             if op == "midpoint":
                 return pts.mean(axis=0)
