@@ -61,6 +61,8 @@ are not stored in the table.
 | `shoulder_neck_right` | Right corner where neck meets shoulder. | `right_collar` (14) | 6698 |
 | `acromion_left` | Outer end of the left shoulder bone (acromion process). dpm's "shoulder point" / "shoulder tip". Alias: `shoulder_tip_left`. Re-picked from 5627 → 3875 because the previous vertex had 41% L_Shoulder skinning weight and drifted with arm pose; 3875 is 81% L_Collar / 3% L_Shoulder. | `left_shoulder` (16) — lateral | 3875 |
 | `acromion_right` | Outer end of the right shoulder bone. Mirror of 3875. | `right_shoulder` (17) — lateral | 6626 |
+| `bust_apex_left` | Bust apex on the left side. Re-picked 3572 → 3230 because truetoform's apex-to-apex measurement (18.41 cm) needed wider lateral position; 3230 at (+0.091, -0.057, +0.128) gives chord 16.28 cm vs old 14.28 cm. | `spine3` (9) — front lateral | 3230 |
+| `bust_apex_right` | Mirror of 3230. | `spine3` (9) — front lateral right | 5993 |
 
 ### Front shoulder midpoints (2)
 
