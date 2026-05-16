@@ -6,6 +6,7 @@ primary outputs. Returns a dict {seamly_code: value_cm} plus a skipped map.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -22,15 +23,17 @@ class CatalogReport:
 def extract_catalog(
     fitted_verts: np.ndarray,
     smplx_faces: np.ndarray,
-    review_json: str | None = None,
+    review_json: str | Path | None = None,
     joints: np.ndarray | None = None,
 ) -> CatalogReport:
-    landmarks = (
-        build_landmark_set(fitted_verts, review_json,
-                            joints=joints, faces=smplx_faces) if review_json
-        else build_landmark_set(fitted_verts,
-                                 joints=joints, faces=smplx_faces)
-    )
+    if review_json is not None:
+        landmarks = build_landmark_set(
+            fitted_verts, review_json, joints=joints, faces=smplx_faces,
+        )
+    else:
+        landmarks = build_landmark_set(
+            fitted_verts, joints=joints, faces=smplx_faces,
+        )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}
 

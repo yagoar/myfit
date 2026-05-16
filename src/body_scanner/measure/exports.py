@@ -11,6 +11,7 @@ importable so the measure CLI can produce the .smis directly.
 from __future__ import annotations
 
 import csv
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
@@ -146,7 +147,6 @@ def write_smis_from_catalog(
 
     template_order: list[str] = []
     if template_path and Path(template_path).is_file():
-        import re
         template_order = re.findall(
             r'<m\s+name="([^"]+)"', Path(template_path).read_text()
         )

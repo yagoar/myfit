@@ -25,6 +25,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import potpourri3d as pp3d
+from scipy.interpolate import splev, splprep
+from scipy.ndimage import gaussian_filter1d
+from scipy.spatial import ConvexHull, cKDTree
 
 from .landmarks import LandmarkSet
 from .recipes import (  # reuse the slicing utilities already built
@@ -301,7 +304,6 @@ class Geodesic:
             # interior waypoints. Smoothed curve is left in 3D space
             # (not re-snapped to vertices) — re-snapping produces a
             # discrete staircase artefact.
-            from scipy.ndimage import gaussian_filter1d
             sigma = max(2.0, len(path) * 0.06)
             sm = np.empty_like(path)
             for j in range(3):
@@ -385,7 +387,6 @@ class HybridLoop:
     regions: tuple[str, ...] = ("torso",)
 
     def _planar_arc(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
-        from .recipes import slice_mesh
         origin = landmarks[self.plane_landmark]
         # Strict torso mask so the slice doesn't include the arms. The
         # segments form OPEN polylines (one for the back, one for the
@@ -462,7 +463,6 @@ class SurfacePlumb:
         the requested side (front Z>0 or back Z<0) arc between Y(start)
         and Y(target). Pure planar slice — no per-Y nearest-vertex
         zigzag."""
-        from .recipes import slice_mesh, _build_loops
         s = landmarks[self.start]
         end_y = float(landmarks[self.target_y_landmark][1])
         origin = np.array([float(s[0]), 0.0, 0.0])
@@ -519,7 +519,6 @@ class SmoothLoop:
     waypoints: tuple[str, ...]
 
     def _spline(self, landmarks: LandmarkSet, samples: int = 200) -> np.ndarray | None:
-        from scipy.interpolate import splprep, splev
         pts = np.array([landmarks[w] for w in self.waypoints])
         if len(pts) < 3:
             return None
@@ -537,7 +536,6 @@ class SmoothLoop:
         spline = self._spline(landmarks, samples=samples)
         if spline is None or verts is None:
             return spline
-        from scipy.spatial import cKDTree
         tree = cKDTree(verts)
         _, nearest = tree.query(spline)
         # Outward normal offset so the line sits just above the surface.
@@ -640,12 +638,6 @@ class DiagonalSurfacePlumb:
     smooth: bool = False  # Gaussian-smooth the final polyline
 
     def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
-        from .recipes import (
-            _build_loops,
-            _pick_largest_loop,
-            _pick_loop_near_point,
-            slice_mesh,
-        )
         s = landmarks[self.start]
         e = landmarks[self.end]
         d = e - s
@@ -754,7 +746,6 @@ class DiagonalSurfacePlumb:
         else:
             out = arc
         if self.smooth and len(out) >= 9:
-            from scipy.ndimage import gaussian_filter1d
             sigma = max(2.0, len(out) * 0.06)
             sm = np.empty_like(out)
             for j in range(3):
@@ -893,12 +884,6 @@ class LimbGirth:
         return landmarks[self.landmark], n / norm
 
     def _slice_loop(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
-        from .recipes import (
-            _build_loops,
-            _pick_largest_loop,
-            _pick_loop_near_point,
-            slice_mesh,
-        )
         origin, normal = self._plane(landmarks)
         mask = region_vertex_mask(self.regions) if self.regions else None
         if self.radius_m is not None:
@@ -941,7 +926,6 @@ class LimbGirth:
         v = np.cross(normal, u)
         pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
         try:
-            from scipy.spatial import ConvexHull
             hull = ConvexHull(pts2d)
         except Exception:
             return float("nan")
@@ -988,7 +972,6 @@ class TapeLoop:
         to the torso at the underarm) — that's fine because the consumer
         (_back_arc / _front_arch) restricts to the XZ convex hull, which
         drops any arm-side excursions."""
-        from .recipes import slice_mesh, _build_loops, _pick_torso_loop
         plane_y = landmarks[self.plane_landmark][1]
         origin = np.array([0.0, plane_y, 0.0])
         segs = slice_mesh(verts, faces, origin, _y_axis())
@@ -1007,7 +990,6 @@ class TapeLoop:
         dropped first so the planar slice cannot wrap into a fused
         arm cross-section at A-pose.
         """
-        from scipy.spatial import ConvexHull
         loop = self._planar_loop(verts, faces, landmarks)
         if loop is None or len(loop) < 6:
             return None
@@ -1089,8 +1071,8 @@ class TapeLoop:
         front = self._front_arch(verts, faces, landmarks)
         if back is None or front is None:
             return float("nan")
-        back_len = float(np.sqrt(np.diff(back, axis=0).__pow__(2).sum(-1)).sum())
-        front_len = float(np.sqrt(np.diff(front, axis=0).__pow__(2).sum(-1)).sum())
+        back_len = float(np.sqrt((np.diff(back, axis=0) ** 2).sum(-1)).sum())
+        front_len = float(np.sqrt((np.diff(front, axis=0) ** 2).sum(-1)).sum())
         return (back_len + front_len) * 100.0
 
     def polyline(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
@@ -1139,7 +1121,6 @@ def drape_polyline_on_body(
     If `faces` is not provided we fall back to nearest-vertex resampling
     plus Gaussian smoothing.
     """
-    from scipy.spatial import cKDTree
     if len(poly) < 2:
         return poly
     tree = cKDTree(body_verts)
@@ -1198,7 +1179,6 @@ def drape_polyline_on_body(
     draped = body_verts[nearest] + body_normals[nearest] * offset_m
     n = len(draped)
     if n >= 9:
-        from scipy.ndimage import gaussian_filter1d
         sigma = max(3.0, n * 0.18)
         smoothed = np.zeros_like(draped)
         for j in range(3):
@@ -1245,7 +1225,6 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             # Show the convex hull (= taut tape around the body) rather than
             # the body-surface contour. Matches the convex_hull_perimeter
             # value the recipe computes.
-            from scipy.spatial import ConvexHull
             xy = _loop_xz(loop, _y_axis())
             if len(xy) < 3:
                 return np.vstack([loop, loop[:1]])
@@ -1361,7 +1340,6 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             v = np.cross(normal, u)
             pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
             try:
-                from scipy.spatial import ConvexHull
                 hull = ConvexHull(pts2d).vertices
             except Exception:
                 return np.vstack([loop, loop[:1]])

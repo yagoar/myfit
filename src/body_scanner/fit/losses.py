@@ -46,7 +46,6 @@ def crop_scan_for_chamfer(
 
     Returns a boolean mask the same length as scan_verts.
     """
-    import numpy as np
     y = scan_verts[:, 1]
     y_min, y_max = float(y.min()), float(y.max())
     height = y_max - y_min

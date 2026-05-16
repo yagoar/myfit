@@ -13,9 +13,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from .landmarks import LandmarkSet, build_landmark_set
+from .landmarks import build_landmark_set
 from .recipes import RECIPE_DISPATCH, derived
-
 
 DEFAULT_YAML = Path("src/body_scanner/measure/definitions/merged.yaml")
 
@@ -62,11 +61,10 @@ def extract(
     only:          if set, only compute measurements whose name is in this set
     """
     spec = yaml.safe_load(Path(yaml_path).read_text())
-    rj = review_json if review_json is not None else None
-    landmarks = (
-        build_landmark_set(fitted_verts, rj, joints=joints) if rj is not None
-        else build_landmark_set(fitted_verts, joints=joints)
-    )
+    if review_json is not None:
+        landmarks = build_landmark_set(fitted_verts, review_json, joints=joints)
+    else:
+        landmarks = build_landmark_set(fitted_verts, joints=joints)
 
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}

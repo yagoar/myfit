@@ -15,9 +15,20 @@ from pathlib import Path
 import numpy as np
 import smplx
 
+from .bent_arm import (
+    DEFAULT_ELBOW_AXIS,
+    DEFAULT_ELBOW_FLEX_DEG,
+    DEFAULT_SHOULDER_FORWARD_DEG,
+    repose_bent_arm,
+)
 from .exports import write_csv, write_obj, write_smis_from_catalog
 from .extractor import extract
+from .landmarks import build_landmark_set
+from .seamly_catalog import RECIPES
 from .seamly_extractor import extract_catalog
+
+
+BENT_ARM_CODES: tuple[str, ...] = ("L01", "L02", "L04")
 
 
 def _print_table(values: dict, label: str = "measurement", unit: str = "cm") -> None:
@@ -72,16 +83,19 @@ def main(argv: list[str] | None = None) -> int:
              "fall through as A-pose values, which are incorrect).",
     )
     p.add_argument(
-        "--bent-elbow-flex-deg", type=float, default=80.0,
-        help="Elbow flex angle for the bent-arm override (default 80°).",
+        "--bent-elbow-flex-deg", type=float, default=DEFAULT_ELBOW_FLEX_DEG,
+        help=f"Elbow flex angle for the bent-arm override "
+             f"(default {DEFAULT_ELBOW_FLEX_DEG}°).",
     )
     p.add_argument(
-        "--bent-elbow-axis", type=str, default="0,-1,0",
+        "--bent-elbow-axis", type=str, default=DEFAULT_ELBOW_AXIS,
         help="Elbow rotation axis in the L_Elbow local frame "
-             "(default '0,-1,0' = forearm forward in the Seamly pose).",
+             f"(default {DEFAULT_ELBOW_AXIS!r} = forearm forward in the "
+             "Seamly pose).",
     )
     p.add_argument(
-        "--bent-shoulder-forward-deg", type=float, default=30.0,
+        "--bent-shoulder-forward-deg", type=float,
+        default=DEFAULT_SHOULDER_FORWARD_DEG,
         help="Extra L_Shoulder forward rotation (around world X) so the "
              "forearm doesn't collide with the torso when bent.",
     )
@@ -120,45 +134,20 @@ def main(argv: list[str] | None = None) -> int:
         # codes on the bent verts, then overwrite the A-pose values.
         if not args.no_bent_arm and "body_pose" in fit.files:
             try:
-                import torch
-                from .seamly_catalog import RECIPES as _CAT
-                from .landmarks import build_landmark_set
-                betas_t = torch.tensor(fit["betas"][None], dtype=torch.float32)
-                body_pose_t = torch.tensor(fit["body_pose"][None],
-                                            dtype=torch.float32)
-                global_orient_t = torch.tensor(fit["global_orient"][None],
-                                                dtype=torch.float32)
-                transl_t = torch.tensor(fit["transl"][None],
-                                         dtype=torch.float32)
-                theta = np.deg2rad(args.bent_elbow_flex_deg)
-                axis = np.array([float(c) for c in
-                                  args.bent_elbow_axis.split(",")],
-                                  dtype=np.float32)
-                axis = axis / max(float(np.linalg.norm(axis)), 1e-9)
-                elbow_aa = (axis * theta).astype(np.float32)
-                body_pose_t[0, 17] = torch.tensor(elbow_aa)  # L_Elbow
-                shoulder_aa = fit["body_pose"][15].copy()
-                shoulder_aa[0] += np.deg2rad(args.bent_shoulder_forward_deg)
-                body_pose_t[0, 15] = torch.tensor(shoulder_aa.astype(np.float32))
-                out = bm(
-                    betas=betas_t,
-                    body_pose=body_pose_t.reshape(1, -1),
-                    global_orient=global_orient_t,
-                    transl=transl_t,
-                    return_verts=True,
+                pose = repose_bent_arm(
+                    fit, bm,
+                    elbow_flex_deg=args.bent_elbow_flex_deg,
+                    elbow_axis=args.bent_elbow_axis,
+                    shoulder_forward_deg=args.bent_shoulder_forward_deg,
                 )
-                bv = out.vertices.detach().numpy()[0]
-                bj = out.joints.detach().numpy()[0]
-                disp = fit.get("displacement") if hasattr(fit, "get") else None
-                if disp is None and "displacement" in fit.files:
-                    disp = fit["displacement"]
-                if disp is not None and disp.shape == bv.shape:
-                    bv = bv + disp
-                bl = build_landmark_set(bv, joints=bj, faces=faces)
-                for code in ("L01", "L02", "L04"):
+                bent_landmarks = build_landmark_set(
+                    pose.verts, joints=pose.joints, faces=faces,
+                )
+                for code in BENT_ARM_CODES:
                     try:
                         cat.values[code] = float(
-                            _CAT[code].compute(bv, faces, bl))
+                            RECIPES[code].compute(
+                                pose.verts, faces, bent_landmarks))
                     except Exception as e:  # noqa: BLE001
                         print(f"bent {code}: {e}")
                 if "L01" in cat.values and "L02" in cat.values:
