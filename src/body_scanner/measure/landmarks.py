@@ -101,6 +101,15 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
 }
 
 
+# Reserved for landmarks computed per fit (e.g. searching a region of the
+# deformed mesh for an extremum). Empty by default — tested with a
+# `bust_apex_left/right -> max-Z search` override which made J01 worse
+# (search produced more-medial points than the verified vids because the
+# SMPL-X+D Laplacian smoothness flattens the apex peak relative to the
+# truetoform tape position). Keeping the infrastructure for future use.
+DYNAMIC_LANDMARKS: dict[str, dict] = {}
+
+
 @dataclass(frozen=True)
 class LandmarkSet:
     """Resolved 3D points for every named landmark on a specific mesh."""
@@ -118,6 +127,9 @@ class LandmarkSet:
 
         if leaf in JOINT_OVERRIDES and self.joints is not None:
             return self._joint(JOINT_OVERRIDES[leaf])
+
+        if leaf in DYNAMIC_LANDMARKS:
+            return self._dynamic(leaf, DYNAMIC_LANDMARKS[leaf])
 
         if leaf in self.vertex_ids:
             return self.verts[self.vertex_ids[leaf]]
@@ -148,7 +160,35 @@ class LandmarkSet:
         leaf = name.split(".", 1)[1] if name.startswith("landmarks.") else name
         if leaf in JOINT_OVERRIDES and self.joints is not None:
             return True
-        return leaf in self.vertex_ids or leaf in COMPOUND_LANDMARKS
+        return (leaf in self.vertex_ids or leaf in COMPOUND_LANDMARKS
+                or leaf in DYNAMIC_LANDMARKS)
+
+    def _dynamic(self, name: str, spec: dict) -> np.ndarray:
+        """Resolve a landmark by searching the fitted mesh per the spec.
+        Currently supports `search: max_z` (most anterior point) with
+        optional x_min, x_max, y_between bounds drawn from other landmarks."""
+        v = self.verts
+        mask = np.ones(len(v), dtype=bool)
+        if "x_min" in spec:
+            mask &= v[:, 0] > spec["x_min"]
+        if "x_max" in spec:
+            mask &= v[:, 0] < spec["x_max"]
+        if "y_between" in spec:
+            lower_name, upper_name = spec["y_between"]
+            y_lo = float(self[lower_name][1])
+            y_hi = float(self[upper_name][1])
+            if y_lo > y_hi:
+                y_lo, y_hi = y_hi, y_lo
+            mask &= (v[:, 1] > y_lo) & (v[:, 1] < y_hi)
+        if not mask.any():
+            raise KeyError(f"dynamic landmark {name!r}: no verts in search region")
+        if spec["search"] == "max_z":
+            idx = int(np.argmax(np.where(mask, v[:, 2], -np.inf)))
+        elif spec["search"] == "min_z":
+            idx = int(np.argmin(np.where(mask, v[:, 2], np.inf)))
+        else:
+            raise ValueError(f"unknown search {spec['search']!r}")
+        return v[idx]
 
     def _joint(self, joint_name: str) -> np.ndarray:
         if self.joints is None:

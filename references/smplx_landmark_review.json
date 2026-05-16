@@ -166,5 +166,13 @@
   "mid_neck_front": {
     "vertex_id": 5616,
     "status": "corrected"
+  },
+  "calf_widest_left": {
+    "vertex_id": 3712,
+    "status": "algorithmic"
+  },
+  "calf_widest_right": {
+    "vertex_id": 6473,
+    "status": "mirrored_from_calf_widest_left"
   }
 }

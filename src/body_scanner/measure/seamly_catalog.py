@@ -183,7 +183,10 @@ RECIPES = {
     "H18": Geodesic(("shoulder_neck_left", "waist_cb")),
     "H19": Geodesic(("c7", "waist_cb")),
     "H20": Geodesic(("shoulder_neck_left", "waist_cb")),  # scapula alias
-    "H21": Geodesic(("c7", "armfold_back_left")),
+    # H21: back neck base to scye-level along the centre back. Use the
+    # midpoint of the back-armscye landmarks as the destination so the
+    # geodesic stays on the spine line rather than diagonal to one side.
+    "H21": Geodesic(("c7", "armscye_back_midpoint")),
     "H23": Geodesic(("c7", "bust_apex_left")),
     "H25": Geodesic(("lowbust_apex", "waist_cb")),
     "H26": Geodesic(("acromion_left", "armfold_back_left")),
@@ -205,10 +208,10 @@ RECIPES = {
     # ------------------------------------------------------------------
     "I01": Geodesic(("shoulder_neck_left", "acromion_left")),
     "I02": Geodesic(("acromion_left", "acromion_right")),
-    "I03": Geodesic(("armscye_front_left", "armscye_front_right")),
+    "I03": Geodesic(("armfold_front_left", "armfold_front_right")),  # was armscye; truetoform uses armfold
     "I04": Geodesic(("armfold_front_left", "armfold_front_right")),
     "I07": Geodesic(("acromion_left", "c7", "acromion_right")),
-    "I08": Geodesic(("armscye_back_left", "armscye_back_right")),
+    "I08": Geodesic(("armfold_back_left", "armfold_back_right")),  # was armscye; truetoform uses armfold
     "I09": Geodesic(("armfold_back_left", "armfold_back_right")),
     "I12": Geodesic(("front_neck_point", "acromion_left")),
     "I13": Geodesic(("c7", "acromion_left")),
@@ -276,7 +279,7 @@ RECIPES = {
     "M03": PlanarGirth("thigh_at_crotch_left",
                        regions=("left_leg", "torso")),
     "M05": PlanarGirth("mid_knee_level", regions=("left_leg",)),
-    "M07": PlanarGirth("ankle_bone_lateral_left", regions=("left_leg",)),  # calf placeholder
+    "M07": PlanarGirth("calf_widest_left", regions=("left_leg",)),
     "M08": Height("ankle_bone_lateral_left"),
     "M09": PlanarGirth("ankle_bone_lateral_left", regions=("left_leg",)),
 
