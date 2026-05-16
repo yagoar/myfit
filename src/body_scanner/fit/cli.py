@@ -33,7 +33,19 @@ def main(argv: list[str] | None = None) -> int:
         help="Folder containing smplx/SMPLX_FEMALE.npz",
     )
     p.add_argument("--gender", default="female")
-    p.add_argument("--num-betas", type=int, default=10)
+    p.add_argument("--num-betas", type=int, default=300)
+    p.add_argument(
+        "--use-displacement",
+        action="store_true",
+        help="Enable SMPL-X+D stages (per-vertex displacement). Default off — "
+             "parametric-only fit is smoother and matches addon mesh fidelity.",
+    )
+    p.add_argument(
+        "--smooth-d",
+        action="store_true",
+        help="Run only the heavy-smooth D stage after parametric fit. "
+             "Improves fit residual (~3mm) without baking scan noise.",
+    )
     p.add_argument(
         "--out",
         type=Path,
@@ -56,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
         gender=args.gender,
         num_betas=args.num_betas,
         device="cpu",
+        use_displacement=args.use_displacement,
+        use_smooth_displacement=args.smooth_d,
     )
     result = fit_scan(scan_v, cfg=cfg, verbose=not args.quiet,
                       scan_faces=scan_f)

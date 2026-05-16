@@ -56,17 +56,32 @@ def write_csv(
 
 
 def write_obj(verts: np.ndarray, faces: np.ndarray, out_path: Path) -> None:
-    """Plain Wavefront OBJ — vertices + 1-indexed triangle faces.
+    """Wavefront OBJ with per-vertex normals + smoothing group enabled.
 
-    CLO3D imports this as a static avatar shell. SMPL-X has 10475 verts
-    and 20908 triangles, all manifold."""
+    `vn` + `s 1` make Blender / CLO3D shade the mesh smoothly on import
+    (no manual Shade-Smooth step). SMPL-X has 10475 verts and 20908
+    triangles, all manifold."""
+    fn = np.cross(
+        verts[faces[:, 1]] - verts[faces[:, 0]],
+        verts[faces[:, 2]] - verts[faces[:, 0]],
+    )
+    fn /= np.linalg.norm(fn, axis=1, keepdims=True).clip(min=1e-12)
+    vn = np.zeros_like(verts)
+    for i in range(3):
+        np.add.at(vn, faces[:, i], fn)
+    vn /= np.linalg.norm(vn, axis=1, keepdims=True).clip(min=1e-12)
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as f:
         f.write("# body-scanner fitted SMPL-X mesh\n")
         for v in verts:
             f.write(f"v {v[0]:.6f} {v[1]:.6f} {v[2]:.6f}\n")
+        for n in vn:
+            f.write(f"vn {n[0]:.6f} {n[1]:.6f} {n[2]:.6f}\n")
+        f.write("s 1\n")
         for tri in faces:
-            f.write(f"f {tri[0]+1} {tri[1]+1} {tri[2]+1}\n")
+            a, b, c = tri[0]+1, tri[1]+1, tri[2]+1
+            f.write(f"f {a}//{a} {b}//{b} {c}//{c}\n")
 
 
 # ---------------------------------------------------------------------------

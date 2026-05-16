@@ -178,5 +178,9 @@
   "highbust_front_cf": {
     "vertex_id": 5938,
     "status": "algorithmic"
+  },
+  "highbust_back_cf": {
+    "vertex_id": 5487,
+    "status": "algorithmic"
   }
 }

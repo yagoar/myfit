@@ -41,8 +41,16 @@ from .vposer import VPoserWrapper
 class FitConfig:
     model_folder: str = "data/body_models"
     gender: str = "female"
-    num_betas: int = 100
+    num_betas: int = 300
     device: str = "cpu"
+    # SMPL-X+D adds per-vertex displacement (stages 7-9). Off by default —
+    # the high-beta parametric fit is smoother and matches the addon mesh
+    # fidelity. Re-enable when fit residual matters more than smoothness.
+    use_displacement: bool = False
+    # If True, run ONLY stage 7 of the D series (heavy Laplacian smoothing,
+    # iters bumped). Captures broad shape error (e.g. pelvis bulge) without
+    # baking high-frequency scan noise into D. Implies use_displacement.
+    use_smooth_displacement: bool = False
     vposer_ckpt: str | None = "data/vposer/vposer_v1_0/snapshots/TR00_E096.pt"
     # Crop hair/floor from the chamfer target — see losses.crop_scan_for_chamfer.
     crop_above_y_frac: float = 0.97
@@ -218,7 +226,26 @@ def fit_scan(
 
     final_loss = float("inf")
 
-    for stage_i, sw in enumerate(cfg.stage_weights):
+    stages = cfg.stage_weights
+    if cfg.use_smooth_displacement:
+        # Keep parametric stages + ONLY the first D stage (heavy Lap smooth).
+        # Bump iters to converge under heavy smoothness regularizer.
+        param_stages = [s for s in stages if "d" not in s.get("unfreeze", ())]
+        d_stages = [s for s in stages if "d" in s.get("unfreeze", ())]
+        if d_stages:
+            # Bump chamfer 10x relative to the original stage 7, keep
+            # smoothness moderate. Goal: pull D far enough to absorb the
+            # broad parametric residual (pelvis, calf bulges) without
+            # accreting high-frequency scan noise.
+            heavy = {**d_stages[0], "chamfer": 1000.0, "iters": 200,
+                     "d_lap": 10.0, "d_l2": 0.01}
+            stages = param_stages + [heavy]
+        else:
+            stages = param_stages
+    elif not cfg.use_displacement:
+        # Drop the D stages (any stage that unfreezes "d").
+        stages = [s for s in stages if "d" not in s.get("unfreeze", ())]
+    for stage_i, sw in enumerate(stages):
         if sw.get("use_vposer", False) and vposer is None:
             # No VPoser available — fall back to optimizing body_pose with L2.
             sw = {**sw, "use_vposer": False,
@@ -308,8 +335,8 @@ def fit_scan(
         # body_pose, copy the decoded pose into body_model.body_pose so we
         # start from the converged latent rather than zero.
         next_uses_raw = (
-            stage_i + 1 < len(cfg.stage_weights)
-            and not cfg.stage_weights[stage_i + 1].get("use_vposer", False)
+            stage_i + 1 < len(stages)
+            and not stages[stage_i + 1].get("use_vposer", False)
             and use_vposer
         )
         if next_uses_raw:
@@ -318,7 +345,7 @@ def fit_scan(
                 body_model.body_pose[:] = aa
 
     with torch.no_grad():
-        if vposer is not None and cfg.stage_weights[-1].get("use_vposer", False):
+        if vposer is not None and stages[-1].get("use_vposer", False):
             body_pose_aa = vposer.decode(z).view(1, 63)
             out = body_model(body_pose=body_pose_aa, return_full_pose=False)
             bp_out = body_pose_aa.detach().cpu().numpy()[0].reshape(21, 3)

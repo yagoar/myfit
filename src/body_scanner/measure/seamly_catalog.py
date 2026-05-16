@@ -33,10 +33,12 @@ from .primitives import (
     Geodesic,
     GeodesicLoop,
     Height,
+    HybridLoop,
     LandmarkChord,
     LateralChord,
     PlanarArc,
     PlanarGirth,
+    TapeLoop,
 )
 
 
@@ -150,14 +152,14 @@ RECIPES = {
     # neck cylinder (arms/shoulders are below), so no region mask needed.
     "G01": PlanarGirth("mid_neck_level", regions=()),
     "G02": PlanarGirth("neck_base_level", regions=()),
-    # G03 highbust: back armpit-to-armpit horizontal, front goes over the
-    # chest WITHOUT dipping at the centre front. highbust_front_cf
-    # (vid 5938) is a midline vertex at exact armpit Y on the front
-    # sternum so the front arc stays level, neither rising to the
-    # collarbone nor dipping into the cleavage.
-    "G03": GeodesicLoop(
-        ("armfold_back_left", "armfold_back_right",
-         "armfold_front_right", "highbust_front_cf", "armfold_front_left")
+    # G03 highbust: planar back at underarm Y (flat parallel to floor),
+    # front = geodesic from underarm via armfolds to the other underarm
+    # (extends G11 — armfold-to-armfold over the bust — out to the side
+    # seams). Matches a tape pulled taut at chest level.
+    "G03": TapeLoop(
+        plane_landmark="underarm_left",
+        side_endpoints=("underarm_left", "underarm_right"),
+        front_waypoints=("armfold_front_left", "armfold_front_right"),
     ),
     "G04": PlanarGirth("bust_level"),
     "G05": PlanarGirth("lowbust_level"),
@@ -169,7 +171,8 @@ RECIPES = {
 
     "G10": PlanarArc("front_neck_point", "shoulder_neck_left",
                      "shoulder_neck_right", "front"),
-    "G11": Geodesic(("armfold_front_left", "armfold_front_right")),
+    "G11": Geodesic(("underarm_left", "armfold_front_left",
+                     "armfold_front_right", "underarm_right")),
     "G12": PlanarArc("bust_level", "waist_side_left", "waist_side_right", "front"),
     "G13": PlanarArc("lowbust_level", "waist_side_left", "waist_side_right", "front"),
     "G15": PlanarArc("waist_string", "waist_side_left", "waist_side_right", "front"),

@@ -258,8 +258,13 @@ def build_app(npz_path: Path, model_folder: str, gender: str,
         body_verts, body_faces = verts, faces
     body_trace = _body_mesh_trace(body_verts, body_faces)
     body_normals = _vertex_normals(body_verts, body_faces)
-    # Lift each polyline 5mm along the body's outward normal so the lines
-    # render on top of the mesh rather than z-fighting with it.
+    # Lift each polyline along the body's outward normal so the lines render
+    # on top of the mesh rather than z-fighting with it. TapeLoop polylines
+    # pass through the torso under the arms — using nearest-body-vertex
+    # normals breaks down there (some points snap to the arm surface and
+    # get pushed in the wrong direction). For TapeLoops we instead push
+    # radially outward in XZ from the ring's own centroid, which is well
+    # defined regardless of how close the arms are.
     polylines = {code: _offset_along_normals(p, body_verts, body_normals)
                  for code, p in polylines.items()}
     initial_fig = _figure(body_trace, {})

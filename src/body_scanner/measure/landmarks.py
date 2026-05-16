@@ -50,7 +50,21 @@ JOINT_OVERRIDES: dict[str, str] = {}
 # Compound landmarks: name -> (operation, [base_names])
 # Resolved by computing on the base landmarks' 3D coordinates.
 COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
+    # bust_apex_left/right: synthesized landmark interpolated between two
+    # SMPL-X canonical vertices because the mesh has no single vertex at
+    # the Y where Yaiza's actual apex sits.
+    #   vid 5646 (Y=-0.040, X=+0.094) — too HIGH on the fitted body
+    #   vid 3230 (Y=-0.057, X=+0.091) — too LOW on the fitted body
+    # lerp t=0.5 takes the midpoint: Y=-0.048, X=+0.093. Override the
+    # verified-vid lookup in smplx_landmark_review.json; the JSON keeps
+    # 3230 / 5993 as audit-trail for the closer of the two real vids.
+    "bust_apex_left": ("lerp_vids", ["5646", "3230", "0.5"]),
+    "bust_apex_right": ("lerp_vids", ["8340", "5993", "0.5"]),
     "bust_apex_midpoint": ("midpoint", ["bust_apex_left", "bust_apex_right"]),
+    # Back midline at exact underarm Y — vid 5947 gives X/Z, underarm_left
+    # gives Y. Used by G03 highbust so the back arc stays parallel to the
+    # floor at true underarm height.
+    "highbust_back_cf_at_underarm_y": ("snap_y_to", ["5947", "underarm_left"]),
     "armscye_back_midpoint": (
         "midpoint",
         ["armscye_back_left", "armscye_back_right"],
@@ -131,21 +145,37 @@ class LandmarkSet:
         if leaf in DYNAMIC_LANDMARKS:
             return self._dynamic(leaf, DYNAMIC_LANDMARKS[leaf])
 
-        if leaf in self.vertex_ids:
-            return self.verts[self.vertex_ids[leaf]]
-
+        # COMPOUND_LANDMARKS overrides vertex_ids when the same leaf is in
+        # both. Lets us synthesize a landmark position (e.g. lerp between
+        # two vids) without removing the verified vid record from the JSON.
         if leaf in COMPOUND_LANDMARKS:
             op, bases = COMPOUND_LANDMARKS[leaf]
             if op == "offset_y":
                 base = self[bases[0]]
                 dy = float(bases[1])
                 return np.array([base[0], base[1] + dy, base[2]])
+            if op == "midpoint_of_vids":
+                pts = np.stack([self.verts[int(vid)] for vid in bases])
+                return pts.mean(axis=0)
+            if op == "lerp_vids":
+                vid_a, vid_b = int(bases[0]), int(bases[1])
+                t = float(bases[2])
+                return self.verts[vid_a] * (1 - t) + self.verts[vid_b] * t
+            if op == "snap_y_to":
+                # Take X/Z from a vid, override Y with another landmark's Y.
+                # bases: [vid_str, landmark_name_for_y]
+                pos = self.verts[int(bases[0])].copy()
+                pos[1] = self[bases[1]][1]
+                return pos
             pts = np.stack([self[b] for b in bases])
             if op == "midpoint":
                 return pts.mean(axis=0)
             if op == "alias":
                 return pts[0]
             raise ValueError(f"unknown compound op {op!r} for {leaf!r}")
+
+        if leaf in self.vertex_ids:
+            return self.verts[self.vertex_ids[leaf]]
 
         raise KeyError(
             f"landmark {leaf!r} is neither a verified vertex ID nor a "
