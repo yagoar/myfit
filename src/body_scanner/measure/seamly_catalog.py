@@ -250,9 +250,13 @@ RECIPES = {
     # SN_L's X column from SN down to the G04 (bust) Y plane. Stays at
     # constant X (no lateral curving toward chest center).
     "H14": SurfacePlumb("shoulder_neck_left", "bust_level"),
-    # H15 neck_side_to_highbust_f: vertical strip at SN_L's X to the
-    # G03 (highbust) Y plane.
-    "H15": SurfacePlumb("shoulder_neck_left", "armfold_front_left"),
+    # H15 neck_side_to_highbust_f: vertical strip at SN_L's X column
+    # down to the Y where the SN_L plumb line meets the G03 polyline
+    # on the body. Strict vertical (no diagonal), but truncated at the
+    # G03 crossing Y rather than the armfold_front_left Y plane.
+    # `h15_endpoint_left` is the G03-polyline ∩ SN_L-vertical-line
+    # point (intersect_line_with_recipe); only its Y is used here.
+    "H15": SurfacePlumb("shoulder_neck_left", "h15_endpoint_left"),
     # H16 neck_side_to_armpit_via_bust_angle: same diagonal direction
     # as H06 (SN_L → bust apex), but the path is truncated where it
     # crosses the G03 (highbust = armfold_front_left Y) plane. No chord

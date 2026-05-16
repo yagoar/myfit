@@ -264,6 +264,21 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
         "line_b": "bust_apex_left",
         "recipe": "G03",
     },
+    # H15 endpoint: where SN_L's vertical column meets the UPPER branch
+    # of the G03 polyline on the front of the body. G03 dips low over
+    # the bust front, so an unconstrained closest-point pick lands on
+    # that dip; we filter to (x near SN_L.x) ∧ (z > 0) and then take
+    # the highest-Y candidate — that's the actual SN-column G03
+    # crossing, not the bust-front low point.
+    "h15_endpoint_left": {
+        "search": "intersect_line_with_recipe",
+        "line_a": "shoulder_neck_left",
+        "line_b": "sn_at_highbust_y_left",
+        "recipe": "G03",
+        "front_only": True,
+        "x_band": 0.025,
+        "prefer_y_max": True,
+    },
     # J03 endpoint: closest point on the G05 polyline to the vertical
     # line through bust_apex_left (apex straight down). Lands where
     # the inframammary G05 ring meets the apex's X/Z column.
@@ -629,29 +644,141 @@ def _search_intersect_line_with_recipe(
     lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
 ) -> np.ndarray:
     """Closest point on a recipe's polyline to the 3D line through two
-    landmarks. Used by H16: where SN→apex line crosses G03."""
+    landmarks. Used by H16 (SN→apex × G03) and H15 (SN vertical × G03).
+
+    Robustness goals (this is shared by every per-body intersection
+    landmark, so an edge case in one figure must not skip a measurement
+    on another):
+      1. Scrub NaN / inf rows from the polyline before any geometry.
+      2. Filters (`front_only`, `back_only`, `x_band`,
+         `y_min`/`y_max`/`y_between`) restrict candidates BEFORE the
+         perpendicular-distance pick. Conflicting filters (both
+         `front_only` and `back_only`) raise immediately.
+      3. Progressive widening: if the filter set is empty, retry with
+         the band scaled 2x, then 4x. If still empty, drop `x_band`.
+         If still empty, drop the side filter. Only then raise.
+      4. Degenerate line (line_a ≈ line_b): fall back to nearest-point
+         search around `line_a` instead of nearest-perpendicular.
+      5. `prefer_y_max` / `prefer_y_min`: return the Y-extreme
+         candidate after filters (used by H15 to grab the upper G03
+         crossing rather than the bust-front dip).
+
+    Spec keys (all optional except `recipe`, `line_a`, `line_b`):
+      recipe         — Seamly code whose polyline supplies the curve.
+      line_a, line_b — landmark names defining the 3D line.
+      front_only     — keep curve points with Z > 0.
+      back_only      — keep curve points with Z < 0.
+      x_band         — abs(curve.x - line_a.x) < band (metres).
+      y_min, y_max   — absolute Y bounds.
+      y_between      — [low_landmark, high_landmark]; Y restricted to
+                       that span (auto-swapped if reversed).
+      prefer_y_max   — return highest-Y candidate after filters.
+      prefer_y_min   — return lowest-Y candidate after filters.
+    """
     # Local import — `seamly_catalog` imports primitives, which imports
     # this module. Lazy load breaks the cycle at call time.
     from .primitives import recipe_polyline
     from .seamly_catalog import RECIPES
-    recipe = RECIPES[spec["recipe"]]
+
+    if spec.get("front_only") and spec.get("back_only"):
+        raise ValueError(
+            f"{name!r}: front_only and back_only are mutually exclusive")
+
+    recipe_code = spec["recipe"]
+    if recipe_code not in RECIPES:
+        raise KeyError(f"{name!r}: unknown recipe {recipe_code!r}")
+    recipe = RECIPES[recipe_code]
     curve = recipe_polyline(recipe, lm.verts, lm.faces, lm)
     if curve is None or len(curve) < 2:
         raise KeyError(
-            f"{name!r}: recipe {spec['recipe']} has no polyline")
+            f"{name!r}: recipe {recipe_code} has no polyline")
+
+    # Scrub non-finite rows so a single solver glitch doesn't corrupt
+    # argmin / argmax on the whole array.
+    finite = np.isfinite(curve).all(axis=1)
+    if finite.sum() < 2:
+        raise KeyError(
+            f"{name!r}: recipe {recipe_code} polyline has too few finite "
+            "points")
+    curve = curve[finite]
+
     a = lm[spec["line_a"]]
     b = lm[spec["line_b"]]
+
+    use_front = bool(spec.get("front_only"))
+    use_back = bool(spec.get("back_only"))
+    has_x_band = "x_band" in spec
+    x_band_base = float(spec["x_band"]) if has_x_band else 0.0
+
+    y_low: float | None = None
+    y_high: float | None = None
+    if "y_min" in spec:
+        y_low = float(spec["y_min"])
+    if "y_max" in spec:
+        y_high = float(spec["y_max"])
+    if "y_between" in spec:
+        lo_lm, hi_lm = spec["y_between"]
+        y_lo_v = float(lm[lo_lm][1])
+        y_hi_v = float(lm[hi_lm][1])
+        if y_lo_v > y_hi_v:
+            y_lo_v, y_hi_v = y_hi_v, y_lo_v
+        y_low = y_lo_v if y_low is None else max(y_low, y_lo_v)
+        y_high = y_hi_v if y_high is None else min(y_high, y_hi_v)
+
+    def _filtered(band_scale: float, with_x: bool, with_side: bool,
+                  with_y: bool) -> np.ndarray:
+        k = np.ones(len(curve), dtype=bool)
+        if with_side and use_front:
+            k &= curve[:, 2] > 0
+        if with_side and use_back:
+            k &= curve[:, 2] < 0
+        if with_x and has_x_band:
+            k &= np.abs(curve[:, 0] - a[0]) < x_band_base * band_scale
+        if with_y and y_low is not None:
+            k &= curve[:, 1] >= y_low
+        if with_y and y_high is not None:
+            k &= curve[:, 1] <= y_high
+        return k
+
+    # Cascade: tighten → loosen. First with everything, then widen the
+    # band, then drop the band, then drop the side, then drop the Y
+    # window. Only fail when even the raw curve is empty (impossible —
+    # we already checked len(curve) >= 2).
+    for band_scale, with_x, with_side, with_y in (
+        (1.0, True, True, True),
+        (2.0, True, True, True),
+        (4.0, True, True, True),
+        (1.0, False, True, True),
+        (1.0, False, False, True),
+        (1.0, False, False, False),
+    ):
+        keep = _filtered(band_scale, with_x, with_side, with_y)
+        if keep.any():
+            break
+    else:  # pragma: no cover — covered by the last fallback above
+        raise KeyError(f"{name!r}: no recipe points survive any filter")
+    sub = curve[keep]
+
+    if spec.get("prefer_y_max"):
+        return sub[int(np.argmax(sub[:, 1]))]
+    if spec.get("prefer_y_min"):
+        return sub[int(np.argmin(sub[:, 1]))]
+
     u = b - a
     L = float(np.linalg.norm(u))
     if L < EPS_AXIS_NORM:
-        return b.copy()
+        # Degenerate line — nearest-point fallback around line_a so the
+        # caller still gets a sensible answer instead of `b.copy()`
+        # (which may not lie on the recipe curve at all).
+        d = np.linalg.norm(sub - a, axis=1)
+        return sub[int(np.argmin(d))]
     u = u / L
-    diff = curve - a
+    diff = sub - a
     proj_len = diff @ u
     proj = proj_len[:, None] * u
     perp = diff - proj
     d = np.linalg.norm(perp, axis=1)
-    return curve[int(np.argmin(d))]
+    return sub[int(np.argmin(d))]
 
 
 def _search_underbust_crease(
