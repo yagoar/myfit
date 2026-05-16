@@ -104,11 +104,11 @@
     "status": "confirmed"
   },
   "waist_side_left": {
-    "vertex_id": 3273,
-    "status": "confirmed"
+    "vertex_id": 4123,
+    "status": "corrected"
   },
   "waist_side_right": {
-    "vertex_id": 6036,
+    "vertex_id": 6867,
     "status": "mirrored_from_waist_side_left"
   },
   "elbow_back_left": {

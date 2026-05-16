@@ -103,8 +103,8 @@ are not stored in the table.
 
 | Landmark | Description | Nearest SMPL-X joint | Verified |
 |----------|-------------|----------------------|----------|
-| `waist_side_left` | Left side at the waist-string height. | `spine2` (6) — lateral left, at waist height | 3273 |
-| `waist_side_right` | Right side at the same height. | `spine2` (6) — lateral right | 6036 |
+| `waist_side_left` | Left side at the waist-string height. Re-picked 3273 → 4123 because the original sat at lateral rib level (Y=-0.083) not waist level (Y=-0.18). 4123 is at Y=-0.178, X=+0.141, Z=+0.007, lateral midline. | `spine1` (3) — lateral at waist | 4123 |
+| `waist_side_right` | Right side at the same height. Mirror of 4123. | `spine1` (3) — lateral right | 6867 |
 
 ### Arm (5)
 
