@@ -92,11 +92,11 @@
     "status": "mirrored_from_armfold_back_left"
   },
   "bust_apex_left": {
-    "vertex_id": 5646,
+    "vertex_id": 3230,
     "status": "corrected"
   },
   "bust_apex_right": {
-    "vertex_id": 8340,
+    "vertex_id": 5993,
     "status": "mirrored_from_bust_apex_left"
   },
   "lowbust_apex": {
