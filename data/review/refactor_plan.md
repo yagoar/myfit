@@ -61,3 +61,16 @@ Gating: snapshot regression test passes after every step.
 - `Formula.eval()` → `asteval`. Needs new dep.
 - LBFGS double-step semantics. Needs fit-convergence test.
 - Two parallel extractors (`extractor.py` vs `seamly_extractor.py`) consolidation. Needs user decision.
+- Step 3 (split `primitives.py` into package) deferred — high diff cost, marginal value vs. structural pain already addressed by mesh_ops split + dispatch refactors.
+- Step 7 (`recipe.polyline()` method dispatch) deferred — current isinstance chain in `recipe_polyline()` works and is readable enough.
+
+## Progress
+- [x] Step 1: snapshot regression test (`tests/test_yaiza_snapshot.py`)
+- [x] Step 2: docs (README, recipes.md, catalog_coverage.md auto-gen)
+- [x] Step 4: `mesh_ops.py` extracted, recipes/primitives cycle dead
+- [x] Step 5: tolerance constants (`EPS_*`) replace 17 scattered literals
+- [x] Step 6: `LandmarkSet` compound + dynamic-search dispatch dicts
+- [x] Step 8: narrow `except Exception` sites (`SOLVER_ERRORS`, `HULL_ERRORS`, `SPLINE_ERRORS` tuples)
+- [x] Step 9 partial: `np.zeros((10475, 3))` derived from `v_template.shape[0]`
+- [ ] Step 3 deferred
+- [ ] Step 7 deferred

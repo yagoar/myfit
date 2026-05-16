@@ -27,7 +27,15 @@ import numpy as np
 import potpourri3d as pp3d
 from scipy.interpolate import splev, splprep
 from scipy.ndimage import gaussian_filter1d
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.spatial import ConvexHull, QhullError, cKDTree
+
+
+# Exception groups for narrowed `except` blocks. Splitting by failure
+# mode means a genuine bug (TypeError, AttributeError, KeyError) bubbles
+# up instead of being silently swallowed as NaN.
+SOLVER_ERRORS = (RuntimeError, IndexError)  # potpourri3d geodesic solver
+HULL_ERRORS = (QhullError, ValueError, IndexError)  # scipy ConvexHull
+SPLINE_ERRORS = (RuntimeError, ValueError, TypeError)  # scipy splprep
 
 from .landmarks import LandmarkSet
 from .mesh_ops import (
@@ -311,7 +319,7 @@ class Geodesic:
             for a, b in zip(v_ids, v_ids[1:]):
                 try:
                     seg = np.asarray(solver.find_geodesic_path(a, b))
-                except Exception:
+                except SOLVER_ERRORS:
                     return None
                 if len(seg) >= 2:
                     segments.append(seg)
@@ -324,7 +332,7 @@ class Geodesic:
         else:
             try:
                 path = np.asarray(solver.find_geodesic_path_poly(v_ids))
-            except Exception:
+            except SOLVER_ERRORS:
                 return None
         if self.smooth and len(path) >= 9:
             # Gaussian-smooth the polyline (endpoints pinned) to round
@@ -370,7 +378,7 @@ class GeodesicLoop:
         for a, b in zip(v_ids, v_ids[1:]):
             try:
                 path = solver.find_geodesic_path(a, b)
-            except Exception:
+            except SOLVER_ERRORS:
                 return float("nan")
             if len(path) < 2:
                 continue
@@ -459,7 +467,7 @@ class HybridLoop:
         for u, v in zip(v_ids, v_ids[1:]):
             try:
                 p = solver.find_geodesic_path(u, v)
-            except Exception:
+            except SOLVER_ERRORS:
                 return float("nan")
             if len(p) >= 2:
                 d = np.diff(p, axis=0)
@@ -553,7 +561,7 @@ class SmoothLoop:
         try:
             tck, _ = splprep([pts[:, 0], pts[:, 1], pts[:, 2]],
                              k=3, s=0.0, per=True)
-        except Exception:
+        except SPLINE_ERRORS:
             return None
         u = np.linspace(0.0, 1.0, samples)
         xyz = splev(u, tck)
@@ -864,7 +872,7 @@ class GeodesicThenDrop:
         v_ids = [_nearest_vertex(verts, landmarks[w]) for w in self.waypoints]
         try:
             geo = np.asarray(solver.find_geodesic_path_poly(v_ids))
-        except Exception:
+        except SOLVER_ERRORS:
             return None
         if len(geo) < 2:
             return None
@@ -956,7 +964,7 @@ class LimbGirth:
         pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
         try:
             hull = ConvexHull(pts2d)
-        except Exception:
+        except HULL_ERRORS:
             return float("nan")
         verts_h = pts2d[hull.vertices]
         diffs = np.diff(np.vstack([verts_h, verts_h[:1]]), axis=0)
@@ -1032,7 +1040,7 @@ class TapeLoop:
             return None
         try:
             hidx = ConvexHull(loop[:, [0, 2]]).vertices  # CCW
-        except Exception:
+        except HULL_ERRORS:
             return None
         hull = loop[hidx]
         d_L = np.linalg.norm(hull[:, [0, 2]] - L[[0, 2]], axis=1)
@@ -1080,7 +1088,7 @@ class TapeLoop:
         for a, b in zip(v_ids, v_ids[1:]):
             try:
                 p = np.asarray(solver.find_geodesic_path(a, b))
-            except Exception:
+            except SOLVER_ERRORS:
                 return None
             if len(p) >= 2:
                 segs.append(p)
@@ -1176,7 +1184,7 @@ def drape_polyline_on_body(
                 continue
             try:
                 seg = np.asarray(solver.find_geodesic_path(i, j))
-            except Exception:
+            except SOLVER_ERRORS:
                 continue
             if len(seg) >= 2:
                 segments.append(seg)
@@ -1259,7 +1267,7 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
                 return np.vstack([loop, loop[:1]])
             try:
                 hull_idx = ConvexHull(xy).vertices
-            except Exception:
+            except HULL_ERRORS:
                 return np.vstack([loop, loop[:1]])
             hull_loop = loop[hull_idx]
             return np.vstack([hull_loop, hull_loop[:1]])
@@ -1370,7 +1378,7 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
             try:
                 hull = ConvexHull(pts2d).vertices
-            except Exception:
+            except HULL_ERRORS:
                 return np.vstack([loop, loop[:1]])
             return np.vstack([loop[hull], loop[hull[:1]]])
 
@@ -1398,6 +1406,10 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             if len(front_poly) > 0:
                 return np.vstack([back_arc, front_poly[1:]])
             return back_arc
+    # Outer catch-all stays broad: this is purely viz, partial polyline
+    # is better than crashing the viewer. Individual sites above narrow
+    # solver/hull/spline failures; this catches anything else (KeyError
+    # from a missing landmark, AttributeError, etc.).
     except Exception:
         return None
     return None
