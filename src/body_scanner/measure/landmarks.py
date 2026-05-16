@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 
@@ -351,79 +352,10 @@ class LandmarkSet:
         # two vids) without removing the verified vid record from the JSON.
         if leaf in COMPOUND_LANDMARKS:
             op, bases = COMPOUND_LANDMARKS[leaf]
-            if op == "offset_y":
-                base = self[bases[0]]
-                dy = float(bases[1])
-                return np.array([base[0], base[1] + dy, base[2]])
-            if op == "alias_vid":
-                # Position = a single vertex by ID.
-                return self.verts[int(bases[0])]
-            if op == "midpoint_of_vids":
-                pts = np.stack([self.verts[int(vid)] for vid in bases])
-                return pts.mean(axis=0)
-            if op == "lerp_vids":
-                vid_a, vid_b = int(bases[0]), int(bases[1])
-                t = float(bases[2])
-                return self.verts[vid_a] * (1 - t) + self.verts[vid_b] * t
-            if op == "snap_y_to":
-                # Take X/Z from a vid, override Y with another landmark's Y.
-                # bases: [vid_str, landmark_name_for_y]
-                pos = self.verts[int(bases[0])].copy()
-                pos[1] = self[bases[1]][1]
-                return pos
-            if op == "snap_y_landmark":
-                # Take X/Z from one landmark, Y from another. Useful for
-                # synthetic plumb-line waypoints (e.g. project FNP straight
-                # down to bust_level for sewing yardstick paths).
-                # bases: [xz_landmark_name, y_landmark_name]
-                a = self[bases[0]]
-                b = self[bases[1]]
-                return np.array([a[0], b[1], a[2]])
-            if op == "lerp_y":
-                # 3D lerp between two landmarks at fraction t.
-                # bases: [landmark_a, landmark_b, t_str]
-                a = self[bases[0]]
-                b = self[bases[1]]
-                t = float(bases[2])
-                return a + t * (b - a)
-            if op == "extend_to_y":
-                # Extend line a→b until its Y equals y_landmark.y.
-                # bases: [a, b, y_landmark]
-                a = self[bases[0]]
-                b = self[bases[1]]
-                y_target = self[bases[2]][1]
-                dy = b[1] - a[1]
-                if abs(dy) < EPS_AXIS_NORM:
-                    return b.copy()
-                t = (y_target - a[1]) / dy
-                return a + t * (b - a)
-            if op == "lerp_joint":
-                # 3D lerp between two SMPL-X joints at fraction t.
-                # bases: [joint_a_name, joint_b_name, t_str]
-                a = self._joint(bases[0])
-                b = self._joint(bases[1])
-                t = float(bases[2])
-                return a + t * (b - a)
-            if op == "project_perp":
-                # Project `point_landmark` onto the plane through
-                # `origin_landmark` with normal = axis_to - axis_from.
-                # bases: [point, origin, axis_from, axis_to]
-                p = self[bases[0]]
-                o = self[bases[1]]
-                a = self[bases[2]]
-                b = self[bases[3]]
-                n = b - a
-                nn = float(np.linalg.norm(n))
-                if nn < EPS_AXIS_NORM:
-                    return p.copy()
-                n = n / nn
-                return p - ((p - o) @ n) * n
-            pts = np.stack([self[b] for b in bases])
-            if op == "midpoint":
-                return pts.mean(axis=0)
-            if op == "alias":
-                return pts[0]
-            raise ValueError(f"unknown compound op {op!r} for {leaf!r}")
+            handler = COMPOUND_OPS.get(op)
+            if handler is None:
+                raise ValueError(f"unknown compound op {op!r} for {leaf!r}")
+            return handler(self, bases)
 
         if leaf in self.vertex_ids:
             return self.verts[self.vertex_ids[leaf]]
@@ -446,146 +378,14 @@ class LandmarkSet:
 
     def _dynamic(self, name: str, spec: dict) -> np.ndarray:
         """Resolve a landmark by searching the fitted mesh per the spec.
-        Currently supports `search: max_z` (most anterior point) with
-        optional x_min, x_max, y_between bounds drawn from other landmarks."""
+        See `DYNAMIC_SEARCHES` for the registered search types."""
         v = self.verts
-        mask = np.ones(len(v), dtype=bool)
-        if "x_min" in spec:
-            mask &= v[:, 0] > spec["x_min"]
-        if "x_max" in spec:
-            mask &= v[:, 0] < spec["x_max"]
-        if "y_between" in spec:
-            lower_name, upper_name = spec["y_between"]
-            y_lo = float(self[lower_name][1])
-            y_hi = float(self[upper_name][1])
-            if y_lo > y_hi:
-                y_lo, y_hi = y_hi, y_lo
-            mask &= (v[:, 1] > y_lo) & (v[:, 1] < y_hi)
-        if not mask.any():
-            raise KeyError(f"dynamic landmark {name!r}: no verts in search region")
-        if spec["search"] == "max_z":
-            idx = int(np.argmax(np.where(mask, v[:, 2], -np.inf)))
-            return v[idx]
-        if spec["search"] == "min_z":
-            idx = int(np.argmin(np.where(mask, v[:, 2], np.inf)))
-            return v[idx]
-        if spec["search"] == "min_y":
-            idx = int(np.argmin(np.where(mask, v[:, 1], np.inf)))
-            return v[idx]
-        if spec["search"] == "max_y":
-            idx = int(np.argmax(np.where(mask, v[:, 1], -np.inf)))
-            return v[idx]
-        if spec["search"] == "body_at_xy":
-            # Find the body surface vertex closest to a target (X, Y),
-            # preferring front of body (max Z). `x_ref` and `y_ref` are
-            # landmark names supplying X and Y; the returned point sits
-            # on the body at those coords with the body's natural Z.
-            x = float(self[spec["x_ref"]][0])
-            y = float(self[spec["y_ref"]][1])
-            x_band = float(spec.get("x_band", 0.02))
-            y_band = float(spec.get("y_band", 0.01))
-            front_only = spec.get("front_only", True)
-            m = ((np.abs(v[:, 0] - x) < x_band)
-                 & (np.abs(v[:, 1] - y) < y_band))
-            if front_only:
-                m &= v[:, 2] > 0
-            if not m.any():
-                # Widen the bands.
-                m = ((np.abs(v[:, 0] - x) < x_band * 2)
-                     & (np.abs(v[:, 1] - y) < y_band * 2))
-                if front_only:
-                    m &= v[:, 2] > 0
-            if not m.any():
-                raise KeyError(f"body_at_xy {name!r}: no verts in band")
-            idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
-            return v[idx]
-        if spec["search"] == "intersect_line_with_recipe":
-            # Closest point on a recipe's polyline to the 3D line through
-            # two landmarks. Used by H16: where SN→apex line crosses
-            # the G03 polyline on the body.
-            from .seamly_catalog import RECIPES
-            from .primitives import recipe_polyline
-            recipe = RECIPES[spec["recipe"]]
-            curve = recipe_polyline(recipe, self.verts, self.faces, self)
-            if curve is None or len(curve) < 2:
-                raise KeyError(f"{name!r}: recipe {spec['recipe']} has no polyline")
-            a = self[spec["line_a"]]
-            b = self[spec["line_b"]]
-            u = b - a
-            L = float(np.linalg.norm(u))
-            if L < EPS_AXIS_NORM:
-                return b.copy()
-            u = u / L
-            diff = curve - a
-            proj_len = diff @ u
-            proj = proj_len[:, None] * u
-            perp = diff - proj
-            d = np.linalg.norm(perp, axis=1)
-            return curve[int(np.argmin(d))]
-        if spec["search"] == "underbust_crease":
-            # Detect the inframammary fold per-body.
-            # 1. Bust depth = (apex Z) - (chest-wall reference Z); the
-            #    chest-wall reference is taken from a non-breast landmark
-            #    (default: armfold_front_left, which sits on the pectoral
-            #    above the breast).
-            # 2. Scan Y from min_offset below apex down to max_offset.
-            #    At each Y, sample max-Z of body verts in a slab around
-            #    apex X on the front (Z>0).
-            # 3. Crease = first Y where Z has dropped by `drop_fraction`
-            #    of the bust depth (default 0.5 = the fold sits where the
-            #    breast has lost half of its anterior protrusion). Falls
-            #    back to steepest-gradient if no such crossing exists.
-            ref = self[spec["apex"]]
-            apex_y = float(ref[1])
-            apex_x = float(ref[0])
-            apex_z = float(ref[2])
-            # Estimate the chest-wall (no-breast) Z at apex X. We sample
-            # body verts in a narrow X slab AT a Y a few cm above the
-            # breast attachment (default 8cm above apex — upper chest /
-            # sternum below the clavicle, well clear of bust tissue).
-            slab_dx_chest = float(spec.get("chest_slab_dx", 0.03))
-            chest_y = apex_y + float(spec.get("chest_y_offset", 0.08))
-            chest_y_band = float(spec.get("chest_y_band", 0.01))
-            chest_mask = ((np.abs(v[:, 0] - apex_x) < slab_dx_chest)
-                          & (np.abs(v[:, 1] - chest_y) < chest_y_band)
-                          & (v[:, 2] > 0))
-            if chest_mask.any():
-                chest_z = float(v[chest_mask, 2].mean())
-            else:
-                chest_z = apex_z  # degenerate
-            bust_depth = max(apex_z - chest_z, 0.0)
-            drop_fraction = float(spec.get("drop_fraction", 0.5))
-            min_drop = float(spec.get("min_drop", 0.005))
-            fold_drop = max(bust_depth * drop_fraction, min_drop)
-
-            y_top = apex_y - float(spec.get("min_offset", 0.02))
-            y_bot = apex_y - float(spec.get("max_offset", 0.12))
-            slab_dx = float(spec.get("slab_dx", 0.04))
-            y_band = float(spec.get("y_band", 0.005))
-            ys = np.linspace(y_top, y_bot, 60)
-            zs = []
-            ys_kept = []
-            for y in ys:
-                m = ((np.abs(v[:, 0] - apex_x) < slab_dx)
-                     & (np.abs(v[:, 1] - y) < y_band)
-                     & (v[:, 2] > 0))
-                if not m.any():
-                    continue
-                ys_kept.append(y)
-                zs.append(v[m, 2].max())
-            if len(ys_kept) < 5:
-                raise KeyError(f"underbust_crease {name!r}: too few samples")
-            ys_arr = np.array(ys_kept)
-            zs_arr = np.array(zs)
-            z_top = zs_arr[0]
-            below = np.where(z_top - zs_arr >= fold_drop)[0]
-            if len(below):
-                i = int(below[0])
-            else:
-                dz = np.gradient(zs_arr, ys_arr)
-                i = int(np.argmin(dz))
-            return np.array([apex_x, ys_arr[i], zs_arr[i]])
-        raise ValueError(f"unknown search {spec['search']!r}")
+        mask = _dynamic_prefilter(self, spec, v)
+        search = spec["search"]
+        handler = DYNAMIC_SEARCHES.get(search)
+        if handler is None:
+            raise ValueError(f"unknown search {search!r}")
+        return handler(self, name, spec, mask)
 
     def _joint(self, joint_name: str) -> np.ndarray:
         if self.joints is None:
@@ -628,3 +428,300 @@ def build_landmark_set(
         joints=joints,
         faces=faces,
     )
+
+
+# ---------------------------------------------------------------------------
+# Compound-op handlers. Each takes the LandmarkSet + the op's `bases` list
+# from COMPOUND_LANDMARKS and returns the resolved 3D point.
+# ---------------------------------------------------------------------------
+
+
+def _op_offset_y(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    base = lm[bases[0]]
+    dy = float(bases[1])
+    return np.array([base[0], base[1] + dy, base[2]])
+
+
+def _op_alias_vid(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    return lm.verts[int(bases[0])]
+
+
+def _op_midpoint_of_vids(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    pts = np.stack([lm.verts[int(vid)] for vid in bases])
+    return pts.mean(axis=0)
+
+
+def _op_lerp_vids(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    vid_a, vid_b = int(bases[0]), int(bases[1])
+    t = float(bases[2])
+    return lm.verts[vid_a] * (1 - t) + lm.verts[vid_b] * t
+
+
+def _op_snap_y_to(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """Take X/Z from a vid, override Y with another landmark's Y."""
+    pos = lm.verts[int(bases[0])].copy()
+    pos[1] = lm[bases[1]][1]
+    return pos
+
+
+def _op_snap_y_landmark(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """X/Z from one landmark, Y from another. Synthetic plumb-line waypoints."""
+    a = lm[bases[0]]
+    b = lm[bases[1]]
+    return np.array([a[0], b[1], a[2]])
+
+
+def _op_lerp_y(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """3D lerp between two landmarks at fraction t."""
+    a = lm[bases[0]]
+    b = lm[bases[1]]
+    t = float(bases[2])
+    return a + t * (b - a)
+
+
+def _op_extend_to_y(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """Extend line a→b until its Y equals y_landmark.y."""
+    a = lm[bases[0]]
+    b = lm[bases[1]]
+    y_target = lm[bases[2]][1]
+    dy = b[1] - a[1]
+    if abs(dy) < EPS_AXIS_NORM:
+        return b.copy()
+    t = (y_target - a[1]) / dy
+    return a + t * (b - a)
+
+
+def _op_lerp_joint(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """3D lerp between two SMPL-X joints at fraction t."""
+    a = lm._joint(bases[0])
+    b = lm._joint(bases[1])
+    t = float(bases[2])
+    return a + t * (b - a)
+
+
+def _op_project_perp(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    """Project `point` onto the plane through `origin` with normal axis_to -
+    axis_from."""
+    p = lm[bases[0]]
+    o = lm[bases[1]]
+    a = lm[bases[2]]
+    b = lm[bases[3]]
+    n = b - a
+    nn = float(np.linalg.norm(n))
+    if nn < EPS_AXIS_NORM:
+        return p.copy()
+    n = n / nn
+    return p - ((p - o) @ n) * n
+
+
+def _op_midpoint(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    pts = np.stack([lm[b] for b in bases])
+    return pts.mean(axis=0)
+
+
+def _op_alias(lm: LandmarkSet, bases: list[str]) -> np.ndarray:
+    return lm[bases[0]]
+
+
+COMPOUND_OPS: dict[str, Callable[[LandmarkSet, list[str]], np.ndarray]] = {
+    "offset_y": _op_offset_y,
+    "alias_vid": _op_alias_vid,
+    "midpoint_of_vids": _op_midpoint_of_vids,
+    "lerp_vids": _op_lerp_vids,
+    "snap_y_to": _op_snap_y_to,
+    "snap_y_landmark": _op_snap_y_landmark,
+    "lerp_y": _op_lerp_y,
+    "extend_to_y": _op_extend_to_y,
+    "lerp_joint": _op_lerp_joint,
+    "project_perp": _op_project_perp,
+    "midpoint": _op_midpoint,
+    "alias": _op_alias,
+}
+
+
+# ---------------------------------------------------------------------------
+# Dynamic-search prefilter + handlers. The prefilter narrows the candidate
+# vertex set by spec-level x_min/x_max/y_between bounds shared by most
+# searches; each handler then picks from that masked set.
+# ---------------------------------------------------------------------------
+
+
+def _dynamic_prefilter(
+    lm: LandmarkSet, spec: dict, v: np.ndarray,
+) -> np.ndarray:
+    mask = np.ones(len(v), dtype=bool)
+    if "x_min" in spec:
+        mask &= v[:, 0] > spec["x_min"]
+    if "x_max" in spec:
+        mask &= v[:, 0] < spec["x_max"]
+    if "y_between" in spec:
+        lower_name, upper_name = spec["y_between"]
+        y_lo = float(lm[lower_name][1])
+        y_hi = float(lm[upper_name][1])
+        if y_lo > y_hi:
+            y_lo, y_hi = y_hi, y_lo
+        mask &= (v[:, 1] > y_lo) & (v[:, 1] < y_hi)
+    if not mask.any():
+        raise KeyError("dynamic landmark: no verts in search region")
+    return mask
+
+
+def _search_max_z(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    v = lm.verts
+    idx = int(np.argmax(np.where(mask, v[:, 2], -np.inf)))
+    return v[idx]
+
+
+def _search_min_z(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    v = lm.verts
+    idx = int(np.argmin(np.where(mask, v[:, 2], np.inf)))
+    return v[idx]
+
+
+def _search_min_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    v = lm.verts
+    idx = int(np.argmin(np.where(mask, v[:, 1], np.inf)))
+    return v[idx]
+
+
+def _search_max_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    v = lm.verts
+    idx = int(np.argmax(np.where(mask, v[:, 1], -np.inf)))
+    return v[idx]
+
+
+def _search_body_at_xy(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Body surface vertex closest to a target (X, Y), preferring front of
+    body (max Z). `x_ref` / `y_ref` are landmark names supplying X / Y."""
+    v = lm.verts
+    x = float(lm[spec["x_ref"]][0])
+    y = float(lm[spec["y_ref"]][1])
+    x_band = float(spec.get("x_band", 0.02))
+    y_band = float(spec.get("y_band", 0.01))
+    front_only = spec.get("front_only", True)
+    m = ((np.abs(v[:, 0] - x) < x_band)
+         & (np.abs(v[:, 1] - y) < y_band))
+    if front_only:
+        m &= v[:, 2] > 0
+    if not m.any():
+        # Widen the bands.
+        m = ((np.abs(v[:, 0] - x) < x_band * 2)
+             & (np.abs(v[:, 1] - y) < y_band * 2))
+        if front_only:
+            m &= v[:, 2] > 0
+    if not m.any():
+        raise KeyError(f"body_at_xy {name!r}: no verts in band")
+    idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
+    return v[idx]
+
+
+def _search_intersect_line_with_recipe(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Closest point on a recipe's polyline to the 3D line through two
+    landmarks. Used by H16: where SN→apex line crosses G03."""
+    # Local import — `seamly_catalog` imports primitives, which imports
+    # this module. Lazy load breaks the cycle at call time.
+    from .primitives import recipe_polyline
+    from .seamly_catalog import RECIPES
+    recipe = RECIPES[spec["recipe"]]
+    curve = recipe_polyline(recipe, lm.verts, lm.faces, lm)
+    if curve is None or len(curve) < 2:
+        raise KeyError(
+            f"{name!r}: recipe {spec['recipe']} has no polyline")
+    a = lm[spec["line_a"]]
+    b = lm[spec["line_b"]]
+    u = b - a
+    L = float(np.linalg.norm(u))
+    if L < EPS_AXIS_NORM:
+        return b.copy()
+    u = u / L
+    diff = curve - a
+    proj_len = diff @ u
+    proj = proj_len[:, None] * u
+    perp = diff - proj
+    d = np.linalg.norm(perp, axis=1)
+    return curve[int(np.argmin(d))]
+
+
+def _search_underbust_crease(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Detect the inframammary fold per-body.
+
+    1. Bust depth = (apex Z) - (chest-wall reference Z) sampled in a
+       narrow X slab a few cm above the breast attachment.
+    2. Scan Y from min_offset below apex down to max_offset, sampling
+       max-Z of body verts at apex X.
+    3. Crease = first Y where Z has dropped by drop_fraction of the
+       bust depth, or the steepest-gradient Y as fallback.
+    """
+    v = lm.verts
+    ref = lm[spec["apex"]]
+    apex_y = float(ref[1])
+    apex_x = float(ref[0])
+    apex_z = float(ref[2])
+    slab_dx_chest = float(spec.get("chest_slab_dx", 0.03))
+    chest_y = apex_y + float(spec.get("chest_y_offset", 0.08))
+    chest_y_band = float(spec.get("chest_y_band", 0.01))
+    chest_mask = ((np.abs(v[:, 0] - apex_x) < slab_dx_chest)
+                  & (np.abs(v[:, 1] - chest_y) < chest_y_band)
+                  & (v[:, 2] > 0))
+    if chest_mask.any():
+        chest_z = float(v[chest_mask, 2].mean())
+    else:
+        chest_z = apex_z  # degenerate
+    bust_depth = max(apex_z - chest_z, 0.0)
+    drop_fraction = float(spec.get("drop_fraction", 0.5))
+    min_drop = float(spec.get("min_drop", 0.005))
+    fold_drop = max(bust_depth * drop_fraction, min_drop)
+
+    y_top = apex_y - float(spec.get("min_offset", 0.02))
+    y_bot = apex_y - float(spec.get("max_offset", 0.12))
+    slab_dx = float(spec.get("slab_dx", 0.04))
+    y_band = float(spec.get("y_band", 0.005))
+    ys = np.linspace(y_top, y_bot, 60)
+    zs: list[float] = []
+    ys_kept: list[float] = []
+    for y in ys:
+        m = ((np.abs(v[:, 0] - apex_x) < slab_dx)
+             & (np.abs(v[:, 1] - y) < y_band)
+             & (v[:, 2] > 0))
+        if not m.any():
+            continue
+        ys_kept.append(float(y))
+        zs.append(float(v[m, 2].max()))
+    if len(ys_kept) < 5:
+        raise KeyError(f"underbust_crease {name!r}: too few samples")
+    ys_arr = np.array(ys_kept)
+    zs_arr = np.array(zs)
+    z_top = zs_arr[0]
+    below = np.where(z_top - zs_arr >= fold_drop)[0]
+    if len(below):
+        i = int(below[0])
+    else:
+        dz = np.gradient(zs_arr, ys_arr)
+        i = int(np.argmin(dz))
+    return np.array([apex_x, ys_arr[i], zs_arr[i]])
+
+
+DYNAMIC_SEARCHES: dict[str, Callable[
+    [LandmarkSet, str, dict, np.ndarray], np.ndarray]] = {
+    "max_z": _search_max_z,
+    "min_z": _search_min_z,
+    "min_y": _search_min_y,
+    "max_y": _search_max_y,
+    "body_at_xy": _search_body_at_xy,
+    "intersect_line_with_recipe": _search_intersect_line_with_recipe,
+    "underbust_crease": _search_underbust_crease,
+}
