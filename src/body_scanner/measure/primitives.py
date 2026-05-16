@@ -44,6 +44,34 @@ from .regions import region_vertex_mask
 
 
 # ---------------------------------------------------------------------------
+# Tolerance constants. Order-of-magnitude varies because the units do:
+# coordinates are metres (~1.0 for body height) but tangent vectors / dot
+# products can collapse to 1e-3 magnitudes around degenerate cases.
+# ---------------------------------------------------------------------------
+
+# Unit-axis normalisation guard. Below this, axis is treated as degenerate
+# and the caller errors / returns NaN rather than dividing by ~zero.
+EPS_AXIS_NORM = 1e-9
+
+# 3D vector zero-length guard for chord lengths, line directions, etc.
+# Looser than EPS_AXIS_NORM because vector inputs may already be the result
+# of subtracting two near-coincident points.
+EPS_VECTOR_NORM = 1e-6
+
+# "Already on the requested Y plane" early-exit. End-of-arc Y vs target Y
+# within this tolerance means we skip the trailing chord segment.
+EPS_Y_PLANE_HIT = 1e-4
+
+# Right-edge inclusion for t-bin selection in DiagonalSurfacePlumb: each
+# bin is [t_i, t_{i+1} + EPS) so the last bin includes its right boundary.
+EPS_BIN_EDGE = 1e-9
+
+# Division-degenerate guards in face-normal accumulation. ~smaller than
+# any plausible normal magnitude on the SMPL-X mesh.
+EPS_NORMAL_CLIP = 1e-12
+
+
+# ---------------------------------------------------------------------------
 # Shared helpers.
 # ---------------------------------------------------------------------------
 
@@ -69,7 +97,7 @@ def _densify_last(arc: np.ndarray, target: np.ndarray,
     last = arc[-1]
     seg = target - last
     L = float(np.linalg.norm(seg))
-    if L < 1e-6:
+    if L < EPS_VECTOR_NORM:
         return arc
     n = max(int(L / step), 2)
     ts = np.linspace(0.0, 1.0, n + 1)[1:]  # skip arc[-1] (already present)
@@ -544,12 +572,12 @@ class SmoothLoop:
         v1 = verts[faces[:, 1]]
         v2 = verts[faces[:, 2]]
         fn = np.cross(v1 - v0, v2 - v0)
-        n = np.linalg.norm(fn, axis=1, keepdims=True).clip(min=1e-12)
+        n = np.linalg.norm(fn, axis=1, keepdims=True).clip(min=EPS_NORMAL_CLIP)
         fn = fn / n
         vn = np.zeros_like(verts)
         for i in range(3):
             np.add.at(vn, faces[:, i], fn)
-        vn = vn / np.linalg.norm(vn, axis=1, keepdims=True).clip(min=1e-12)
+        vn = vn / np.linalg.norm(vn, axis=1, keepdims=True).clip(min=EPS_NORMAL_CLIP)
         return verts[nearest] + vn[nearest] * 0.006
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
@@ -591,7 +619,7 @@ class SurfacePlumbThenDrop:
             return upper
         end = upper[-1]
         ty = float(landmarks[self.target_y_landmark][1])
-        if abs(end[1] - ty) < 1e-4:
+        if abs(end[1] - ty) < EPS_Y_PLANE_HIT:
             return upper
         drop = np.array([end[0], ty, end[2]])
         return np.vstack([upper, drop[None]])
@@ -642,7 +670,7 @@ class DiagonalSurfacePlumb:
         e = landmarks[self.end]
         d = e - s
         d_xy = np.array([float(d[0]), float(d[1]), 0.0])
-        if np.linalg.norm(d_xy) < 1e-6:
+        if np.linalg.norm(d_xy) < EPS_VECTOR_NORM:
             return None
         normal = np.array([d_xy[1], -d_xy[0], 0.0])
         normal /= np.linalg.norm(normal)
@@ -669,7 +697,7 @@ class DiagonalSurfacePlumb:
         # path stays a single-valued curve over t (no zigzag).
         u = e - s
         u2 = float(u @ u)
-        if u2 < 1e-9:
+        if u2 < EPS_AXIS_NORM:
             return None
         t_param = ((loop - s) @ u) / u2
         # Z sign filter — drop the opposite-side body crossings so the
@@ -687,7 +715,8 @@ class DiagonalSurfacePlumb:
         tbins = np.linspace(0.0, 1.0, nbins + 1)
         out = []
         for i in range(nbins):
-            in_bin = sel[(t_sel >= tbins[i]) & (t_sel < tbins[i + 1] + 1e-9)]
+            in_bin = sel[(t_sel >= tbins[i])
+                         & (t_sel < tbins[i + 1] + EPS_BIN_EDGE)]
             if len(in_bin) == 0:
                 continue
             if self.side == "front":
@@ -787,7 +816,7 @@ class DiagonalYardstick:
         e = landmarks[self.end]
         my = float(landmarks[self.mid_y_landmark][1])
         dy = float(e[1] - s[1])
-        if abs(dy) < 1e-6:
+        if abs(dy) < EPS_VECTOR_NORM:
             return None
         t = (my - float(s[1])) / dy
         mid_xz = s + t * (e - s)  # 3D point on the chord at Y=my
@@ -841,7 +870,7 @@ class GeodesicThenDrop:
             return None
         end = geo[-1]
         ty = float(landmarks[self.target_y_landmark][1])
-        if abs(end[1] - ty) < 1e-4:
+        if abs(end[1] - ty) < EPS_Y_PLANE_HIT:
             return geo
         drop = np.array([end[0], ty, end[2]])
         return np.vstack([geo, drop[None]])
@@ -879,7 +908,7 @@ class LimbGirth:
         b = landmarks[self.axis_to]
         n = b - a
         norm = float(np.linalg.norm(n))
-        if norm < 1e-9:
+        if norm < EPS_AXIS_NORM:
             raise ValueError(f"LimbGirth({self.landmark}): degenerate axis")
         return landmarks[self.landmark], n / norm
 
@@ -1165,7 +1194,7 @@ def drape_polyline_on_body(
     seg = np.diff(poly, axis=0)
     seg_lens = np.linalg.norm(seg, axis=1)
     total = float(seg_lens.sum())
-    if total < 1e-6:
+    if total < EPS_VECTOR_NORM:
         return poly
     cum = np.concatenate([[0.0], np.cumsum(seg_lens)])
     ts = np.linspace(0.0, total, samples)
@@ -1173,7 +1202,7 @@ def drape_polyline_on_body(
     for i, t in enumerate(ts):
         idx = int(np.searchsorted(cum, t) - 1)
         idx = max(0, min(idx, len(seg_lens) - 1))
-        local = (t - cum[idx]) / max(seg_lens[idx], 1e-9)
+        local = (t - cum[idx]) / max(seg_lens[idx], EPS_AXIS_NORM)
         sampled[i] = poly[idx] + local * (poly[idx + 1] - poly[idx])
     _, nearest = tree.query(sampled)
     draped = body_verts[nearest] + body_normals[nearest] * offset_m

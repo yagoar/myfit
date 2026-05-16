@@ -19,6 +19,12 @@ from pathlib import Path
 import numpy as np
 
 
+# Unit-axis normalisation guard for compound / dynamic landmark resolution.
+# Smaller than any plausible axis magnitude (axes here are differences of
+# body landmarks ~10-50 cm). Same role as `EPS_AXIS_NORM` in primitives.py.
+EPS_AXIS_NORM = 1e-9
+
+
 DEFAULT_REVIEW_JSON = Path("references/smplx_landmark_review.json")
 
 
@@ -387,7 +393,7 @@ class LandmarkSet:
                 b = self[bases[1]]
                 y_target = self[bases[2]][1]
                 dy = b[1] - a[1]
-                if abs(dy) < 1e-9:
+                if abs(dy) < EPS_AXIS_NORM:
                     return b.copy()
                 t = (y_target - a[1]) / dy
                 return a + t * (b - a)
@@ -408,7 +414,7 @@ class LandmarkSet:
                 b = self[bases[3]]
                 n = b - a
                 nn = float(np.linalg.norm(n))
-                if nn < 1e-9:
+                if nn < EPS_AXIS_NORM:
                     return p.copy()
                 n = n / nn
                 return p - ((p - o) @ n) * n
@@ -507,7 +513,7 @@ class LandmarkSet:
             b = self[spec["line_b"]]
             u = b - a
             L = float(np.linalg.norm(u))
-            if L < 1e-9:
+            if L < EPS_AXIS_NORM:
                 return b.copy()
             u = u / L
             diff = curve - a

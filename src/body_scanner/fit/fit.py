@@ -380,5 +380,6 @@ def save_fit(result: FitResult, out_path: Path) -> None:
         smplx_joints=result.smplx_joints,
         final_chamfer=np.array([result.final_chamfer]),
         displacement=(result.displacement if result.displacement is not None
-                      else np.zeros((10475, 3), dtype=np.float32)),
+                      else np.zeros((result.smplx_vertices.shape[0], 3),
+                                    dtype=np.float32)),
     )
