@@ -86,6 +86,10 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
                     ["ankle_bone_lateral_left", "ankle_bone_lateral_right"]),
     "lowbust_level": ("alias", ["lowbust_apex"]),
     "mid_neck_level": ("alias", ["mid_neck_front"]),
+    # neck_base_level: front_neck_point sits at the throat hollow, BELOW the
+    # actual neck cylinder (no neck-region verts exist at that Y on most
+    # bodies). Shift up 2.5cm to land in the neck proper for clean slicing.
+    "neck_base_level": ("offset_y", ["front_neck_point", "0.025"]),
     # high_hip_level: rule per dpm pants_1 = 4-5" below waist (~11cm). Use a
     # fixed mid-value here; refine when scan calibration validates.
     # Stored as point with y = waist_cf.y - 0.11; x/z unused as plane origin.

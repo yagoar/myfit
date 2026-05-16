@@ -87,10 +87,16 @@ def slice_mesh(
     d = (verts - plane_origin) @ n  # signed distance per vertex
     segs: list[np.ndarray] = []
     for tri in faces:
-        if vertex_mask is not None and not (
-            vertex_mask[tri[0]] and vertex_mask[tri[1]] and vertex_mask[tri[2]]
-        ):
-            continue
+        if vertex_mask is not None:
+            # Any-vertex rule: keep triangle if AT LEAST ONE of its 3 verts
+            # is in the mask. Strict all-3 (or majority) filtering loses
+            # boundary triangles at region junctions (neck/chest, torso/leg)
+            # and breaks slice loop closure. The crossing point will be on
+            # an edge between an in-mask and out-of-mask vertex, which is
+            # exactly the region boundary we want.
+            if not (vertex_mask[tri[0]] or vertex_mask[tri[1]]
+                    or vertex_mask[tri[2]]):
+                continue
         d0, d1, d2 = d[tri[0]], d[tri[1]], d[tri[2]]
         signs = np.array([d0, d1, d2]) > 0.0
         if signs.all() or (~signs).all():

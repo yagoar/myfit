@@ -42,6 +42,10 @@ REGIONS: dict[str, frozenset[int]] = {
         "pelvis", "spine1", "spine2", "spine3", "neck",
         "L_Collar", "R_Collar",
     )}),
+    # Neck only — used to isolate neck-circumference slices. Excludes
+    # collar/spine so the slice can't escape into the chest.
+    "neck": frozenset({JOINT[n] for n in ("neck", "head", "jaw",
+                                          "L_eye", "R_eye")}),
     "left_arm": frozenset(
         {JOINT[n] for n in ("L_Shoulder", "L_Elbow", "L_Wrist")}
         | set(L_HAND_JOINTS)
@@ -60,25 +64,15 @@ REGIONS: dict[str, frozenset[int]] = {
 
 
 @lru_cache(maxsize=4)
-def vertex_to_region(model_folder: str = "data/body_models",
-                     gender: str = "female") -> np.ndarray:
-    """Return shape (10475,) of region-name strings for each SMPL-X vertex.
-
-    Vertex labelled with the FIRST region whose joint set contains its
-    dominant joint. Vertices not in any region (hand fingertips beyond a
-    given side, etc.) fall back to whichever side their joint maps to."""
+def vertex_dominant_joint(model_folder: str = "data/body_models",
+                          gender: str = "female") -> np.ndarray:
+    """Return shape (10475,) of dominant-joint-index per vertex."""
     import smplx
     bm = smplx.create(
         model_path=model_folder, model_type="smplx", gender=gender,
         use_pca=False, batch_size=1,
     )
-    dom = bm.lbs_weights.detach().numpy().argmax(axis=1)  # (10475,)
-    labels = np.full(len(dom), "", dtype=object)
-    for region_name, joint_set in REGIONS.items():
-        mask = np.isin(dom, list(joint_set))
-        unlabelled = labels == ""
-        labels[mask & unlabelled] = region_name
-    return labels
+    return bm.lbs_weights.detach().numpy().argmax(axis=1)
 
 
 def region_vertex_mask(
@@ -86,7 +80,27 @@ def region_vertex_mask(
     model_folder: str = "data/body_models",
     gender: str = "female",
 ) -> np.ndarray:
-    """Bool mask over all 10475 SMPL-X verts: True if the vertex's region is
-    in `region_names`."""
-    labels = vertex_to_region(model_folder, gender)
-    return np.isin(labels, list(region_names))
+    """Bool mask over all 10475 SMPL-X verts: True if the vertex's
+    dominant joint belongs to ANY of the named regions. Regions can
+    overlap (e.g. neck verts are members of both 'torso' and 'neck')."""
+    dom = vertex_dominant_joint(model_folder, gender)
+    joints: set[int] = set()
+    for r in region_names:
+        if r in REGIONS:
+            joints |= REGIONS[r]
+    return np.isin(dom, list(joints))
+
+
+# Backwards-compatibility: callers using vertex_to_region get the legacy
+# first-match label assignment, but new code should prefer
+# region_vertex_mask which handles overlapping regions correctly.
+@lru_cache(maxsize=4)
+def vertex_to_region(model_folder: str = "data/body_models",
+                     gender: str = "female") -> np.ndarray:
+    dom = vertex_dominant_joint(model_folder, gender)
+    labels = np.full(len(dom), "", dtype=object)
+    for region_name, joint_set in REGIONS.items():
+        mask = np.isin(dom, list(joint_set))
+        unlabelled = labels == ""
+        labels[mask & unlabelled] = region_name
+    return labels

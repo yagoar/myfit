@@ -132,8 +132,10 @@ RECIPES = {
     # G — Circumferences (G01-G09) and Front Arcs (G10-G17)
     # Per extraction_audit.md, G03 and G11 are GEODESIC, not planar.
     # ------------------------------------------------------------------
-    "G01": PlanarGirth("mid_neck_level"),
-    "G02": PlanarGirth("front_neck_point"),  # neck base
+    # G01/G02 — at neck height the body cross-section is naturally just the
+    # neck cylinder (arms/shoulders are below), so no region mask needed.
+    "G01": PlanarGirth("mid_neck_level", regions=()),
+    "G02": PlanarGirth("neck_base_level", regions=()),
     "G03": GeodesicLoop(  # highbust geodesic loop under armfolds
         ("armfold_front_left", "armfold_back_left",
          "armfold_back_right", "armfold_front_right")
