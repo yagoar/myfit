@@ -52,7 +52,21 @@ def _load_code_to_name() -> dict[str, str]:
     return dict(re.findall(r"^\|\s*([A-Z]\d{2})\s*\|\s*`([^`]+)`", text, re.MULTILINE))
 
 
+def _load_code_to_diagram() -> dict[str, str]:
+    """Parse the markdown table to map code -> diagram base name (e.g. Gp1)."""
+    try:
+        text = _README.read_text()
+    except FileNotFoundError:
+        return {}
+    pattern = re.compile(
+        r"^\|\s*([A-Z]\d{2})\s*\|\s*`[^`]+`\s*\|\s*([A-Z]p\d+)",
+        re.MULTILINE,
+    )
+    return dict(pattern.findall(text))
+
+
 CODE_TO_NAME: dict[str, str] = _load_code_to_name()
+CODE_TO_DIAGRAM: dict[str, str] = _load_code_to_diagram()
 
 
 # Codes whose status is "judgment" or "standard" per extraction_audit.md.
@@ -136,9 +150,14 @@ RECIPES = {
     # neck cylinder (arms/shoulders are below), so no region mask needed.
     "G01": PlanarGirth("mid_neck_level", regions=()),
     "G02": PlanarGirth("neck_base_level", regions=()),
-    "G03": GeodesicLoop(  # highbust geodesic loop under armfolds
-        ("armfold_front_left", "armfold_back_left",
-         "armfold_back_right", "armfold_front_right")
+    # G03 highbust: back armpit-to-armpit horizontal, front goes over the
+    # chest WITHOUT dipping at the centre front. highbust_front_cf
+    # (vid 5938) is a midline vertex at exact armpit Y on the front
+    # sternum so the front arc stays level, neither rising to the
+    # collarbone nor dipping into the cleavage.
+    "G03": GeodesicLoop(
+        ("armfold_back_left", "armfold_back_right",
+         "armfold_front_right", "highbust_front_cf", "armfold_front_left")
     ),
     "G04": PlanarGirth("bust_level"),
     "G05": PlanarGirth("lowbust_level"),

@@ -23,7 +23,10 @@ MAPPING: dict[str, str] = {
     # Circumferences
     "Neck":              "G01",   # neck_mid_circ
     "Neck Base":         "G02",   # neck_circ
-    "Upper Chest":       "G03",   # highbust_circ
+    # truetoform's "Overbust" = highbust_circ (over bust, under armpits)
+    # truetoform's "Upper Chest" is the planar slice just under armpits;
+    # no Seamly code for it (closest is G03 but the conventions differ).
+    "Overbust":          "G03",   # highbust_circ
     "Bust":              "G04",   # bust_circ
     "Under Bust":        "G05",   # lowbust_circ
     "Waist":             "G07",   # waist_circ

@@ -23,7 +23,7 @@ from dash import Dash, Input, Output, dcc, html
 
 from .landmarks import build_landmark_set
 from .primitives import recipe_polyline
-from .seamly_catalog import CODE_TO_NAME, FORMULAS, RECIPES
+from .seamly_catalog import CODE_TO_DIAGRAM, CODE_TO_NAME, FORMULAS, RECIPES
 from .seamly_extractor import extract_catalog
 
 
@@ -120,11 +120,14 @@ def _body_mesh_trace(verts: np.ndarray, faces: np.ndarray) -> go.Mesh3d:
     return go.Mesh3d(
         x=verts[:, 0], y=verts[:, 1], z=verts[:, 2],
         i=faces[:, 0], j=faces[:, 1], k=faces[:, 2],
-        color="#dadada",
+        color="#cfcfcf",
         opacity=1.0,
         flatshading=False,
-        lighting=dict(ambient=0.55, diffuse=0.8, specular=0.05),
-        lightposition=dict(x=200, y=400, z=300),
+        # Lower ambient + higher diffuse = stronger shading contrast so the
+        # body shape reads cleanly. Specular kept small (skin is matte).
+        lighting=dict(ambient=0.25, diffuse=1.0, specular=0.08,
+                      roughness=0.55, fresnel=0.15),
+        lightposition=dict(x=400, y=600, z=600),
         hoverinfo="skip",
         name="body",
         showscale=False,
@@ -271,18 +274,33 @@ def build_app(npz_path: Path, model_folder: str, gender: str,
                     style={"height": "calc(100vh - 50px)", "width": "100%"},
                     config={"displayModeBar": False},
                 ),
-                style={"flex": "1 1 70%", "background": "#888c93"},
+                style={"flex": "1 1 50%", "background": "#5a5e63"},
             ),
             html.Div(
                 _measurement_panel(report.values, set(polylines)),
                 style={"flex": "0 0 360px"},
             ),
+            html.Div([
+                html.Div("Diagram", style={
+                    "fontWeight": 600, "fontSize": "13px",
+                    "padding": "8px 12px", "borderBottom": "1px solid #ccc"}),
+                html.Div(id="diagram-label",
+                         style={"padding": "6px 12px", "fontSize": "12px",
+                                "color": "#444"}),
+                html.Img(id="diagram-img", src="",
+                         style={"maxWidth": "100%", "padding": "8px",
+                                "display": "block"}),
+            ], style={"flex": "0 0 320px", "background": "#fff",
+                     "borderLeft": "1px solid #ccc", "overflowY": "auto",
+                     "height": "calc(100vh - 50px)"}),
         ], style={"display": "flex", "height": "calc(100vh - 50px)"}),
     ], style={"margin": 0, "fontFamily": "system-ui, sans-serif"})
 
     # Store the polylines + body_trace in closure for the callback.
     @app.callback(
         Output("body-graph", "figure"),
+        Output("diagram-img", "src"),
+        Output("diagram-label", "children"),
         Input({"type": "group-checklist", "group": "A"}, "value"),
         Input({"type": "group-checklist", "group": "B"}, "value"),
         Input({"type": "group-checklist", "group": "G"}, "value"),
@@ -308,7 +326,19 @@ def build_app(npz_path: Path, model_folder: str, gender: str,
                 v = report.values.get(code)
                 label = f"{code} {name} = {v:.2f} cm" if v is not None else code
                 selected[code] = (polylines[code], label)
-        return _figure(body_trace, selected)
+        fig = _figure(body_trace, selected)
+        # Diagram: pick the FIRST selected code that has a diagram.
+        diagram_src = ""
+        diagram_label = "—" if not selected_codes else \
+            "select a measurement with a diagram"
+        for code in selected_codes:
+            diag = CODE_TO_DIAGRAM.get(code)
+            if diag:
+                diagram_src = f"/assets/diagrams/{diag}.svg"
+                name = CODE_TO_NAME.get(code, code)
+                diagram_label = f"{code} {name} — {diag}"
+                break
+        return fig, diagram_src, diagram_label
 
     return app
 

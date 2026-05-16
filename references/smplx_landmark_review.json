@@ -92,11 +92,11 @@
     "status": "mirrored_from_armfold_back_left"
   },
   "bust_apex_left": {
-    "vertex_id": 3230,
+    "vertex_id": 5646,
     "status": "corrected"
   },
   "bust_apex_right": {
-    "vertex_id": 5993,
+    "vertex_id": 8340,
     "status": "mirrored_from_bust_apex_left"
   },
   "lowbust_apex": {
@@ -174,5 +174,9 @@
   "calf_widest_right": {
     "vertex_id": 6473,
     "status": "mirrored_from_calf_widest_left"
+  },
+  "highbust_front_cf": {
+    "vertex_id": 5938,
+    "status": "algorithmic"
   }
 }
