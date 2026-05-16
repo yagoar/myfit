@@ -1,0 +1,162 @@
+{
+  "G01": {
+    "flagged": true,
+    "note": "circ should be perpendicular to the neck tube, not the floor"
+  },
+  "G02": {
+    "flagged": true,
+    "note": "should be smoother, its creating a V both in the front and back"
+  },
+  "G10": {
+    "flagged": true,
+    "note": "curve it up towards the neck sides. it should be the same as G01 but cut off at the neck sides"
+  },
+  "H05": {
+    "flagged": true,
+    "note": "should go down on top of the body, not through the inside"
+  },
+  "H06": {
+    "flagged": true,
+    "note": "the line from neck to bust apex is still cutting the bust. the second line from apex to waist should follow the same angle as the first line but down to touch G07"
+  },
+  "H14": {
+    "flagged": true,
+    "note": "its still cutting into the bust (should sit on top) and it should go straight down from the neck to touch G04"
+  },
+  "H15": {
+    "flagged": true,
+    "note": "should go straight down the front to touch G03"
+  },
+  "H16": {
+    "flagged": true,
+    "note": "should go at an angle towarst the apex to touch G03"
+  },
+  "H17": {
+    "flagged": true,
+    "note": "should go around the shoulder then from armscye straight down to touch G07"
+  },
+  "H23": {
+    "flagged": true,
+    "note": "it should sit on top of the body, not inside it"
+  },
+  "H25": {
+    "flagged": true,
+    "note": "the lowbust point should be at the same X on G05 as the waist center back, then down to waist CB"
+  },
+  "H27": {
+    "flagged": true,
+    "note": "measurement should sit on top of the body, not inside"
+  },
+  "H28": {
+    "flagged": true,
+    "note": "measurement should sit on top of the body, not inside"
+  },
+  "H32": {
+    "flagged": true,
+    "note": "go down the side from the waist side to touch G08"
+  },
+  "H35": {
+    "flagged": true,
+    "note": "measure from waist side along the side seam to touch G09"
+  },
+  "H39": {
+    "flagged": true,
+    "note": "vertical line from shoulder point up to Y value of neck side"
+  },
+  "H41": {
+    "flagged": true,
+    "note": "should sit on top of the body, not inside"
+  },
+  "I03": {
+    "flagged": true,
+    "note": "the height of the across chest line is at 2/3 way between neck front point and the CF point on G03. use the X value for the neck front as CF"
+  },
+  "I07": {
+    "flagged": true,
+    "note": "straight from shoulder tip to shoulder tip"
+  },
+  "I08": {
+    "flagged": true,
+    "note": "measure halfway level between neck point at the back (use X as center back axis) and G03 level"
+  },
+  "I09": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "I13": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "J02": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "J04": {
+    "flagged": true,
+    "note": "should move in straight from apex to touch G07, not straight down to the floor"
+  },
+  "J10": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "K01": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "K02": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "K03": {
+    "flagged": true,
+    "note": "should be on top of the body not inside"
+  },
+  "K10": {
+    "flagged": true,
+    "note": "touch G04 at side seam (use depth of underarm point)"
+  },
+  "K13": {
+    "flagged": true,
+    "note": "touch G04 at side seam (use depth of underarm point)"
+  },
+  "L11": {
+    "flagged": true,
+    "note": "circ perpendicular to arm, not parallel to the floor\nalso this should be measured around the arm at underarm point"
+  },
+  "L13": {
+    "flagged": true,
+    "note": "circ perpendicular to arm, not parallel to the floor"
+  },
+  "L15": {
+    "flagged": true,
+    "note": "circ perpendicular to arm, not parallel to the floor"
+  },
+  "L16": {
+    "flagged": true,
+    "note": "touch L11 down the arm from shoulder tip"
+  },
+  "L19": {
+    "flagged": true,
+    "note": "smooth his curve out"
+  },
+  "M02": {
+    "flagged": true,
+    "note": "use geodesic curve from waist side to hip side, then straight to floor"
+  },
+  "M07": {
+    "flagged": true,
+    "note": "point should be further down"
+  },
+  "P01": {
+    "flagged": true,
+    "note": "should touch G04 at center front axis"
+  },
+  "P09": {
+    "flagged": true,
+    "note": "should curve down from armfold to touch G04 at center front"
+  },
+  "P12": {
+    "flagged": true,
+    "note": "should go over shoulder tip"
+  }
+}

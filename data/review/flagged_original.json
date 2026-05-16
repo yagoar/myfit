@@ -1,0 +1,226 @@
+{
+  "G01": {
+    "flagged": true,
+    "note": "the circ is too low"
+  },
+  "G02": {
+    "flagged": true,
+    "note": "the circ should touch the c7 point in the back, the neck side points at the base and the neck front and create a smooth neckline all around"
+  },
+  "G06": {
+    "flagged": true,
+    "note": "too low, same as waist. lets skip this measurement entirely. its too difficult to measure without touch"
+  },
+  "G10": {
+    "flagged": true,
+    "note": "should create a smooth arc from neck front point to neck base side points"
+  },
+  "H01": {
+    "flagged": true,
+    "note": "should not contour to the chest, its a straight measurementfrom neck to bust and bust to waist"
+  },
+  "H02": {
+    "flagged": true,
+    "note": "should follow the curve of the chest and underbust (as if the tape measure was between the breasts)"
+  },
+  "H05": {
+    "flagged": true,
+    "note": "should be From Neck Side straight down (perpendicular to floor) front to Waist level"
+  },
+  "H06": {
+    "flagged": true,
+    "note": "From Neck Side over Bustpoint to Waist level, forming a straight line\nmeaning: straight line to bust point from neck side and follow that angle to the waist"
+  },
+  "H07": {
+    "flagged": true,
+    "note": "measurement goes straight down to touch the line created by G03"
+  },
+  "H09": {
+    "flagged": true,
+    "note": "measurement goes straight down to touch the line created by G04"
+  },
+  "H12": {
+    "flagged": true,
+    "note": "remove this measurement entirely, we will skip the rib level"
+  },
+  "H14": {
+    "flagged": true,
+    "note": "straight from neck side down to touch the line from G04"
+  },
+  "H15": {
+    "flagged": true,
+    "note": "straight down from neck side to touch line from G03"
+  },
+  "H16": {
+    "flagged": true,
+    "note": "straight from center of the shoulder angled toward bust apex but ending at G03 line"
+  },
+  "H17": {
+    "flagged": true,
+    "note": "From Shoulder Tip, curving around Armscye Back, then down to Waist Side"
+  },
+  "H18": {
+    "flagged": true,
+    "note": "From Neck Side straight down back to Waist level (not angled)"
+  },
+  "H20": {
+    "flagged": true,
+    "note": "remove this measurement, we dont know where the scapula is"
+  },
+  "H21": {
+    "flagged": true,
+    "note": "should go straight down from neck back to G03 line at the back"
+  },
+  "H23": {
+    "flagged": true,
+    "note": "should go straight down from neck back to G04 line at the back"
+  },
+  "H25": {
+    "flagged": true,
+    "note": "lowbust point at the back (H25 line in center back) to waist back"
+  },
+  "H27": {
+    "flagged": true,
+    "note": "straight down from neck side to G04"
+  },
+  "H28": {
+    "flagged": true,
+    "note": "straight down from neck side to G03"
+  },
+  "H29": {
+    "flagged": true,
+    "note": "remove measurement, we dont know where the scapula is"
+  },
+  "H32": {
+    "flagged": true,
+    "note": "should go down the side seam from waist to G08"
+  },
+  "H33": {
+    "flagged": true,
+    "note": "straight down from waist back to G08"
+  },
+  "H34": {
+    "flagged": true,
+    "note": "straight down from waist to G09 \nRequires tape to cover the gap between\nbuttocks."
+  },
+  "H35": {
+    "flagged": true,
+    "note": "along side seam from waist to G09 (following the body curve)"
+  },
+  "H39": {
+    "flagged": true,
+    "note": "Vertical distance between Neck Back point Y and Shoulder Tip"
+  },
+  "H41": {
+    "flagged": true,
+    "note": "straight down from neck to I08"
+  },
+  "I03": {
+    "flagged": true,
+    "note": "From Armscye to Armscye at narrowest width across chest, about halfway between neck center front and G03 at the same axis as neck"
+  },
+  "I07": {
+    "flagged": true,
+    "note": "should be across the back, not the top of the shoulders"
+  },
+  "I08": {
+    "flagged": true,
+    "note": "should be from armscye to armscye parallel to the floor halfway between neck back point and G03 at the back"
+  },
+  "I09": {
+    "flagged": true,
+    "note": "should not go down but straight from armfold to armfold"
+  },
+  "I13": {
+    "flagged": true,
+    "note": "straight measurement, do not follow the curvature of the shoulder."
+  },
+  "J02": {
+    "flagged": true,
+    "note": "straight measurement from neck side to buspoint, but should not cut the bust "
+  },
+  "J03": {
+    "flagged": true,
+    "note": "curve down from bustpoint to touch G05, molding around the bust curve"
+  },
+  "J04": {
+    "flagged": true,
+    "note": "From Bustpoint to straight down to Waist level, forming a straight line (not curving\nalong the body)"
+  },
+  "J10": {
+    "flagged": true,
+    "note": "straight line is correct, but should not cut into the bust but sit on top"
+  },
+  "J11": {
+    "flagged": true,
+    "note": "straight line is correct, but should not cut into the bust but sit on top"
+  },
+  "K01": {
+    "flagged": true,
+    "note": "should form a diagonal, its curving too much around the bust "
+  },
+  "K02": {
+    "flagged": true,
+    "note": "should form a diagonal, its curving too much around the bust "
+  },
+  "K03": {
+    "flagged": true,
+    "note": "should form a diagonal, its curving too much around the bust "
+  },
+  "K10": {
+    "flagged": true,
+    "note": "line should go from neck side to seam line (same place as underarm) at bust level G04"
+  },
+  "K13": {
+    "flagged": true,
+    "note": "line should go from neck side to seam line (same place as underarm) at bust level G04 at the back"
+  },
+  "L11": {
+    "flagged": true,
+    "note": "circ should measure at armpit level cutting the arm tube perpendicular to the arm itself"
+  },
+  "L13": {
+    "flagged": true,
+    "note": "should not be parallel to the floor but perpendicular to the arm"
+  },
+  "L15": {
+    "flagged": true,
+    "note": "should not be parallel to the floor but perpendicular to the arm"
+  },
+  "L16": {
+    "flagged": true,
+    "note": "curve from shoulder tip down the arm until L11 level"
+  },
+  "L19": {
+    "flagged": true,
+    "note": "could be smoother"
+  },
+  "M02": {
+    "flagged": true,
+    "note": "From Waist Side along curve to Hip level then straight down to floor. Meaning we follow the curve from waist to hip and then straight down"
+  },
+  "M07": {
+    "flagged": true,
+    "note": "point is too high"
+  },
+  "N08": {
+    "flagged": true,
+    "note": "this should be a formula, not a measurement. Vertical distance from Waist side down to Crotch level. Use formula (Height: Waist\nside - Leg: Crotch to floor)"
+  },
+  "O01": {
+    "flagged": true,
+    "note": "should go around the neck, not under the arm"
+  },
+  "P01": {
+    "flagged": true,
+    "note": "should go to the center front of G03, between the apex points"
+  },
+  "P09": {
+    "flagged": true,
+    "note": "Measure in a curve from Armfold Left Front through Bust Front curved back up to Armfold Right Front"
+  },
+  "P12": {
+    "flagged": true,
+    "note": "should go from armscye front over shoulder tip to armscye back"
+  }
+}

@@ -265,8 +265,16 @@ def build_app(npz_path: Path, model_folder: str, gender: str,
     # get pushed in the wrong direction). For TapeLoops we instead push
     # radially outward in XZ from the ring's own centroid, which is well
     # defined regardless of how close the arms are.
-    polylines = {code: _offset_along_normals(p, body_verts, body_normals)
-                 for code, p in polylines.items()}
+    from .primitives import drape_polyline_on_body, should_drape
+    new_polylines = {}
+    for code, p in polylines.items():
+        if should_drape(RECIPES.get(code)):
+            new_polylines[code] = drape_polyline_on_body(
+                p, body_verts, body_normals, faces=body_faces)
+        else:
+            new_polylines[code] = _offset_along_normals(
+                p, body_verts, body_normals)
+    polylines = new_polylines
     initial_fig = _figure(body_trace, {})
 
     app = Dash(__name__, title="body-scanner viewer")

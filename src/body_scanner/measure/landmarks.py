@@ -123,8 +123,28 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
                            ["shoulder_neck_left", "bust_level"]),
     "c7_at_bust_y": ("snap_y_landmark", ["c7", "bust_level"]),
     "c7_at_highbust_y": ("snap_y_landmark", ["c7", "armfold_front_left"]),
+    "sn_at_highbust_y_left": ("snap_y_landmark",
+                                ["shoulder_neck_left", "armfold_front_left"]),
+    "waist_side_left_at_lowhip_y": ("snap_y_landmark",
+                                      ["waist_side_left", "low_hip_level"]),
+    "waist_side_left_at_floor": ("snap_y_landmark",
+                                   ["waist_side_left", "floor_anchor"]),
+    "waist_side_left_at_highhip_y": ("snap_y_landmark",
+                                       ["waist_side_left", "high_hip_level"]),
+    "armfold_back_left_at_waist_y": ("snap_y_landmark",
+                                       ["armfold_back_left", "waist_cb"]),
+    "underarm_left_at_bust_y": ("snap_y_landmark",
+                                  ["underarm_left", "bust_level"]),
+    "underarm_right_at_bust_y": ("snap_y_landmark",
+                                   ["underarm_right", "bust_level"]),
+    # Synthetic interior arm points at the underarm Y — used as origins
+    # for LimbGirth so the slice plane cuts the arm tube, not the torso.
+    "l_arm_at_underarm_y": ("snap_y_landmark",
+                              ["joint.L_Shoulder", "underarm_left"]),
     "bust_apex_left_at_lowbust_y": ("snap_y_landmark",
                                       ["bust_apex_left", "lowbust_level"]),
+    "bust_apex_left_at_waist_y": ("snap_y_landmark",
+                                    ["bust_apex_left", "waist_string"]),
     # high_hip_level: rule per dpm pants_1 = 4-5" below waist (~11cm). Use a
     # fixed mid-value here; refine when scan calibration validates.
     # Stored as point with y = waist_cf.y - 0.11; x/z unused as plane origin.
@@ -143,6 +163,40 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
 # SMPL-X+D Laplacian smoothness flattens the apex peak relative to the
 # truetoform tape position). Keeping the infrastructure for future use.
 DYNAMIC_LANDMARKS: dict[str, dict] = {
+    # Floor anchor: the body's lowest Y. Used to project landmarks down
+    # to floor level for plumb-line measurements that terminate at the
+    # ground (e.g. M02 outseam).
+    "floor_anchor": {"search": "min_y"},
+    # Waist front body point at the bust apex X — used as the endpoint
+    # of J04 (bust apex to waist at apex X on the G07 line).
+    "waist_front_at_apex_x_left": {
+        "search": "body_at_xy",
+        "x_ref": "bust_apex_left",
+        "y_ref": "waist_string",
+        "x_band": 0.02,
+        "y_band": 0.01,
+        "front_only": True,
+    },
+    # Body surface point on the G04 (bust) line at the SN_L X column.
+    # Endpoint for H14 (neck side straight down to bust line).
+    "bust_front_at_sn_x_left": {
+        "search": "body_at_xy",
+        "x_ref": "shoulder_neck_left",
+        "y_ref": "bust_level",
+        "x_band": 0.02,
+        "y_band": 0.01,
+        "front_only": True,
+    },
+    # Body surface point on the G03 (highbust = armfold_front Y) line at
+    # the SN_L X column. Endpoint for H15.
+    "highbust_front_at_sn_x_left": {
+        "search": "body_at_xy",
+        "x_ref": "shoulder_neck_left",
+        "y_ref": "armfold_front_left",
+        "x_band": 0.02,
+        "y_band": 0.01,
+        "front_only": True,
+    },
     # Underbust crease (inframammary fold). Detected per-body by scanning
     # the anterior surface profile below the bust apex for the steepest
     # negative dZ/dY — the point where the breast tissue meets the
@@ -264,6 +318,36 @@ class LandmarkSet:
             return v[idx]
         if spec["search"] == "min_z":
             idx = int(np.argmin(np.where(mask, v[:, 2], np.inf)))
+            return v[idx]
+        if spec["search"] == "min_y":
+            idx = int(np.argmin(np.where(mask, v[:, 1], np.inf)))
+            return v[idx]
+        if spec["search"] == "max_y":
+            idx = int(np.argmax(np.where(mask, v[:, 1], -np.inf)))
+            return v[idx]
+        if spec["search"] == "body_at_xy":
+            # Find the body surface vertex closest to a target (X, Y),
+            # preferring front of body (max Z). `x_ref` and `y_ref` are
+            # landmark names supplying X and Y; the returned point sits
+            # on the body at those coords with the body's natural Z.
+            x = float(self[spec["x_ref"]][0])
+            y = float(self[spec["y_ref"]][1])
+            x_band = float(spec.get("x_band", 0.02))
+            y_band = float(spec.get("y_band", 0.01))
+            front_only = spec.get("front_only", True)
+            m = ((np.abs(v[:, 0] - x) < x_band)
+                 & (np.abs(v[:, 1] - y) < y_band))
+            if front_only:
+                m &= v[:, 2] > 0
+            if not m.any():
+                # Widen the bands.
+                m = ((np.abs(v[:, 0] - x) < x_band * 2)
+                     & (np.abs(v[:, 1] - y) < y_band * 2))
+                if front_only:
+                    m &= v[:, 2] > 0
+            if not m.any():
+                raise KeyError(f"body_at_xy {name!r}: no verts in band")
+            idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
             return v[idx]
         if spec["search"] == "underbust_crease":
             # Detect the inframammary fold per-body.

@@ -22,7 +22,11 @@ import plotly.graph_objects as go
 import smplx
 
 from body_scanner.measure.landmarks import build_landmark_set
-from body_scanner.measure.primitives import recipe_polyline
+from body_scanner.measure.primitives import (
+    drape_polyline_on_body,
+    recipe_polyline,
+    should_drape,
+)
 from body_scanner.measure.seamly_catalog import (
     CODE_TO_DIAGRAM,
     CODE_TO_NAME,
@@ -130,6 +134,11 @@ def main():
     body_trace = _mesh_trace(verts, faces)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Per-vertex normals for draping straight-chord polylines onto the
+    # body surface.
+    from body_scanner.measure.viewer import _vertex_normals
+    body_normals = _vertex_normals(verts, faces)
+
     codes = sorted(args.codes) if args.codes else sorted(RECIPES.keys())
     written = []
     for i, code in enumerate(codes, 1):
@@ -142,6 +151,8 @@ def main():
         if poly is None or len(poly) < 2:
             print(f"[{i}/{len(codes)}] {code}: no polyline (value-only)")
             continue
+        if should_drape(recipe):
+            poly = drape_polyline_on_body(poly, verts, body_normals, faces=faces)
         try:
             value = recipe.compute(verts, faces, landmarks)
         except Exception:

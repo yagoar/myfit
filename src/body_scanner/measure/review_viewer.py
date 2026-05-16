@@ -115,6 +115,8 @@ def build_app(
     num_betas: int,
     notes_path: Path,
     scan_obj: Path | None = None,
+    flagged_only: bool = False,
+    filter_from: Path | None = None,
 ) -> Dash:
     verts, faces, joints = _load_fit(npz_path, model_folder, gender, num_betas)
     landmarks = build_landmark_set(verts, joints=joints)
@@ -135,17 +137,36 @@ def build_app(
         body_verts, body_faces = _load_obj(scan_obj)
     body_trace = _body_mesh_trace(body_verts, body_faces)
     body_normals = _vertex_normals(body_verts, body_faces)
-    polylines = {c: _offset_along_normals(p, body_verts, body_normals)
-                 for c, p in polylines.items()}
+    from .primitives import drape_polyline_on_body, should_drape
+    new_polylines = {}
+    for c, p in polylines.items():
+        if should_drape(RECIPES.get(c)):
+            new_polylines[c] = drape_polyline_on_body(
+                p, body_verts, body_normals, faces=body_faces)
+        else:
+            new_polylines[c] = _offset_along_normals(p, body_verts, body_normals)
+    polylines = new_polylines
 
     centroid = body_verts.mean(axis=0)
     extent = float(np.linalg.norm(body_verts.max(0) - body_verts.min(0)))
     radius = extent * 1.6
 
-    codes = sorted(polylines.keys())
+    notes = _load_notes(notes_path)
+    # Filter source: either the live notes file or a separate filter file.
+    # Lets us reset notes (empty) while still cycling only through a fixed
+    # subset (e.g. the set of codes flagged in a prior review pass).
+    filter_source = filter_from if filter_from is not None else notes_path
+    if flagged_only:
+        src = _load_notes(filter_source)
+        flagged = {c for c, v in src.items() if v.get("flagged")}
+        codes = sorted(c for c in polylines if c in flagged)
+        if not codes:
+            raise SystemExit(
+                f"--flagged-only set but no flagged codes in {filter_source}.")
+    else:
+        codes = sorted(polylines.keys())
     if not codes:
         raise SystemExit("No renderable measurements.")
-    notes = _load_notes(notes_path)
     # Initial camera = front view.
     cam_front = _camera(centroid, radius, *ANGLE_PRESETS["front"])
 
@@ -383,6 +404,17 @@ def main():
         default=Path("data/review/review_notes.json"),
         help="Where to persist review notes. Auto-loaded on startup.",
     )
+    p.add_argument(
+        "--flagged-only", action="store_true",
+        help="Cycle only through codes flagged in --filter-from (if set) "
+             "else --notes-json. Lets you reset notes while keeping the "
+             "code subset.",
+    )
+    p.add_argument(
+        "--filter-from", type=Path, default=None,
+        help="JSON file whose 'flagged' entries determine the code subset "
+             "when --flagged-only is set. Defaults to --notes-json.",
+    )
     args = p.parse_args()
 
     app = build_app(
@@ -392,6 +424,8 @@ def main():
         num_betas=args.num_betas,
         notes_path=args.notes_json,
         scan_obj=args.scan_obj,
+        flagged_only=args.flagged_only,
+        filter_from=args.filter_from,
     )
     app.run(debug=False, port=args.port, host="127.0.0.1")
 

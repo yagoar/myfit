@@ -165,9 +165,18 @@ class LateralChord:
 
 @dataclass(frozen=True)
 class LandmarkChord:
-    """Straight-line 3D distance between two landmarks."""
+    """Straight-line 3D distance between two landmarks.
+
+    `straight=True` opts out of the surface-drape visualisation: the
+    line renders as the actual 3D chord (with a small normal offset for
+    visibility) instead of being snapped to the body. Use for tape-pull
+    measurements whose direction is the measurement (e.g. bustpoint to
+    waist front, J04) rather than measurements where the tape lies on
+    the body (e.g. H05 plumb-line on torso).
+    """
     a: str
     b: str
+    straight: bool = False
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
         pa = landmarks[self.a]
@@ -363,6 +372,213 @@ class HybridLoop:
 
 
 @dataclass(frozen=True)
+class SurfacePlumb:
+    """Vertical strip on the body surface at a fixed X column.
+
+    Starts at `start` landmark, ends at the body surface at the same X
+    column at `target_y_landmark`'s Y plane. Path samples Y in steps and
+    at each Y picks the front-of-body vertex at the start landmark's X
+    (max Z in a small X slab). Result is a smooth curve that hugs the
+    body surface but stays at constant X — a tape pulled straight down
+    along the chest from the neck side, not a geodesic that curves
+    laterally toward the chest centerline.
+    """
+    start: str
+    target_y_landmark: str
+    side: str = "front"  # "front" (Z>0) or "back" (Z<0)
+    x_band: float = 0.015
+    y_band: float = 0.006
+
+    def _path(self, verts, faces, landmarks: LandmarkSet,
+                samples: int = 60) -> np.ndarray | None:
+        """Slice the body with a vertical plane at X = start.X and take
+        the requested side (front Z>0 or back Z<0) arc between Y(start)
+        and Y(target). Pure planar slice — no per-Y nearest-vertex
+        zigzag."""
+        from .recipes import slice_mesh, _build_loops
+        s = landmarks[self.start]
+        end_y = float(landmarks[self.target_y_landmark][1])
+        origin = np.array([float(s[0]), 0.0, 0.0])
+        normal = np.array([1.0, 0.0, 0.0])
+        segs = slice_mesh(verts, faces, origin, normal, vertex_mask=None)
+        if not segs:
+            return None
+        loops = _build_loops(segs)
+        # Pick the loop closest to the start point. Falls back to the
+        # raw segment cloud if loop-building fails (midline slices
+        # sometimes don't close due to float precision).
+        # Use the raw segment cloud — at near-midline X the loop builder
+        # often picks up only tiny artefact loops (face, fingers) while
+        # the actual torso slice doesn't close due to float precision.
+        # Raw segments always cover the full slice.
+        best = np.vstack(segs)
+        if self.side == "back":
+            side_pts = best[best[:, 2] < 0]
+        else:
+            side_pts = best[best[:, 2] > 0]
+        if len(side_pts) < 3:
+            return None
+        y_lo = min(float(s[1]), end_y)
+        y_hi = max(float(s[1]), end_y)
+        band = side_pts[(side_pts[:, 1] >= y_lo - 0.005)
+                        & (side_pts[:, 1] <= y_hi + 0.005)]
+        if len(band) < 3:
+            return None
+        # Order by Y descending so the path starts near `start`.
+        order = np.argsort(-band[:, 1])
+        ordered = band[order]
+        return np.vstack([s[None], ordered])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._path(verts, faces, landmarks)
+        if path is None:
+            return float("nan")
+        diffs = np.diff(path, axis=0)
+        return float(np.linalg.norm(diffs, axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
+class SmoothLoop:
+    """Closed smooth curve through an ordered set of waypoints, snapped
+    to the body surface between anchors.
+
+    Implementation: a periodic cubic B-spline (splprep with per=True)
+    through the anchor landmarks, then each sample is replaced with the
+    nearest body vertex (with a small outward normal offset). Length =
+    arc length of the snapped curve. Tape touches the anatomical anchors
+    AND lies on the body between them, with no V-dip from a body-surface
+    GeodesicLoop.
+    """
+    waypoints: tuple[str, ...]
+
+    def _spline(self, landmarks: LandmarkSet, samples: int = 200) -> np.ndarray | None:
+        from scipy.interpolate import splprep, splev
+        pts = np.array([landmarks[w] for w in self.waypoints])
+        if len(pts) < 3:
+            return None
+        try:
+            tck, _ = splprep([pts[:, 0], pts[:, 1], pts[:, 2]],
+                             k=3, s=0.0, per=True)
+        except Exception:
+            return None
+        u = np.linspace(0.0, 1.0, samples)
+        xyz = splev(u, tck)
+        return np.stack(xyz, axis=1)
+
+    def _curve(self, verts, faces, landmarks: LandmarkSet,
+                 samples: int = 200) -> np.ndarray | None:
+        spline = self._spline(landmarks, samples=samples)
+        if spline is None or verts is None:
+            return spline
+        from scipy.spatial import cKDTree
+        tree = cKDTree(verts)
+        _, nearest = tree.query(spline)
+        # Outward normal offset so the line sits just above the surface.
+        # Compute per-vertex normals locally (cheap; cached by caller).
+        v0 = verts[faces[:, 0]]
+        v1 = verts[faces[:, 1]]
+        v2 = verts[faces[:, 2]]
+        fn = np.cross(v1 - v0, v2 - v0)
+        n = np.linalg.norm(fn, axis=1, keepdims=True).clip(min=1e-12)
+        fn = fn / n
+        vn = np.zeros_like(verts)
+        for i in range(3):
+            np.add.at(vn, faces[:, i], fn)
+        vn = vn / np.linalg.norm(vn, axis=1, keepdims=True).clip(min=1e-12)
+        return verts[nearest] + vn[nearest] * 0.006
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        curve = self._curve(verts, faces, landmarks)
+        if curve is None:
+            return float("nan")
+        diffs = np.diff(curve, axis=0)
+        return float(np.linalg.norm(diffs, axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
+class LimbGirth:
+    """Circumference perpendicular to a limb axis at a given landmark.
+
+    The slice plane normal is `axis_to - axis_from` (e.g. elbow joint
+    minus shoulder joint for the upper arm), so the cut is square to the
+    limb tube rather than parallel to the floor.
+
+    Plane origin = `landmark`. Convex-hull perimeter of the planar slice
+    inside the region mask. `axis_from` / `axis_to` accept either a
+    landmark name or `joint.<NAME>` (resolved via SMPL-X joints).
+    """
+    landmark: str
+    axis_from: str
+    axis_to: str
+    regions: tuple[str, ...] = ()
+
+    def _plane(self, landmarks: LandmarkSet) -> tuple[np.ndarray, np.ndarray]:
+        a = landmarks[self.axis_from]
+        b = landmarks[self.axis_to]
+        n = b - a
+        norm = float(np.linalg.norm(n))
+        if norm < 1e-9:
+            raise ValueError(f"LimbGirth({self.landmark}): degenerate axis")
+        return landmarks[self.landmark], n / norm
+
+    def _slice_loop(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        from .recipes import (
+            _build_loops,
+            _pick_largest_loop,
+            _pick_loop_near_point,
+            slice_mesh,
+        )
+        origin, normal = self._plane(landmarks)
+        mask = region_vertex_mask(self.regions) if self.regions else None
+        segs = slice_mesh(verts, faces, origin, normal, vertex_mask=mask)
+        if not segs:
+            return None
+        loops = _build_loops(segs)
+        if loops:
+            if len(loops) == 1:
+                return loops[0]
+            near = _pick_loop_near_point(loops, origin)
+            return near if near is not None else _pick_largest_loop(loops)
+        # No closed loop survived the region mask (the limb is fused to
+        # the torso at this slice — typical at the armpit). Fall back to
+        # collecting all segment points and taking their 2D convex hull
+        # in the slice plane, restricted to points within radius_m of
+        # the origin so we don't sweep in another limb.
+        pts = np.vstack(segs)
+        # In-plane basis to filter by distance from origin (perpendicular
+        # distances ≈ 0 by construction; we care about radial in-plane).
+        d = np.linalg.norm(pts - origin, axis=1)
+        radius_m = 0.20
+        near_pts = pts[d < radius_m]
+        if len(near_pts) < 3:
+            return None
+        return near_pts
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        loop = self._slice_loop(verts, faces, landmarks)
+        if loop is None or len(loop) < 3:
+            return float("nan")
+        # Convex hull perimeter in the plane: project loop to 2D using two
+        # in-plane basis vectors, then ConvexHull.area in 2D == perimeter
+        # for 2D ConvexHull.
+        origin, normal = self._plane(landmarks)
+        # Build orthonormal basis u, v ⟂ normal.
+        ref = np.array([1.0, 0.0, 0.0]) if abs(normal[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+        u = ref - (ref @ normal) * normal
+        u /= np.linalg.norm(u)
+        v = np.cross(normal, u)
+        pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
+        try:
+            from scipy.spatial import ConvexHull
+            hull = ConvexHull(pts2d)
+        except Exception:
+            return float("nan")
+        verts_h = pts2d[hull.vertices]
+        diffs = np.diff(np.vstack([verts_h, verts_h[:1]]), axis=0)
+        return float(np.linalg.norm(diffs, axis=1).sum()) * 100.0
+
+
+@dataclass(frozen=True)
 class TapeLoop:
     """Closed loop that simulates a tape measure pulled taut across the
     chest at highbust level. Two halves:
@@ -519,6 +735,7 @@ PrimitiveRecipe = (
     Height | PlanarGirth | PlanarArc | LateralChord
     | LandmarkChord | VerticalDrop | PolylineChord
     | Geodesic | GeodesicLoop | HybridLoop | TapeLoop
+    | LimbGirth | SmoothLoop | SurfacePlumb
 )
 
 
@@ -526,6 +743,113 @@ PrimitiveRecipe = (
 # Polyline extraction — for visualisation. Returns an (N, 3) numpy array of
 # 3D points whose total length equals the recipe's measurement value.
 # ---------------------------------------------------------------------------
+
+
+def drape_polyline_on_body(
+    poly: np.ndarray,
+    body_verts: np.ndarray,
+    body_normals: np.ndarray,
+    faces: np.ndarray | None = None,
+    samples: int = 80,
+    offset_m: float = 0.008,
+) -> np.ndarray:
+    """Replace a chord polyline (which may pass through the body interior)
+    with the corresponding surface geodesic — the shortest path along
+    the body that joins the same endpoints.
+
+    Used when the MEASUREMENT VALUE is a straight chord or vertical drop
+    (mental model: yardstick distance) but the VIZ should show the tape
+    laid on the body. The geodesic is naturally smooth (shortest path on
+    the mesh) so we get a clean line without ad-hoc smoothing.
+
+    If `faces` is not provided we fall back to nearest-vertex resampling
+    plus Gaussian smoothing.
+    """
+    from scipy.spatial import cKDTree
+    if len(poly) < 2:
+        return poly
+    tree = cKDTree(body_verts)
+    # Skip drape when the chord stays in air (e.g. a vertical plumb-line
+    # from a forward-projected landmark to a Y-plane point). Detected
+    # by sampling the midpoint and checking distance to nearest body
+    # vertex — if too large, the line is genuinely off-surface and
+    # should remain as a straight chord in the viz.
+    mid = poly.mean(axis=0)
+    mid_dist, _ = tree.query(mid)
+    if mid_dist > 0.025:  # >2.5cm from surface = treat as in-air chord
+        # Apply a uniform normal offset along the chord so the line
+        # sits cleanly in front of the body rather than z-fighting.
+        n_pts = len(poly)
+        _, idx = tree.query(poly)
+        return poly + body_normals[idx] * offset_m
+    if faces is not None:
+        solver = _get_solver(body_verts, faces)
+        segments = []
+        for a, b in zip(poly, poly[1:]):
+            i = int(tree.query(a)[1])
+            j = int(tree.query(b)[1])
+            if i == j:
+                continue
+            try:
+                seg = np.asarray(solver.find_geodesic_path(i, j))
+            except Exception:
+                continue
+            if len(seg) >= 2:
+                segments.append(seg)
+        if segments:
+            full = [segments[0]]
+            for s in segments[1:]:
+                full.append(s[1:])
+            geo = np.vstack(full)
+            # Push outward 5mm along nearest-vertex normals so it sits
+            # just above the surface.
+            _, idx = tree.query(geo)
+            return geo + body_normals[idx] * offset_m
+
+    # Fallback: dense resample + Gaussian smooth.
+    seg = np.diff(poly, axis=0)
+    seg_lens = np.linalg.norm(seg, axis=1)
+    total = float(seg_lens.sum())
+    if total < 1e-6:
+        return poly
+    cum = np.concatenate([[0.0], np.cumsum(seg_lens)])
+    ts = np.linspace(0.0, total, samples)
+    sampled = np.zeros((samples, 3))
+    for i, t in enumerate(ts):
+        idx = int(np.searchsorted(cum, t) - 1)
+        idx = max(0, min(idx, len(seg_lens) - 1))
+        local = (t - cum[idx]) / max(seg_lens[idx], 1e-9)
+        sampled[i] = poly[idx] + local * (poly[idx + 1] - poly[idx])
+    _, nearest = tree.query(sampled)
+    draped = body_verts[nearest] + body_normals[nearest] * offset_m
+    n = len(draped)
+    if n >= 9:
+        from scipy.ndimage import gaussian_filter1d
+        sigma = max(3.0, n * 0.18)
+        smoothed = np.zeros_like(draped)
+        for j in range(3):
+            smoothed[:, j] = gaussian_filter1d(draped[:, j], sigma=sigma,
+                                                mode="nearest")
+        smoothed[0] = draped[0]
+        smoothed[-1] = draped[-1]
+        draped = smoothed
+    return draped
+
+
+# Recipe classes whose default visualisation is a straight chord that
+# may pass through the body interior. The viewer / render script drape
+# these onto the body surface.
+DRAPE_ON_BODY_RECIPES = (LandmarkChord, VerticalDrop, PolylineChord)
+
+
+def should_drape(recipe) -> bool:
+    """Return True if this recipe's polyline should be draped onto the
+    body surface, False if it should stay as the literal 3D chord."""
+    if not isinstance(recipe, DRAPE_ON_BODY_RECIPES):
+        return False
+    if isinstance(recipe, LandmarkChord) and recipe.straight:
+        return False
+    return True
 
 
 def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
@@ -632,6 +956,30 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
 
         if isinstance(recipe, TapeLoop):
             return recipe.polyline(verts, faces, landmarks)
+
+        if isinstance(recipe, SmoothLoop):
+            return recipe._curve(verts, faces, landmarks)
+
+        if isinstance(recipe, SurfacePlumb):
+            return recipe._path(verts, faces, landmarks)
+
+        if isinstance(recipe, LimbGirth):
+            loop = recipe._slice_loop(verts, faces, landmarks)
+            if loop is None or len(loop) < 3:
+                return None
+            origin, normal = recipe._plane(landmarks)
+            ref = np.array([1.0, 0.0, 0.0]) if abs(normal[0]) < 0.9 \
+                else np.array([0.0, 1.0, 0.0])
+            u = ref - (ref @ normal) * normal
+            u /= np.linalg.norm(u)
+            v = np.cross(normal, u)
+            pts2d = np.stack([(loop - origin) @ u, (loop - origin) @ v], axis=1)
+            try:
+                from scipy.spatial import ConvexHull
+                hull = ConvexHull(pts2d).vertices
+            except Exception:
+                return np.vstack([loop, loop[:1]])
+            return np.vstack([loop[hull], loop[hull[:1]]])
 
         if isinstance(recipe, HybridLoop):
             back_arc = recipe._planar_arc(verts, faces, landmarks)
