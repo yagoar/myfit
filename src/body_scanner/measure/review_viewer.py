@@ -14,15 +14,14 @@ import argparse
 import json
 from pathlib import Path
 
-import dash
 import numpy as np
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, ctx, dcc, html
 
-from .seamly_extractor import extract_catalog
 from .landmarks import build_landmark_set
 from .primitives import recipe_polyline
 from .seamly_catalog import CODE_TO_DIAGRAM, CODE_TO_NAME, RECIPES
+from .seamly_extractor import extract_catalog
 from .viewer import (
     _body_mesh_trace,
     _load_fit,
@@ -119,7 +118,7 @@ def build_app(
     filter_from: Path | None = None,
 ) -> Dash:
     verts, faces, joints = _load_fit(npz_path, model_folder, gender, num_betas)
-    landmarks = build_landmark_set(verts, joints=joints)
+    landmarks = build_landmark_set(verts, joints=joints, faces=faces)
     report = extract_catalog(verts, faces, joints=joints)
 
     polylines: dict[str, np.ndarray] = {}
@@ -197,6 +196,10 @@ document.addEventListener('keydown', function(e) {
 </body>
 </html>"""
     app.layout = html.Div([
+        # URL-based deeplink: visit /?code=H06 to land on H06 directly.
+        # The URL search string is also kept in sync with the current
+        # code so you can copy/paste the address bar to share a view.
+        dcc.Location(id="url", refresh=False),
         dcc.Store(id="state", data={
             "idx": 0,
             "codes": codes,
@@ -289,27 +292,50 @@ document.addEventListener('keydown', function(e) {
         dcc.Store(id="body-trace-key", data=0),
     ])
 
-    # Navigation: arrow keys via keyboard handler omitted (would need
-    # extra JS); buttons + dcc.Store hold the index.
+    # Navigation: prev/next buttons + URL search (?code=XYZ) drive the
+    # shared index. Whichever fires last wins. URL stays in sync via
+    # the sync_url callback below.
     @app.callback(
         Output("state", "data"),
         Output("flag", "value"),
         Output("note", "value"),
         Input("prev-btn", "n_clicks"),
         Input("next-btn", "n_clicks"),
+        Input("url", "search"),
         State("state", "data"),
     )
-    def navigate(_p, _n, state):
+    def navigate(_p, _n, search, state):
         trig = ctx.triggered_id
         i = state["idx"]
         if trig == "prev-btn":
             i = (i - 1) % len(state["codes"])
         elif trig == "next-btn":
             i = (i + 1) % len(state["codes"])
+        elif trig == "url" or trig is None:
+            # Parse ?code=XYZ from the URL search string.
+            from urllib.parse import parse_qs
+            qs = parse_qs((search or "").lstrip("?"))
+            code = (qs.get("code") or [None])[0]
+            if code and code in state["codes"]:
+                i = state["codes"].index(code)
         state["idx"] = i
         code = state["codes"][i]
         entry = notes.get(code, {})
         return state, (["flagged"] if entry.get("flagged") else []), entry.get("note", "")
+
+    @app.callback(
+        Output("url", "search"),
+        Input("state", "data"),
+        State("url", "search"),
+        prevent_initial_call=True,
+    )
+    def sync_url(state, current_search):
+        code = state["codes"][state["idx"]]
+        new = f"?code={code}"
+        if (current_search or "") == new:
+            from dash import no_update
+            return no_update
+        return new
 
     @app.callback(
         Output("code-label", "children"),

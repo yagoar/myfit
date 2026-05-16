@@ -10,7 +10,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from .landmarks import build_landmark_set
-from .primitives import Formula
 from .seamly_catalog import FORMULAS, JUDGMENT_OR_STANDARD, RECIPES
 
 
@@ -27,8 +26,10 @@ def extract_catalog(
     joints: np.ndarray | None = None,
 ) -> CatalogReport:
     landmarks = (
-        build_landmark_set(fitted_verts, review_json, joints=joints) if review_json
-        else build_landmark_set(fitted_verts, joints=joints)
+        build_landmark_set(fitted_verts, review_json,
+                            joints=joints, faces=smplx_faces) if review_json
+        else build_landmark_set(fitted_verts,
+                                 joints=joints, faces=smplx_faces)
     )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}

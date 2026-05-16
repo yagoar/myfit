@@ -168,11 +168,11 @@
     "status": "corrected"
   },
   "calf_widest_left": {
-    "vertex_id": 3712,
-    "status": "algorithmic"
+    "vertex_id": 3725,
+    "status": "algorithmic_max_girth"
   },
   "calf_widest_right": {
-    "vertex_id": 6473,
+    "vertex_id": 6486,
     "status": "mirrored_from_calf_widest_left"
   },
   "highbust_front_cf": {

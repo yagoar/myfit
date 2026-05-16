@@ -129,7 +129,7 @@ def main():
     )
     verts = fit["smplx_vertices"]
     faces = np.asarray(bm.faces, dtype=np.int32)
-    landmarks = build_landmark_set(verts, joints=fit["smplx_joints"])
+    landmarks = build_landmark_set(verts, joints=fit["smplx_joints"], faces=faces)
 
     body_trace = _mesh_trace(verts, faces)
     args.out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,62 @@
+{
+  "G10": {
+    "flagged": true,
+    "note": "this should arc from neck side to neck side passing through neck front point"
+  },
+  "H06": {
+    "flagged": true,
+    "note": "start like H05 at an angle towards apex and then follow that same angle to waist\nkind of like K01 but using the angle dictated by the apex"
+  },
+  "H16": {
+    "flagged": true,
+    "note": "like H15 but should point toward apex and end at G03 line"
+  },
+  "H25": {
+    "flagged": true,
+    "note": "use SurfacePlumb from waist center back up to same X on lowbust level"
+  },
+  "H32": {
+    "flagged": true,
+    "note": "use Geodesic like in H35"
+  },
+  "H37": {
+    "flagged": true,
+    "note": "vertical height line from shoulder tip perpendicular to floor up to Y of neck side point"
+  },
+  "H39": {
+    "flagged": true,
+    "note": "vertical height line from shoulder tip perpendicular to floor up to Y of neck back point"
+  },
+  "I03": {
+    "flagged": true,
+    "note": "should be at same X as armscye points but 2/3 of height between front neck point and center front point of G03"
+  },
+  "I08": {
+    "flagged": true,
+    "note": "should be at same X as armfold to armfold, but 2/3 between neck back point and I09"
+  },
+  "J01": {
+    "flagged": true,
+    "note": "no contour, just straight LandmarkChord"
+  },
+  "J03": {
+    "flagged": true,
+    "note": "this seems a bit too short, are you sure its touching the line at G05"
+  },
+  "J08": {
+    "flagged": true,
+    "note": "use straight LandmarkChord"
+  },
+  "L13": {
+    "flagged": true,
+    "note": "should be on left arm (mirror point for bicep)"
+  },
+  "M07": {
+    "flagged": true,
+    "note": "lower calf point"
+  },
+  "P09": {
+    "flagged": true,
+    "note": "should curve down to touch center point of bust circ G04 from the armfolds"
+  }
+}

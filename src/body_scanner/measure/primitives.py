@@ -58,6 +58,22 @@ def _nearest_vertex(verts: np.ndarray, p: np.ndarray) -> int:
     return int(np.argmin(np.linalg.norm(verts - p, axis=1)))
 
 
+def _densify_last(arc: np.ndarray, target: np.ndarray,
+                   step: float = 0.01) -> np.ndarray:
+    """Append a straight chord from arc[-1] to `target`, interpolated
+    every `step` metres so subsequent Gaussian smoothing has enough
+    samples on the chord segment to round the kink at arc[-1]."""
+    last = arc[-1]
+    seg = target - last
+    L = float(np.linalg.norm(seg))
+    if L < 1e-6:
+        return arc
+    n = max(int(L / step), 2)
+    ts = np.linspace(0.0, 1.0, n + 1)[1:]  # skip arc[-1] (already present)
+    pts = last[None] + ts[:, None] * seg
+    return np.vstack([arc, pts])
+
+
 # ---------------------------------------------------------------------------
 # Recipe protocol — each subclass implements compute(verts, faces, landmarks).
 # ---------------------------------------------------------------------------
@@ -242,17 +258,63 @@ def _get_solver(verts: np.ndarray, faces: np.ndarray) -> pp3d.EdgeFlipGeodesicSo
 
 @dataclass(frozen=True)
 class Geodesic:
-    """Open geodesic path through ordered landmark waypoints (>=2)."""
-    waypoints: tuple[str, ...]
+    """Open geodesic path through ordered landmark waypoints (>=2).
 
-    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+    With `via=True` (default), intermediate waypoints are CONSTRAINTS —
+    each consecutive pair (w_i, w_{i+1}) is solved as its own geodesic
+    and the results concatenated, so the path is guaranteed to visit
+    every waypoint. With `via=False`, the path uses
+    `find_geodesic_path_poly`, which iteratively shortens the polyline
+    and may skip past intermediate constraints (faster, but the
+    waypoints become hints rather than visits).
+    """
+    waypoints: tuple[str, ...]
+    via: bool = True
+    smooth: bool = False  # post-smooth chained geodesic to remove V-kinks at waypoints
+
+    def _compute_path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
         solver = _get_solver(verts, faces)
         v_ids = [_nearest_vertex(verts, landmarks[w]) for w in self.waypoints]
-        try:
-            path = solver.find_geodesic_path_poly(v_ids)
-        except Exception:
-            return float("nan")
-        if len(path) < 2:
+        if self.via:
+            segments = []
+            for a, b in zip(v_ids, v_ids[1:]):
+                try:
+                    seg = np.asarray(solver.find_geodesic_path(a, b))
+                except Exception:
+                    return None
+                if len(seg) >= 2:
+                    segments.append(seg)
+            if not segments:
+                return None
+            out = [segments[0]]
+            for s in segments[1:]:
+                out.append(s[1:])
+            path = np.vstack(out)
+        else:
+            try:
+                path = np.asarray(solver.find_geodesic_path_poly(v_ids))
+            except Exception:
+                return None
+        if self.smooth and len(path) >= 9:
+            # Gaussian-smooth the polyline (endpoints pinned) to round
+            # the V-kinks where chained geodesic segments meet at
+            # interior waypoints. Smoothed curve is left in 3D space
+            # (not re-snapped to vertices) — re-snapping produces a
+            # discrete staircase artefact.
+            from scipy.ndimage import gaussian_filter1d
+            sigma = max(2.0, len(path) * 0.06)
+            sm = np.empty_like(path)
+            for j in range(3):
+                sm[:, j] = gaussian_filter1d(path[:, j], sigma=sigma,
+                                              mode="nearest")
+            sm[0] = path[0]
+            sm[-1] = path[-1]
+            path = sm
+        return path
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        path = self._compute_path(verts, faces, landmarks)
+        if path is None or len(path) < 2:
             return float("nan")
         diffs = np.diff(path, axis=0)
         return float(np.sqrt((diffs ** 2).sum(axis=1)).sum()) * 100.0
@@ -558,11 +620,24 @@ class DiagonalSurfacePlumb:
     drop to `end` with a straight chord below (same idea as
     SurfacePlumbThenDrop, used for tapes that should not mold the
     waist concavity).
+
+    Optional `chord_endpoint`: if set, the arc (after mold_y clip if
+    any) is followed by a straight chord to this landmark instead of
+    the default `end`. Lets the same primitive express "mold body
+    along the SN→apex diagonal, then continue at that angle to
+    waist_cf" (H06: chord_endpoint='waist_cf', no mold_y).
+
+    Optional `truncate`: if True, no chord is appended after the arc
+    (regardless of mold_y / chord_endpoint). Used when the measurement
+    ends ON the mold line (e.g. H16: arc clipped at G03 Y, stop there).
     """
     start: str
     end: str
     side: str = "front"  # "front" = highest mean Z; "back" = lowest
     mold_y_landmark: str | None = None
+    chord_endpoint: str | None = None
+    truncate: bool = False
+    smooth: bool = False  # Gaussian-smooth the final polyline
 
     def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
         from .recipes import (
@@ -585,10 +660,14 @@ class DiagonalSurfacePlumb:
         loops = _build_loops(segs)
         if not loops:
             return None
-        mid = (s + e) / 2.0
-        loop = _pick_loop_near_point(loops, mid)
-        if loop is None:
-            loop = _pick_largest_loop(loops)
+        # Pick the loop whose closest vertex covers BOTH endpoints.
+        # _pick_loop_near_point uses centroid, which fails when the
+        # slice produces multiple loops (e.g. head + torso) and the
+        # chord midpoint sits near the head centroid by coincidence.
+        def _score(lp: np.ndarray) -> float:
+            return (float(np.linalg.norm(lp - s, axis=1).min())
+                    + float(np.linalg.norm(lp - e, axis=1).min()))
+        loop = min(loops, key=_score) if loops else None
         if loop is None or len(loop) < 4:
             return None
         # Parameterise loop points along the chord (s → e). t=0 at s,
@@ -642,16 +721,49 @@ class DiagonalSurfacePlumb:
             arc = np.vstack([arc, e[None]])
         else:
             arc[-1] = e
-        if self.mold_y_landmark is None:
-            return arc
-        my = float(landmarks[self.mold_y_landmark][1])
-        if s[1] >= e[1]:
-            upper = arc[arc[:, 1] >= my - 0.005]
+        # Apply mold_y clip: keep arc points strictly above (or below
+        # for upward-going) the mold Y, then interpolate the arc-edge
+        # to land EXACTLY at mold_y so the path ends on the requested
+        # plane, not at the nearest bin Y.
+        if self.mold_y_landmark is not None:
+            my = float(landmarks[self.mold_y_landmark][1])
+            cross = None
+            for i in range(len(arc) - 1):
+                y1, y2 = float(arc[i, 1]), float(arc[i + 1, 1])
+                if (y1 - my) * (y2 - my) < 0:
+                    t = (my - y1) / (y2 - y1)
+                    cross = arc[i] + t * (arc[i + 1] - arc[i])
+                    break
+            if s[1] >= e[1]:
+                kept = arc[arc[:, 1] >= my]
+            else:
+                kept = arc[arc[:, 1] <= my]
+            if cross is not None and len(kept) >= 1:
+                arc = np.vstack([kept, cross[None]])
+            elif len(kept) >= 2:
+                arc = kept
+        # Decide what (if anything) to append after the arc.
+        if self.truncate:
+            out = arc
+        elif self.chord_endpoint is not None:
+            target = landmarks[self.chord_endpoint]
+            out = _densify_last(arc, target)
+        elif self.mold_y_landmark is not None:
+            # Default: chord back to the diagonal endpoint after clipping.
+            out = _densify_last(arc, e)
         else:
-            upper = arc[arc[:, 1] <= my + 0.005]
-        if len(upper) < 2:
-            return arc
-        return np.vstack([upper, e[None]])
+            out = arc
+        if self.smooth and len(out) >= 9:
+            from scipy.ndimage import gaussian_filter1d
+            sigma = max(2.0, len(out) * 0.06)
+            sm = np.empty_like(out)
+            for j in range(3):
+                sm[:, j] = gaussian_filter1d(out[:, j], sigma=sigma,
+                                              mode="nearest")
+            sm[0] = out[0]
+            sm[-1] = out[-1]
+            out = sm
+        return out
 
     def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
         path = self._path(verts, faces, landmarks)
@@ -1193,9 +1305,7 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
             return np.array([landmarks[n] for n in recipe.landmarks])
 
         if isinstance(recipe, Geodesic):
-            solver = _get_solver(verts, faces)
-            v_ids = [_nearest_vertex(verts, landmarks[w]) for w in recipe.waypoints]
-            return np.asarray(solver.find_geodesic_path_poly(v_ids))
+            return recipe._compute_path(verts, faces, landmarks)
 
         if isinstance(recipe, GeodesicLoop):
             solver = _get_solver(verts, faces)

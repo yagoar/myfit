@@ -156,6 +156,27 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
         "joint.L_Shoulder",
         "joint.L_Elbow",
     ]),
+    # bicep_max_left: mirror of bicep_max_right (vid 6022 → vid 3259,
+    # found by minimising |verts[i] - mirrored(verts[6022])|). Used by
+    # L13 to slice the LEFT upper arm at the bicep apex.
+    "bicep_max_left": ("alias_vid", ["3259"]),
+    # I03 / I08 height anchors: 2/3 between two Y references.
+    # SN→apex line extended down to waist Y (H06 chord endpoint).
+    "sn_to_apex_at_waist_y_left": ("extend_to_y", [
+        "shoulder_neck_left", "bust_apex_left", "waist_string"]),
+    "i03_y_anchor": ("lerp_y", ["front_neck_point",
+                                 "armfold_front_left",
+                                 "0.6667"]),
+    "i08_y_anchor": ("lerp_y", ["c7", "armfold_back_left", "0.6667"]),
+    # I03 / I08 endpoints: armscye / armfold X/Z at the 2/3 Y level.
+    "armscye_front_left_at_i03_y": (
+        "snap_y_landmark", ["armscye_front_left", "i03_y_anchor"]),
+    "armscye_front_right_at_i03_y": (
+        "snap_y_landmark", ["armscye_front_right", "i03_y_anchor"]),
+    "armfold_back_left_at_i08_y": (
+        "snap_y_landmark", ["armfold_back_left", "i08_y_anchor"]),
+    "armfold_back_right_at_i08_y": (
+        "snap_y_landmark", ["armfold_back_right", "i08_y_anchor"]),
     "bust_apex_left_at_lowbust_y": ("snap_y_landmark",
                                       ["bust_apex_left", "lowbust_level"]),
     "bust_apex_left_at_waist_y": ("snap_y_landmark",
@@ -227,6 +248,58 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
     # the anterior surface profile below the bust apex for the steepest
     # negative dZ/dY — the point where the breast tissue meets the
     # ribcage. Falls back gracefully if too few samples are found.
+    # H16 endpoint: closest point on the G03 polyline to the 3D line
+    # through SN_L and bust_apex_left. The endpoint sits on the actual
+    # G03 curve where the SN→apex trajectory meets it.
+    "h16_endpoint_left": {
+        "search": "intersect_line_with_recipe",
+        "line_a": "shoulder_neck_left",
+        "line_b": "bust_apex_left",
+        "recipe": "G03",
+    },
+    # J03 endpoint: closest point on the G05 polyline to the vertical
+    # line through bust_apex_left (apex straight down). Lands where
+    # the inframammary G05 ring meets the apex's X/Z column.
+    "j03_endpoint_left": {
+        "search": "intersect_line_with_recipe",
+        "line_a": "bust_apex_left",
+        "line_b": "bust_apex_left_at_lowbust_y",
+        "recipe": "G05",
+    },
+    # H06 lower endpoint: body surface at waist Y, at the X column
+    # of the SN→apex line extended to waist Y. Lets the lower segment
+    # of H06 "go in toward the body" instead of continuing in air at
+    # the apex's forward Z.
+    "h06_endpoint_left": {
+        "search": "body_at_xy",
+        "x_ref": "sn_to_apex_at_waist_y_left",
+        "y_ref": "waist_string",
+        "x_band": 0.025,
+        "y_band": 0.012,
+        "front_only": True,
+    },
+    # Body midline at bust Y plane — used as the centre point of G04
+    # for P09's geodesic loop. Tight X band so the search lands on
+    # the sternum/cleavage midline, not the inner edge of a breast.
+    "bust_front_cf": {
+        "search": "body_at_xy",
+        "x_ref": "waist_cf",
+        "y_ref": "bust_level",
+        "x_band": 0.010,
+        "y_band": 0.008,
+        "front_only": True,
+    },
+    # J03 lower endpoint: actual body surface point at G05 (lowbust) Y
+    # with X near the bust apex. Replaces the in-air snap_y_landmark
+    # so the geodesic lands on the body, not floating below the bust.
+    "bust_apex_left_at_lowbust_y_body": {
+        "search": "body_at_xy",
+        "x_ref": "bust_apex_left",
+        "y_ref": "lowbust_level",
+        "x_band": 0.025,
+        "y_band": 0.012,
+        "front_only": True,
+    },
     "underbust_crease_left": {
         "search": "underbust_crease",
         "apex": "bust_apex_left",
@@ -237,7 +310,7 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
         # depth (apex Z minus chest-wall Z, both measured automatically).
         # 0.7 lands at the actual inframammary crease on small/medium busts;
         # tune up for larger busts if needed.
-        "drop_fraction": 0.7,
+        "drop_fraction": 0.5,
         "min_drop": 0.005,  # floor for flat chests
     },
 }
@@ -250,6 +323,9 @@ class LandmarkSet:
     verts: np.ndarray  # (V, 3) fitted SMPL-X vertices
     vertex_ids: dict[str, int]  # leaf name -> vertex id
     joints: np.ndarray | None = None  # (J, 3) fitted SMPL-X joint positions
+    faces: np.ndarray | None = None  # (F, 3) triangle indices (needed by
+    # dynamic landmarks that call into recipe polylines, e.g. the SN→apex
+    # ↔ G03 intersection used by H16)
 
     def __getitem__(self, name: str) -> np.ndarray:
         """Resolve `landmarks.<leaf>`, `joint.<NAME>`, or bare `<leaf>` to
@@ -273,6 +349,9 @@ class LandmarkSet:
                 base = self[bases[0]]
                 dy = float(bases[1])
                 return np.array([base[0], base[1] + dy, base[2]])
+            if op == "alias_vid":
+                # Position = a single vertex by ID.
+                return self.verts[int(bases[0])]
             if op == "midpoint_of_vids":
                 pts = np.stack([self.verts[int(vid)] for vid in bases])
                 return pts.mean(axis=0)
@@ -294,6 +373,31 @@ class LandmarkSet:
                 a = self[bases[0]]
                 b = self[bases[1]]
                 return np.array([a[0], b[1], a[2]])
+            if op == "lerp_y":
+                # 3D lerp between two landmarks at fraction t.
+                # bases: [landmark_a, landmark_b, t_str]
+                a = self[bases[0]]
+                b = self[bases[1]]
+                t = float(bases[2])
+                return a + t * (b - a)
+            if op == "extend_to_y":
+                # Extend line a→b until its Y equals y_landmark.y.
+                # bases: [a, b, y_landmark]
+                a = self[bases[0]]
+                b = self[bases[1]]
+                y_target = self[bases[2]][1]
+                dy = b[1] - a[1]
+                if abs(dy) < 1e-9:
+                    return b.copy()
+                t = (y_target - a[1]) / dy
+                return a + t * (b - a)
+            if op == "lerp_joint":
+                # 3D lerp between two SMPL-X joints at fraction t.
+                # bases: [joint_a_name, joint_b_name, t_str]
+                a = self._joint(bases[0])
+                b = self._joint(bases[1])
+                t = float(bases[2])
+                return a + t * (b - a)
             if op == "project_perp":
                 # Project `point_landmark` onto the plane through
                 # `origin_landmark` with normal = axis_to - axis_from.
@@ -389,6 +493,29 @@ class LandmarkSet:
                 raise KeyError(f"body_at_xy {name!r}: no verts in band")
             idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
             return v[idx]
+        if spec["search"] == "intersect_line_with_recipe":
+            # Closest point on a recipe's polyline to the 3D line through
+            # two landmarks. Used by H16: where SN→apex line crosses
+            # the G03 polyline on the body.
+            from .seamly_catalog import RECIPES
+            from .primitives import recipe_polyline
+            recipe = RECIPES[spec["recipe"]]
+            curve = recipe_polyline(recipe, self.verts, self.faces, self)
+            if curve is None or len(curve) < 2:
+                raise KeyError(f"{name!r}: recipe {spec['recipe']} has no polyline")
+            a = self[spec["line_a"]]
+            b = self[spec["line_b"]]
+            u = b - a
+            L = float(np.linalg.norm(u))
+            if L < 1e-9:
+                return b.copy()
+            u = u / L
+            diff = curve - a
+            proj_len = diff @ u
+            proj = proj_len[:, None] * u
+            perp = diff - proj
+            d = np.linalg.norm(perp, axis=1)
+            return curve[int(np.argmin(d))]
         if spec["search"] == "underbust_crease":
             # Detect the inframammary fold per-body.
             # 1. Bust depth = (apex Z) - (chest-wall reference Z); the
@@ -482,6 +609,7 @@ def build_landmark_set(
     fitted_verts: np.ndarray,
     review_json: Path | str = DEFAULT_REVIEW_JSON,
     joints: np.ndarray | None = None,
+    faces: np.ndarray | None = None,
 ) -> LandmarkSet:
     """Construct a LandmarkSet from a fitted SMPL-X mesh + verified IDs.
 
@@ -492,4 +620,5 @@ def build_landmark_set(
         verts=fitted_verts,
         vertex_ids=load_vertex_ids(review_json),
         joints=joints,
+        faces=faces,
     )

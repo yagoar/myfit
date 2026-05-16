@@ -1,0 +1,46 @@
+{
+  "G01": {
+    "flagged": true,
+    "note": "circ should still be perpendicular to the neck axis and should go along the middle of the neck all around"
+  },
+  "H05": {
+    "flagged": true,
+    "note": "from bust line to waist line should use LandmarkChord like in J04 but using shoulder_neck_left X\nfrom neck to bust is fine"
+  },
+  "H35": {
+    "flagged": true,
+    "note": "contour long the side seam like in M02"
+  },
+  "I07": {
+    "flagged": true,
+    "note": "should go around the back"
+  },
+  "I13": {
+    "flagged": true,
+    "note": "on the surface but straight line"
+  },
+  "K01": {
+    "flagged": true,
+    "note": "should not curve around bust"
+  },
+  "K02": {
+    "flagged": true,
+    "note": "should not curve around bust"
+  },
+  "K03": {
+    "flagged": true,
+    "note": "should not be that curved"
+  },
+  "K10": {
+    "flagged": true,
+    "note": "should not be that curved"
+  },
+  "K13": {
+    "flagged": true,
+    "note": "shoul go around the back"
+  },
+  "L16": {
+    "flagged": true,
+    "note": "go along the top of the arm to touch L11 line"
+  }
+}
