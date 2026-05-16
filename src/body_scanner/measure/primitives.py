@@ -30,7 +30,7 @@ from scipy.ndimage import gaussian_filter1d
 from scipy.spatial import ConvexHull, cKDTree
 
 from .landmarks import LandmarkSet
-from .recipes import (  # reuse the slicing utilities already built
+from .mesh_ops import (
     _build_loops,
     _convex_hull_perimeter,
     _loop_xz,
