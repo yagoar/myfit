@@ -45,7 +45,6 @@ from .mesh_ops import (
     _pick_largest_loop,
     _pick_loop_near_point,
     _pick_torso_loop,
-    _polygon_perimeter,
     slice_mesh,
 )
 from .regions import region_vertex_mask
@@ -115,6 +114,12 @@ def _densify_last(arc: np.ndarray, target: np.ndarray,
 
 # ---------------------------------------------------------------------------
 # Recipe protocol — each subclass implements compute(verts, faces, landmarks).
+#
+# Some recipes (Height, LandmarkChord, VerticalDrop, PolylineChord) need
+# only `landmarks` to compute their value. Their `verts` / `faces` params
+# are kept for protocol parity so the catalog can dispatch all recipes
+# uniformly via `recipe.compute(verts, faces, landmarks)`. Static
+# analysers will flag them as unused — that's expected.
 # ---------------------------------------------------------------------------
 
 
@@ -493,8 +498,7 @@ class SurfacePlumb:
     x_band: float = 0.015
     y_band: float = 0.006
 
-    def _path(self, verts, faces, landmarks: LandmarkSet,
-                samples: int = 60) -> np.ndarray | None:
+    def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
         """Slice the body with a vertical plane at X = start.X and take
         the requested side (front Z>0 or back Z<0) arc between Y(start)
         and Y(target). Pure planar slice — no per-Y nearest-vertex
@@ -506,14 +510,11 @@ class SurfacePlumb:
         segs = slice_mesh(verts, faces, origin, normal, vertex_mask=None)
         if not segs:
             return None
-        loops = _build_loops(segs)
-        # Pick the loop closest to the start point. Falls back to the
-        # raw segment cloud if loop-building fails (midline slices
-        # sometimes don't close due to float precision).
-        # Use the raw segment cloud — at near-midline X the loop builder
-        # often picks up only tiny artefact loops (face, fingers) while
-        # the actual torso slice doesn't close due to float precision.
-        # Raw segments always cover the full slice.
+        # Use the raw segment cloud rather than `_build_loops(segs)`: at
+        # near-midline X the loop builder often picks up only tiny
+        # artefact loops (face, fingers) while the actual torso slice
+        # doesn't close due to float precision. Raw segments always
+        # cover the full slice.
         best = np.vstack(segs)
         if self.side == "back":
             side_pts = best[best[:, 2] < 0]
@@ -840,6 +841,9 @@ class DiagonalYardstick:
         return cand[int(np.argmin(d))]
 
     def _path(self, verts, faces, landmarks: LandmarkSet) -> np.ndarray | None:
+        # `faces` kept in signature for parity with other recipes that
+        # `recipe_polyline` dispatches via `recipe._path(verts, faces, lm)`.
+        del faces
         s = landmarks[self.start]
         e = landmarks[self.end]
         mid = self._touch(verts, landmarks)
@@ -1032,7 +1036,6 @@ class TapeLoop:
             return None
         L = landmarks[self.side_endpoints[0]]
         R = landmarks[self.side_endpoints[1]]
-        midZ = (L[2] + R[2]) / 2.0
         x_lim = max(abs(L[0]), abs(R[0])) + 0.005
         keep = np.abs(loop[:, 0]) <= x_lim
         loop = loop[keep]
@@ -1171,7 +1174,6 @@ def drape_polyline_on_body(
     if mid_dist > 0.025:  # >2.5cm from surface = treat as in-air chord
         # Apply a uniform normal offset along the chord so the line
         # sits cleanly in front of the body rather than z-fighting.
-        n_pts = len(poly)
         _, idx = tree.query(poly)
         return poly + body_normals[idx] * offset_m
     if faces is not None:

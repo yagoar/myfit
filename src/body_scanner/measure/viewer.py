@@ -23,7 +23,7 @@ from dash import Dash, Input, Output, dcc, html
 
 from .landmarks import build_landmark_set
 from .primitives import recipe_polyline
-from .seamly_catalog import CODE_TO_DIAGRAM, CODE_TO_NAME, FORMULAS, RECIPES
+from .seamly_catalog import CODE_TO_DIAGRAM, CODE_TO_NAME, RECIPES
 from .seamly_extractor import extract_catalog
 
 
