@@ -103,8 +103,8 @@ are not stored in the table.
 
 | Landmark | Description | Nearest SMPL-X joint | Verified |
 |----------|-------------|----------------------|----------|
-| `waist_side_left` | Left side at the waist-string height. Re-picked 3273 → 4123 because the original sat at lateral rib level (Y=-0.083) not waist level (Y=-0.18). 4123 is at Y=-0.178, X=+0.141, Z=+0.007, lateral midline. | `spine1` (3) — lateral at waist | 4123 |
-| `waist_side_right` | Right side at the same height. Mirror of 4123. | `spine1` (3) — lateral right | 6867 |
+| `waist_side_left` | Left side at the waist-string height. Re-picked 3273 → 4124 to align Y with waist_cf (-0.189, only 4mm below the new lateral pick). 4124 at (+0.141, -0.193, -0.013). The earlier alternative 4123 at Y=-0.178 was closer to lateral midline in Z but left an 11mm Y offset from waist_cf; 4124 keeps the three waist anchors on the same horizontal plane. | `spine1` (3) — lateral at waist | 4124 |
+| `waist_side_right` | Right side at the same height. Mirror of 4124. | `spine1` (3) — lateral right | 6868 |
 
 ### Arm (5)
 
