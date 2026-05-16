@@ -416,6 +416,27 @@ RECIPES = {
     # perpendicular slice with body-part vertex masking. Tracked as a
     # follow-up; values here are placeholders flagged in tests.
     # ------------------------------------------------------------------
+    # L01/L02/L04 are bent-arm measurements. Identical recipes to
+    # L05/L06/(elbow LimbGirth) — values are correct only when the
+    # mesh fed in has the elbow flexed (see scripts/extract_bent_arm.py
+    # which re-poses the fit and saves a bent npz the viewer/render
+    # script can load directly). On an A-pose mesh they collapse to
+    # the straight-arm equivalents.
+    "L01": Geodesic(("acromion_left", "elbow_back_left",
+                      "wrist_ulnar_left")),
+    "L02": Geodesic(("acromion_left", "elbow_back_left")),
+    # L04 elbow circumference bent: slice normal is the bisector of
+    # the bent arm (L_Shoulder → L_Wrist direction). With ~90° flex
+    # that bisector is the perpendicular to the elbow joint axis,
+    # giving a clean closed loop around the elbow when the tape is
+    # laid in the bisecting plane.
+    "L04": LimbGirth(
+        landmark="elbow_back_left",
+        axis_from="joint.L_Shoulder",
+        axis_to="joint.L_Wrist",
+        regions=("left_arm",),
+        radius_m=0.10,
+    ),
     "L05": Geodesic(("acromion_left", "wrist_ulnar_left")),
     "L06": Geodesic(("acromion_left", "elbow_back_left")),
     "L08": Geodesic(("underarm_left", "wrist_ulnar_left")),

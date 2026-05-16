@@ -878,6 +878,10 @@ class LimbGirth:
     axis_from: str
     axis_to: str
     regions: tuple[str, ...] = ()
+    radius_m: float | None = None  # extra mask: keep only verts within radius
+    # of `landmark` (3D distance). Useful when the region mask alone is too
+    # broad — e.g. bent-arm elbow slice where upper arm + forearm both lie
+    # inside the `left_arm` region but only the elbow cross-section is wanted.
 
     def _plane(self, landmarks: LandmarkSet) -> tuple[np.ndarray, np.ndarray]:
         a = landmarks[self.axis_from]
@@ -897,6 +901,9 @@ class LimbGirth:
         )
         origin, normal = self._plane(landmarks)
         mask = region_vertex_mask(self.regions) if self.regions else None
+        if self.radius_m is not None:
+            radial = np.linalg.norm(verts - origin, axis=1) < self.radius_m
+            mask = radial if mask is None else (mask & radial)
         segs = slice_mesh(verts, faces, origin, normal, vertex_mask=mask)
         if not segs:
             return None
@@ -909,13 +916,11 @@ class LimbGirth:
         # No closed loop survived the region mask (the limb is fused to
         # the torso at this slice — typical at the armpit). Fall back to
         # collecting all segment points and taking their 2D convex hull
-        # in the slice plane, restricted to points within radius_m of
-        # the origin so we don't sweep in another limb.
+        # in the slice plane, restricted to points within radius of the
+        # origin so we don't sweep in another limb.
         pts = np.vstack(segs)
-        # In-plane basis to filter by distance from origin (perpendicular
-        # distances ≈ 0 by construction; we care about radial in-plane).
         d = np.linalg.norm(pts - origin, axis=1)
-        radius_m = 0.20
+        radius_m = self.radius_m if self.radius_m is not None else 0.20
         near_pts = pts[d < radius_m]
         if len(near_pts) < 3:
             return None
