@@ -98,12 +98,33 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     "mid_knee_level": ("midpoint", ["knee_back_left", "knee_back_right"]),
     "ankle_level": ("midpoint",
                     ["ankle_bone_lateral_left", "ankle_bone_lateral_right"]),
-    "lowbust_level": ("alias", ["lowbust_apex"]),
+    # lowbust_level: detected underbust crease (per-body). The
+    # lowbust_apex vid 3855 was too high on SMPL-X canonical; the
+    # `underbust_crease_left` dynamic landmark finds the inframammary
+    # fold directly from the fitted mesh.
+    "lowbust_level": ("alias", ["underbust_crease_left"]),
     "mid_neck_level": ("alias", ["mid_neck_front"]),
-    # neck_base_level: front_neck_point sits at the throat hollow, BELOW the
-    # actual neck cylinder (no neck-region verts exist at that Y on most
-    # bodies). Shift up 2.5cm to land in the neck proper for clean slicing.
-    "neck_base_level": ("offset_y", ["front_neck_point", "0.025"]),
+    # neck_base_level: front_neck_point sits at the throat hollow. At +2.5cm
+    # the slice grazed the trapezius (truth diff +27%); at +5cm it overshoot
+    # into the upper neck (−10%). +4cm is the sweet spot for the base of
+    # the actual neck cylinder where a tape is normally placed.
+    "neck_base_level": ("offset_y", ["front_neck_point", "0.04"]),
+    # ankle_high_level: ~3cm above the lateral malleolus, where the leg
+    # is narrowest (the "ankle high" tape-measure level, distinct from
+    # the ankle bone itself).
+    "ankle_high_level": ("offset_y", ["ankle_bone_lateral_left", "0.03"]),
+    # Synthetic plumb-line waypoints — X/Z from one landmark, Y from a
+    # horizontal plane. Used by PolylineChord recipes (e.g. H01) so the
+    # tape goes straight down from neck-front to the bust-level line,
+    # then across to waist_cf, instead of contouring over the bust.
+    "fnp_at_bust_y": ("snap_y_landmark",
+                       ["front_neck_point", "bust_level"]),
+    "sn_at_bust_y_left": ("snap_y_landmark",
+                           ["shoulder_neck_left", "bust_level"]),
+    "c7_at_bust_y": ("snap_y_landmark", ["c7", "bust_level"]),
+    "c7_at_highbust_y": ("snap_y_landmark", ["c7", "armfold_front_left"]),
+    "bust_apex_left_at_lowbust_y": ("snap_y_landmark",
+                                      ["bust_apex_left", "lowbust_level"]),
     # high_hip_level: rule per dpm pants_1 = 4-5" below waist (~11cm). Use a
     # fixed mid-value here; refine when scan calibration validates.
     # Stored as point with y = waist_cf.y - 0.11; x/z unused as plane origin.
@@ -121,7 +142,25 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
 # (search produced more-medial points than the verified vids because the
 # SMPL-X+D Laplacian smoothness flattens the apex peak relative to the
 # truetoform tape position). Keeping the infrastructure for future use.
-DYNAMIC_LANDMARKS: dict[str, dict] = {}
+DYNAMIC_LANDMARKS: dict[str, dict] = {
+    # Underbust crease (inframammary fold). Detected per-body by scanning
+    # the anterior surface profile below the bust apex for the steepest
+    # negative dZ/dY — the point where the breast tissue meets the
+    # ribcage. Falls back gracefully if too few samples are found.
+    "underbust_crease_left": {
+        "search": "underbust_crease",
+        "apex": "bust_apex_left",
+        # Search 3-12 cm below apex (covers small to large busts).
+        "min_offset": 0.03,
+        "max_offset": 0.12,
+        # Fold = where breast has receded `drop_fraction` of its full
+        # depth (apex Z minus chest-wall Z, both measured automatically).
+        # 0.7 lands at the actual inframammary crease on small/medium busts;
+        # tune up for larger busts if needed.
+        "drop_fraction": 0.7,
+        "min_drop": 0.005,  # floor for flat chests
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -167,6 +206,14 @@ class LandmarkSet:
                 pos = self.verts[int(bases[0])].copy()
                 pos[1] = self[bases[1]][1]
                 return pos
+            if op == "snap_y_landmark":
+                # Take X/Z from one landmark, Y from another. Useful for
+                # synthetic plumb-line waypoints (e.g. project FNP straight
+                # down to bust_level for sewing yardstick paths).
+                # bases: [xz_landmark_name, y_landmark_name]
+                a = self[bases[0]]
+                b = self[bases[1]]
+                return np.array([a[0], b[1], a[2]])
             pts = np.stack([self[b] for b in bases])
             if op == "midpoint":
                 return pts.mean(axis=0)
@@ -214,11 +261,74 @@ class LandmarkSet:
             raise KeyError(f"dynamic landmark {name!r}: no verts in search region")
         if spec["search"] == "max_z":
             idx = int(np.argmax(np.where(mask, v[:, 2], -np.inf)))
-        elif spec["search"] == "min_z":
+            return v[idx]
+        if spec["search"] == "min_z":
             idx = int(np.argmin(np.where(mask, v[:, 2], np.inf)))
-        else:
-            raise ValueError(f"unknown search {spec['search']!r}")
-        return v[idx]
+            return v[idx]
+        if spec["search"] == "underbust_crease":
+            # Detect the inframammary fold per-body.
+            # 1. Bust depth = (apex Z) - (chest-wall reference Z); the
+            #    chest-wall reference is taken from a non-breast landmark
+            #    (default: armfold_front_left, which sits on the pectoral
+            #    above the breast).
+            # 2. Scan Y from min_offset below apex down to max_offset.
+            #    At each Y, sample max-Z of body verts in a slab around
+            #    apex X on the front (Z>0).
+            # 3. Crease = first Y where Z has dropped by `drop_fraction`
+            #    of the bust depth (default 0.5 = the fold sits where the
+            #    breast has lost half of its anterior protrusion). Falls
+            #    back to steepest-gradient if no such crossing exists.
+            ref = self[spec["apex"]]
+            apex_y = float(ref[1])
+            apex_x = float(ref[0])
+            apex_z = float(ref[2])
+            # Estimate the chest-wall (no-breast) Z at apex X. We sample
+            # body verts in a narrow X slab AT a Y a few cm above the
+            # breast attachment (default 8cm above apex — upper chest /
+            # sternum below the clavicle, well clear of bust tissue).
+            slab_dx_chest = float(spec.get("chest_slab_dx", 0.03))
+            chest_y = apex_y + float(spec.get("chest_y_offset", 0.08))
+            chest_y_band = float(spec.get("chest_y_band", 0.01))
+            chest_mask = ((np.abs(v[:, 0] - apex_x) < slab_dx_chest)
+                          & (np.abs(v[:, 1] - chest_y) < chest_y_band)
+                          & (v[:, 2] > 0))
+            if chest_mask.any():
+                chest_z = float(v[chest_mask, 2].mean())
+            else:
+                chest_z = apex_z  # degenerate
+            bust_depth = max(apex_z - chest_z, 0.0)
+            drop_fraction = float(spec.get("drop_fraction", 0.5))
+            min_drop = float(spec.get("min_drop", 0.005))
+            fold_drop = max(bust_depth * drop_fraction, min_drop)
+
+            y_top = apex_y - float(spec.get("min_offset", 0.02))
+            y_bot = apex_y - float(spec.get("max_offset", 0.12))
+            slab_dx = float(spec.get("slab_dx", 0.04))
+            y_band = float(spec.get("y_band", 0.005))
+            ys = np.linspace(y_top, y_bot, 60)
+            zs = []
+            ys_kept = []
+            for y in ys:
+                m = ((np.abs(v[:, 0] - apex_x) < slab_dx)
+                     & (np.abs(v[:, 1] - y) < y_band)
+                     & (v[:, 2] > 0))
+                if not m.any():
+                    continue
+                ys_kept.append(y)
+                zs.append(v[m, 2].max())
+            if len(ys_kept) < 5:
+                raise KeyError(f"underbust_crease {name!r}: too few samples")
+            ys_arr = np.array(ys_kept)
+            zs_arr = np.array(zs)
+            z_top = zs_arr[0]
+            below = np.where(z_top - zs_arr >= fold_drop)[0]
+            if len(below):
+                i = int(below[0])
+            else:
+                dz = np.gradient(zs_arr, ys_arr)
+                i = int(np.argmin(dz))
+            return np.array([apex_x, ys_arr[i], zs_arr[i]])
+        raise ValueError(f"unknown search {spec['search']!r}")
 
     def _joint(self, joint_name: str) -> np.ndarray:
         if self.joints is None:

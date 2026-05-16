@@ -175,6 +175,43 @@ class LandmarkChord:
         return float(np.linalg.norm(pb - pa)) * 100.0
 
 
+@dataclass(frozen=True)
+class VerticalDrop:
+    """Vertical line from a landmark at its (x, z) down (or up) to the Y
+    plane of another landmark, measured as a straight 3D distance.
+
+    Used for sewing measurements where the rule is "straight down from
+    X to the Y line" — the path is perpendicular to the floor, not a
+    body-surface geodesic.
+    """
+    landmark: str
+    target_y_landmark: str
+
+    def _endpoints(self, landmarks: LandmarkSet) -> tuple[np.ndarray, np.ndarray]:
+        p = landmarks[self.landmark]
+        ty = landmarks[self.target_y_landmark][1]
+        return p, np.array([p[0], ty, p[2]])
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        a, b = self._endpoints(landmarks)
+        return float(abs(a[1] - b[1])) * 100.0
+
+
+@dataclass(frozen=True)
+class PolylineChord:
+    """Sum of straight-line 3D distances between an ordered sequence of
+    landmarks. Used when a tape is laid as a yardstick touching several
+    anatomical points (e.g. neck-front → bust-apex → waist-front)."""
+    landmarks: tuple[str, ...]
+
+    def compute(self, verts, faces, landmarks: LandmarkSet) -> float:
+        pts = [landmarks[n] for n in self.landmarks]
+        total = 0.0
+        for a, b in zip(pts, pts[1:]):
+            total += float(np.linalg.norm(b - a))
+        return total * 100.0
+
+
 # Geodesic solvers are expensive to construct (build edge structure); cache
 # per mesh-id.
 _GEODESIC_CACHE: dict[int, pp3d.EdgeFlipGeodesicSolver] = {}
@@ -480,7 +517,8 @@ class TapeLoop:
 # Convenience union for dispatch / typing.
 PrimitiveRecipe = (
     Height | PlanarGirth | PlanarArc | LateralChord
-    | LandmarkChord | Geodesic | GeodesicLoop | HybridLoop | TapeLoop
+    | LandmarkChord | VerticalDrop | PolylineChord
+    | Geodesic | GeodesicLoop | HybridLoop | TapeLoop
 )
 
 
@@ -563,6 +601,13 @@ def recipe_polyline(recipe, verts, faces, landmarks: LandmarkSet) -> np.ndarray 
 
         if isinstance(recipe, LandmarkChord):
             return np.array([landmarks[recipe.a], landmarks[recipe.b]])
+
+        if isinstance(recipe, VerticalDrop):
+            a, b = recipe._endpoints(landmarks)
+            return np.array([a, b])
+
+        if isinstance(recipe, PolylineChord):
+            return np.array([landmarks[n] for n in recipe.landmarks])
 
         if isinstance(recipe, Geodesic):
             solver = _get_solver(verts, faces)

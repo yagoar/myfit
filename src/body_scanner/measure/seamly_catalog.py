@@ -38,7 +38,9 @@ from .primitives import (
     LateralChord,
     PlanarArc,
     PlanarGirth,
+    PolylineChord,
     TapeLoop,
+    VerticalDrop,
 )
 
 
@@ -125,7 +127,7 @@ RECIPES = {
     "A05": Height("waist_side_left"),
     "A06": Height("low_hip_level"),
     "A08": Height("mid_knee_level"),
-    "A10": Height("ankle_level"),  # high-ankle = lateral_malleolus + 5cm offset; approx for v1
+    "A10": Height("ankle_high_level"),  # height to the narrowest-leg point above the malleolus approx for v1
     "A11": Height("ankle_bone_lateral_left"),
     "A12": Height("high_hip_level"),
     "A13": Height("waist_cf"),
@@ -151,7 +153,11 @@ RECIPES = {
     # G01/G02 — at neck height the body cross-section is naturally just the
     # neck cylinder (arms/shoulders are below), so no region mask needed.
     "G01": PlanarGirth("mid_neck_level", regions=()),
-    "G02": PlanarGirth("neck_base_level", regions=()),
+    # G02 neck_circ: smooth loop touching c7 (back), shoulder-neck-side
+    # left, front_neck_point, shoulder-neck-side right — matches how a
+    # tape is laid at the neck base.
+    "G02": GeodesicLoop(("c7", "shoulder_neck_left",
+                         "front_neck_point", "shoulder_neck_right")),
     # G03 highbust: planar back at underarm Y (flat parallel to floor),
     # front = geodesic from underarm via armfolds to the other underarm
     # (extends G11 — armfold-to-armfold over the bust — out to the side
@@ -163,12 +169,15 @@ RECIPES = {
     ),
     "G04": PlanarGirth("bust_level"),
     "G05": PlanarGirth("lowbust_level"),
-    "G06": PlanarGirth("waist_string"),  # placeholder until rib_level lands
+    # G06 rib_circ removed — user dropped from spec (too hard to measure without touch)
     "G07": PlanarGirth("waist_string"),
     "G08": PlanarGirth("high_hip_level"),
     "G09": PlanarGirth("low_hip_level",
                        regions=("torso", "left_leg", "right_leg")),
 
+    # G10 neck_arc_f: smooth arc neck-front-point ↔ shoulder-neck-side via
+    # the planar slice at FNP Y. Clip endpoints are the side neck-base
+    # points (where the trapezius meets the neck cylinder).
     "G10": PlanarArc("front_neck_point", "shoulder_neck_left",
                      "shoulder_neck_right", "front"),
     "G11": Geodesic(("underarm_left", "armfold_front_left",
@@ -187,56 +196,89 @@ RECIPES = {
     # the landmarks"). H05-H07 etc. could equally be implemented as
     # Y-axis differences; using geodesic captures the tape convention.
     # ------------------------------------------------------------------
-    "H01": Geodesic(("front_neck_point", "waist_cf")),
-    "H02": Geodesic(("front_neck_point", "bust_apex_left", "waist_cf")),
+    # H01 neck_front_to_waist_f: yardstick from FNP touching the G04 line
+    # at the front-midline (bust_apex_midpoint = midpoint of L/R apex,
+    # which sits on the centre-front at bust_level Y), then continuing
+    # at that angle down to waist_cf.
+    "H01": PolylineChord(("front_neck_point", "bust_apex_midpoint", "waist_cf")),
+    # H02 …_flat_f: tape laid between the breasts — surface geodesic via
+    # lowbust_apex (in the cleavage gutter).
+    "H02": Geodesic(("front_neck_point", "lowbust_apex", "waist_cf")),
     "H03": Geodesic(("underarm_left", "waist_side_left")),
     "H04": Geodesic(("acromion_left", "waist_side_left")),
-    "H05": Geodesic(("shoulder_neck_left", "waist_cf")),
-    "H06": Geodesic(("shoulder_neck_left", "bust_apex_left", "waist_cf")),
-    "H07": Geodesic(("front_neck_point", "armfold_front_left")),
-    "H09": Geodesic(("front_neck_point", "bust_apex_left")),
+    # H05 neck_side_to_waist_f: vertical drop from SNL to waist Y. Straight
+    # plumb-line, not a body-following geodesic.
+    "H05": VerticalDrop("shoulder_neck_left", "waist_cf"),
+    # H06 …_bustpoint_f: SN straight down to bust apex (yardstick touching
+    # the apex) then continued at the same angle to waist. Implemented as
+    # SN → bust_apex → waist_cf chord polyline.
+    "H06": PolylineChord(("shoulder_neck_left", "bust_apex_left", "waist_cf")),
+    # H07 neck_front_to_highbust_f: straight chord from FNP to the G03
+    # line at front midline (highbust_front_cf is the centre-front vertex
+    # at highbust Y).
+    "H07": LandmarkChord("front_neck_point", "highbust_front_cf"),
+    # H09 neck_front_to_bust_f: chord from FNP to the G04 line at front
+    # midline (bust_apex_midpoint sits on the centre-front at bust Y).
+    "H09": LandmarkChord("front_neck_point", "bust_apex_midpoint"),
     "H11": Geodesic(("lowbust_apex", "waist_cf")),
-    "H12": Geodesic(("underarm_left", "waist_side_left")),  # rib alias for now
+    # H12 rib_to_waist_side removed — user dropped (rib level skipped)
     "H13": Geodesic(("acromion_left", "armfold_front_left")),
-    "H14": Geodesic(("shoulder_neck_left", "bust_apex_left")),
-    "H15": Geodesic(("shoulder_neck_left", "armfold_front_left")),
+    # H14 neck_side_to_bust_f: chord from SN to G04 line at bust apex
+    # (ipsilateral).
+    "H14": LandmarkChord("shoulder_neck_left", "bust_apex_left"),
+    # H15 neck_side_to_highbust_f: chord from SN to G03 line at armfold
+    # front (ipsilateral highbust front point).
+    "H15": LandmarkChord("shoulder_neck_left", "armfold_front_left"),
     "H16": Geodesic(("front_shoulder_centre_left", "armfold_front_left")),
     "H17": Geodesic(("acromion_left", "waist_cb")),
-    "H18": Geodesic(("shoulder_neck_left", "waist_cb")),
+    # H18 neck_side_to_waist_b: vertical drop SN → waist Y (back).
+    "H18": VerticalDrop("shoulder_neck_left", "waist_cb"),
     "H19": Geodesic(("c7", "waist_cb")),
-    "H20": Geodesic(("shoulder_neck_left", "waist_cb")),  # scapula alias
-    # H21: back neck base to scye-level along the centre back. Use the
-    # midpoint of the back-armscye landmarks as the destination so the
-    # geodesic stays on the spine line rather than diagonal to one side.
-    "H21": Geodesic(("c7", "armscye_back_midpoint")),
-    "H23": Geodesic(("c7", "bust_apex_left")),
+    # H20 …_scapula_b removed — user dropped (scapula location unknown)
+    # H21 neck_back_to_highbust_b: chord c7 → G03 line at back midline.
+    "H21": LandmarkChord("c7", "highbust_back_cf"),
+    # H23 neck_back_to_bust_b: chord c7 → G04 line at back midline. Use
+    # the snap_y_landmark compound so the touching point sits at the
+    # bust Y on the centre-back surface.
+    "H23": LandmarkChord("c7", "c7_at_bust_y"),
     "H25": Geodesic(("lowbust_apex", "waist_cb")),
     "H26": Geodesic(("acromion_left", "armfold_back_left")),
-    "H27": Geodesic(("shoulder_neck_left", "bust_apex_left")),  # back variant
-    "H28": Geodesic(("shoulder_neck_left", "armfold_back_left")),
-    "H29": Geodesic(("front_shoulder_centre_left", "armfold_back_left")),
+    # H27 neck_side_to_bust_b: chord SN → bust Y on the back (use a snap-
+    # y compound from SN_L's X/Z to bust_level Y).
+    "H27": LandmarkChord("shoulder_neck_left", "sn_at_bust_y_left"),
+    # H28 neck_side_to_highbust_b: chord SN → G03 line back armfold.
+    "H28": LandmarkChord("shoulder_neck_left", "armfold_back_left"),
+    # H29 …_scapula removed — user dropped (scapula location unknown)
     "H30": Geodesic(("waist_cf", "high_hip_level")),
     "H31": Geodesic(("waist_cf", "low_hip_level")),
     "H32": Geodesic(("waist_side_left", "high_hip_level")),
-    "H33": Geodesic(("waist_cb", "high_hip_level")),
-    "H34": Geodesic(("waist_cb", "low_hip_level")),
+    # H33 waist_to_highhip_b: vertical drop waist back → high_hip Y.
+    "H33": VerticalDrop("waist_cb", "high_hip_level"),
+    # H34 waist_to_hip_b: vertical drop waist back → low_hip Y.
+    "H34": VerticalDrop("waist_cb", "low_hip_level"),
     "H35": Geodesic(("waist_side_left", "low_hip_level")),
     "H37": Geodesic(("shoulder_neck_left", "acromion_left")),
     "H39": LandmarkChord("c7", "acromion_left"),  # vertical height of shoulder slope
-    "H41": Geodesic(("c7", "armscye_back_left")),
+    # H41 neck_back_to_across_back: vertical drop c7 → across-back Y.
+    "H41": VerticalDrop("c7", "armfold_back_left"),
 
     # ------------------------------------------------------------------
     # I — Shoulder & Across
     # ------------------------------------------------------------------
     "I01": Geodesic(("shoulder_neck_left", "acromion_left")),
-    "I02": Geodesic(("acromion_left", "acromion_right")),
+    # Add front_neck_point as waypoint so the path stays along the
+    # clavicle plane rather than dipping into the sternum hollow.
+    "I02": Geodesic(("acromion_left", "front_neck_point", "acromion_right")),
     "I03": Geodesic(("armfold_front_left", "armfold_front_right")),  # was armscye; truetoform uses armfold
     "I04": Geodesic(("armfold_front_left", "armfold_front_right")),
     "I07": Geodesic(("acromion_left", "c7", "acromion_right")),
     "I08": Geodesic(("armfold_back_left", "armfold_back_right")),  # was armscye; truetoform uses armfold
-    "I09": Geodesic(("armfold_back_left", "armfold_back_right")),
+    # I09 armfold_to_armfold_b: straight chord (not curving over scapulae).
+    "I09": LandmarkChord("armfold_back_left", "armfold_back_right"),
     "I12": Geodesic(("front_neck_point", "acromion_left")),
-    "I13": Geodesic(("c7", "acromion_left")),
+    # I13 neck_back_to_shoulder_tip_b: straight chord (no curvature over the
+    # shoulder).
+    "I13": LandmarkChord("c7", "acromion_left"),
     "I14": LandmarkChord("shoulder_neck_left", "shoulder_neck_right"),
 
     # ------------------------------------------------------------------
@@ -244,8 +286,11 @@ RECIPES = {
     # ------------------------------------------------------------------
     "J01": LandmarkChord("bust_apex_left", "bust_apex_right"),
     "J02": LandmarkChord("bust_apex_left", "shoulder_neck_left"),
-    "J03": LandmarkChord("bust_apex_left", "lowbust_apex"),
-    "J04": LandmarkChord("bust_apex_left", "waist_string"),
+    # J03: geodesic from bust apex down the body surface to the G05 line
+    # at the apex X/Z (so the curve molds to the underside of the bust).
+    "J03": Geodesic(("bust_apex_left", "bust_apex_left_at_lowbust_y")),
+    # J04 bustpoint_to_waist: vertical drop from bust apex to waist Y.
+    "J04": VerticalDrop("bust_apex_left", "waist_string"),
     "J07": LandmarkChord("bust_apex_left", "acromion_left"),
     "J08": LandmarkChord("bust_apex_left", "waist_cf"),
     "J10": LandmarkChord("bust_apex_left", "front_shoulder_centre_left"),
@@ -254,9 +299,11 @@ RECIPES = {
     # ------------------------------------------------------------------
     # K — Shoulder/neck geodesic paths
     # ------------------------------------------------------------------
-    "K01": Geodesic(("acromion_left", "waist_cf")),
-    "K02": Geodesic(("front_neck_point", "waist_side_left")),
-    "K03": Geodesic(("shoulder_neck_left", "waist_side_left")),
+    # K01-K03 diagonals: straight chord (over-the-bust geodesic curves
+    # too much; sewing diagonal is yardstick-straight).
+    "K01": LandmarkChord("acromion_left", "waist_cf"),
+    "K02": LandmarkChord("front_neck_point", "waist_side_left"),
+    "K03": LandmarkChord("shoulder_neck_left", "waist_side_left"),
     "K04": Geodesic(("acromion_left", "waist_cb")),
     "K06": Geodesic(("c7", "waist_side_left")),
     "K08": Geodesic(("shoulder_neck_left", "armfold_front_left")),
@@ -299,10 +346,12 @@ RECIPES = {
     # Thigh at crotch sits exactly at leg/torso boundary; include torso so
     # the boundary triangles survive the mask.
     "M03": PlanarGirth("thigh_at_crotch_left",
-                       regions=("left_leg", "torso")),
+                       regions=("left_leg",)),
     "M05": PlanarGirth("mid_knee_level", regions=("left_leg",)),
     "M07": PlanarGirth("calf_widest_left", regions=("left_leg",)),
-    "M08": Height("ankle_bone_lateral_left"),
+    # ankle_high_circ = narrowest leg circumference above the ankle bone
+    # (~3cm above lateral malleolus). Distinct from M09 (at the bone).
+    "M08": PlanarGirth("ankle_high_level", regions=("left_leg",)),
     "M09": PlanarGirth("ankle_bone_lateral_left", regions=("left_leg",)),
 
     # ------------------------------------------------------------------
@@ -310,12 +359,14 @@ RECIPES = {
     # ------------------------------------------------------------------
     "N01": Geodesic(("waist_cf", "crotch_midpoint", "waist_cb")),
     "N02": Geodesic(("crotch_midpoint", "waist_cb")),
-    "N08": Geodesic(("waist_side_left", "crotch_lateral_left")),
+    # N08 moved to FORMULAS (= A05 − M01).
 
     # ------------------------------------------------------------------
     # O — Geodesics through neck-back to waist-front (mechanical entries)
     # ------------------------------------------------------------------
-    "O01": Geodesic(("c7", "waist_side_left", "waist_cf")),
+    # O01: route via shoulder_neck_left (around the neck) rather than
+    # waist_side (which sends the geodesic under the arm).
+    "O01": Geodesic(("c7", "shoulder_neck_left", "front_neck_point", "waist_cf")),
 
     # ------------------------------------------------------------------
     # P — Complex torso paths
@@ -395,6 +446,7 @@ FORMULAS = {
     "N03": Formula("N01 - N02"),                  # crotch front = total - back
     "N06": Formula("N02"),                        # rise back = back portion of crotch
     "N07": Formula("N03"),                        # rise front
+    "N08": Formula("A05 - M01"),                  # rise_length_side = waist_side height − inseam
 }
 
 
