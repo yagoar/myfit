@@ -210,20 +210,27 @@ def render_smis(
     def _value_attr(name: str) -> str:
         if name in formulas:
             return xml_escape(formulas[name])
-        val = seamly_values.get(name, 0)
+        val = seamly_values[name]
         if isinstance(val, float) and val.is_integer():
             val = int(val)
         return str(val)
 
+    # Only emit measurements we actually extracted (numeric value) or
+    # know how to derive (formula). Names listed in the template but
+    # absent from both are skipped — Seamly2D users can re-add them
+    # manually if needed.
+    available = set(seamly_values) | set(formulas)
+
     rows: list[str] = []
     seen: set[str] = set()
     for name in template_order:
+        if name not in available:
+            continue
         rows.append(
             f'        <m name="{xml_escape(name)}" value="{_value_attr(name)}"/>'
         )
         seen.add(name)
-    extras = sorted((set(seamly_values) | set(formulas)) - seen)
-    for name in extras:
+    for name in sorted(available - seen):
         rows.append(
             f'        <m name="{xml_escape(name)}" value="{_value_attr(name)}"/>'
         )
