@@ -132,6 +132,8 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     "c7_at_highbust_y": ("snap_y_landmark", ["c7", "armfold_front_left"]),
     "sn_at_highbust_y_left": ("snap_y_landmark",
                                 ["shoulder_neck_left", "armfold_front_left"]),
+    "fnp_at_highbust_y": ("snap_y_landmark",
+                            ["front_neck_point", "armfold_front_left"]),
     "waist_side_left_at_lowhip_y": ("snap_y_landmark",
                                       ["waist_side_left", "low_hip_level"]),
     "waist_side_left_at_floor": ("snap_y_landmark",
@@ -274,6 +276,20 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
         "search": "intersect_line_with_recipe",
         "line_a": "shoulder_neck_left",
         "line_b": "sn_at_highbust_y_left",
+        "recipe": "G03",
+        "front_only": True,
+        "x_band": 0.025,
+        "prefer_y_max": True,
+    },
+    # H07 endpoint: same idea as H15 but on the body midline — vertical
+    # column at the front_neck_point X dropped to its G03 crossing.
+    # G03 (highbust arc) dips at the cleavage, so we again filter to
+    # FNP's X column + front-only + take the upper-Y branch so the
+    # plumb stops at the upper highbust line, not the bust-front dip.
+    "h07_endpoint_front": {
+        "search": "intersect_line_with_recipe",
+        "line_a": "front_neck_point",
+        "line_b": "fnp_at_highbust_y",
         "recipe": "G03",
         "front_only": True,
         "x_band": 0.025,

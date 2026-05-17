@@ -239,8 +239,12 @@ RECIPES = {
         chord_endpoint="h06_endpoint_left",
     ),
     # H07 neck_front_to_highbust_f: vertical strip at FNP's X column
-    # down to the G03 (highbust) Y on body surface.
-    "H07": SurfacePlumb("front_neck_point", "armfold_front_left", side="front"),
+    # truncated at its G03 (highbust) intersection, mirroring H15/H16.
+    # Using `armfold_front_left` as the end gave H07's Y the
+    # armfold-front plane, which sits below the actual G03 crossing on
+    # the cleavage midline — the polyline overshot the highbust line.
+    "H07": SurfacePlumb("front_neck_point", "h07_endpoint_front",
+                          side="front"),
     # H09 neck_front_to_bust_f: vertical strip at FNP's X to G04 Y.
     "H09": SurfacePlumb("front_neck_point", "bust_level", side="front"),
     "H11": Geodesic(("lowbust_apex", "waist_cf")),
