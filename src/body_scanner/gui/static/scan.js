@@ -60,29 +60,30 @@
 
   // --- Run / cancel + SSE log stream -------------------------------------
   let evtSource = null;
-  function setStatus(text, cls) {
-    const s = $("status");
-    s.className = "pill " + (cls || "");
-    s.textContent = text;
+
+  function setRunning(running, label) {
+    const btn = $("run-btn");
+    btn.classList.toggle("loading", running);
+    btn.disabled = running;
+    btn.querySelector(".btn-label").textContent =
+      label || (running ? "Running…" : "Run scan");
+    $("cancel-btn").disabled = !running;
   }
 
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
     $("log").textContent = "";
-    setStatus("starting", "run");
-    $("run-btn").disabled = true;
-    $("cancel-btn").disabled = false;
+    setLogVisible(true);
+    setRunning(true, "Starting…");
     const data = new FormData($("form"));
     const r = await fetch("/run", { method: "POST", body: data });
     const j = await r.json();
     if (!j.ok) {
-      setStatus("error", "err");
       $("log").textContent = "ERROR: " + j.error + "\n";
-      $("run-btn").disabled = false;
-      $("cancel-btn").disabled = true;
+      setRunning(false);
       return;
     }
-    setStatus("running", "run");
+    setRunning(true, "Running…");
     evtSource = new EventSource("/stream");
     evtSource.onmessage = (ev) => {
       const m = JSON.parse(ev.data);
@@ -93,22 +94,29 @@
       if (m.done) {
         evtSource.close();
         evtSource = null;
-        $("run-btn").disabled = false;
-        $("cancel-btn").disabled = true;
-        setStatus(
-          m.rc === 0 ? "done" : "exit " + m.rc,
-          m.rc === 0 ? "ok" : "err",
-        );
+        setRunning(false);
       }
     };
   });
 
   $("cancel-btn").addEventListener("click", async () => {
     await fetch("/cancel", { method: "POST" });
-    setStatus("cancelling", "err");
+    setRunning(true, "Cancelling…");
   });
 
-  // --- How-to modal ------------------------------------------------------
+  // --- Terminal toggle ---------------------------------------------------
+const logToggle = $("log-toggle");
+const logPanel = $("log-panel");
+function setLogVisible(visible) {
+  logPanel.hidden = !visible;
+  logToggle.setAttribute("aria-expanded", String(visible));
+  logToggle.querySelector(".log-toggle-label").textContent =
+    visible ? "Hide terminal" : "Show terminal";
+}
+logToggle.addEventListener("click", () =>
+  setLogVisible(logPanel.hidden));
+
+// --- How-to modal ------------------------------------------------------
   const howto = $("howto");
   const openHowto = () => {
     howto.hidden = false;

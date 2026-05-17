@@ -53,5 +53,5 @@ def test_list_scans_marks_obj(tmp_path: Path) -> None:
 
 def test_index_has_viewer_link(client) -> None:
     body = client.get("/").get_data(as_text=True)
-    assert "3D viewer" in body
+    assert "3D Viewer" in body
     assert 'href="/viewer"' in body

@@ -80,10 +80,10 @@ let polyObjects = {};  // { code: THREE.Line }
 let measurementMeta = [];
 let activeCam = 1;
 
-function setStatus(text, cls = "") {
-  const el = $("viewer-status");
-  el.className = "pill " + cls;
-  el.textContent = text;
+function showLoader(visible, label = "Loading scan…") {
+  const el = $("loader");
+  el.querySelector(".loader-label").textContent = label;
+  el.hidden = !visible;
 }
 
 function setHud(html) {
@@ -377,7 +377,7 @@ function renderHud(name) {
 }
 
 async function loadScan(name) {
-  setStatus("loading", "run");
+  showLoader(true, `Loading ${name}…`);
   try {
     const q = dirQuery();
     const [payload, group] = await Promise.all([
@@ -390,11 +390,11 @@ async function loadScan(name) {
     buildPolylines();
     renderMeasList();
     renderHud(name);
-    setStatus("loaded", "ok");
   } catch (err) {
     console.error(err);
-    setStatus("error", "err");
-    setHud(`<b>error:</b> ${err.message || err}`);
+    setHud(`<b style="color:#ff8484">error:</b> ${err.message || err}`);
+  } finally {
+    showLoader(false);
   }
 }
 
