@@ -677,27 +677,43 @@ def _search_max_y(
 def _search_body_at_xy(
     lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
 ) -> np.ndarray:
-    """Body surface vertex closest to a target (X, Y), preferring front of
-    body (max Z). `x_ref` / `y_ref` are landmark names supplying X / Y."""
+    """Body surface vertex closest to a target (X, Y).
+
+    Defaults to picking the front-most vertex (max Z) within the X/Y
+    band. Pass ``back_only: True`` to flip to the back-most (min Z)
+    instead — needed for back-of-torso landmarks (h21/h23 endpoints).
+    ``front_only`` and ``back_only`` are mutually exclusive; both
+    unset is treated as ``front_only`` (legacy behaviour)."""
     v = lm.verts
     x = float(lm[spec["x_ref"]][0])
     y = float(lm[spec["y_ref"]][1])
     x_band = float(spec.get("x_band", 0.02))
     y_band = float(spec.get("y_band", 0.01))
-    front_only = spec.get("front_only", True)
-    m = ((np.abs(v[:, 0] - x) < x_band)
-         & (np.abs(v[:, 1] - y) < y_band))
-    if front_only:
-        m &= v[:, 2] > 0
-    if not m.any():
-        # Widen the bands.
-        m = ((np.abs(v[:, 0] - x) < x_band * 2)
-             & (np.abs(v[:, 1] - y) < y_band * 2))
+    back_only = bool(spec.get("back_only"))
+    # Legacy default: front-only. Explicit `back_only` flips the side.
+    front_only = (not back_only) and spec.get("front_only", True)
+    if front_only and back_only:
+        raise KeyError(
+            f"body_at_xy {name!r}: front_only and back_only are mutually exclusive")
+
+    def _build_mask(scale: float) -> np.ndarray:
+        mm = ((np.abs(v[:, 0] - x) < x_band * scale)
+              & (np.abs(v[:, 1] - y) < y_band * scale))
         if front_only:
-            m &= v[:, 2] > 0
+            mm &= v[:, 2] > 0
+        elif back_only:
+            mm &= v[:, 2] < 0
+        return mm
+
+    m = _build_mask(1.0)
+    if not m.any():
+        m = _build_mask(2.0)
     if not m.any():
         raise KeyError(f"body_at_xy {name!r}: no verts in band")
-    idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
+    if back_only:
+        idx = int(np.argmin(np.where(m, v[:, 2], np.inf)))
+    else:
+        idx = int(np.argmax(np.where(m, v[:, 2], -np.inf)))
     return v[idx]
 
 

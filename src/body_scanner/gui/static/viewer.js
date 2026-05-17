@@ -1,9 +1,9 @@
 // MyFit 3D viewer — Three.js scene + measurement overlay toggles.
 //
-// Loads either:
-//   1. A pipeline-generated scan (server-side compute of polylines via
-//      /api/scan/<name>); or
-//   2. A user-uploaded .obj (mesh only, no measurement polylines).
+// Picks a scan from a user-chosen results folder (defaults to the
+// project's data/results). Each scan = a <prefix>_smplx_fit.npz +
+// matching _fit_body.obj pair; the server computes measurement
+// polylines on demand from the fit npz.
 //
 // Keyboard 1..5 → front / 45° front / side / 45° back / back.
 
@@ -199,9 +199,6 @@ async function loadObjFromUrl(url) {
   });
 }
 
-function loadObjFromText(text) {
-  return smoothMeshes(new OBJLoader().parse(text));
-}
 
 function showBody(group) {
   clearBody();
@@ -271,14 +268,21 @@ function renderMeasList() {
     shown += 1;
     const row = document.createElement("label");
     row.className = "meas-row" + (m.has_polyline ? "" : " unavailable");
-    row.title = m.has_polyline
-      ? `${m.code} — ${m.name}`
-      : `${m.code} — no polyline (extractor did not produce a curve)`;
+    let title = `${m.code} — ${m.name}`;
+    if (m.formula) {
+      title += `\nformula: ${m.formula}`;
+    } else if (!m.has_polyline) {
+      title += "\nno polyline (extractor did not produce a curve)";
+    }
+    row.title = title;
+    const fxBadge = m.formula
+      ? `<span class="fx" title="formula: ${m.formula}">fx</span>` : "";
     row.innerHTML = `
       <input type="checkbox" data-code="${m.code}"
              ${m.has_polyline ? "" : "disabled"}>
       <span class="code">${m.code}</span>
       <span class="label">${m.name || "—"}</span>
+      ${fxBadge}
       <span class="val">${m.value_cm != null ? m.value_cm.toFixed(1) + " cm" : "—"}</span>
     `;
     const cb = row.querySelector("input");
@@ -306,26 +310,51 @@ $("meas-none").addEventListener("click", () => {
   });
 });
 
-// ---- Scan picker ------------------------------------------------------
+// ---- Results folder + scan picker -------------------------------------
+
+function currentDir() {
+  return ($("results-dir").value || "").trim();
+}
+
+function dirQuery() {
+  const d = currentDir();
+  return d ? `?dir=${encodeURIComponent(d)}` : "";
+}
 
 async function refreshScans() {
-  const r = await fetch("/api/scans");
-  const j = await r.json();
-  const sel = $("scan-picker");
-  sel.innerHTML = '<option value="">— pick a scan —</option>';
-  j.scans.forEach((s) => {
-    const o = document.createElement("option");
-    o.value = s.name;
-    o.textContent = s.name + (s.has_obj ? "" : " (no OBJ)");
-    o.disabled = !s.has_obj;
-    sel.appendChild(o);
-  });
+  const status = $("dir-status");
+  try {
+    const r = await fetch(`/api/scans${dirQuery()}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      status.textContent = err.error || `Folder not readable (HTTP ${r.status}).`;
+      return;
+    }
+    const j = await r.json();
+    const sel = $("scan-picker");
+    sel.innerHTML = '<option value="">— pick a scan —</option>';
+    j.scans.forEach((s) => {
+      const o = document.createElement("option");
+      o.value = s.name;
+      o.textContent = s.name + (s.has_obj ? "" : " (no OBJ)");
+      o.disabled = !s.has_obj;
+      sel.appendChild(o);
+    });
+    status.textContent = j.scans.length
+      ? `${j.scans.length} scan${j.scans.length === 1 ? "" : "s"} in ${j.dir}`
+      : `No scans found in ${j.dir}`;
+  } catch (err) {
+    status.textContent = "Error: " + (err.message || err);
+  }
 }
+
 $("scan-picker").addEventListener("change", async (e) => {
   const name = e.target.value;
   if (!name) return;
   await loadScan(name);
 });
+$("results-dir").addEventListener("change", refreshScans);
+$("dir-refresh").addEventListener("click", refreshScans);
 
 // HUD summary measurements — fixed code list (matches Seamly catalog).
 const HUD_ROWS = [
@@ -350,9 +379,10 @@ function renderHud(name) {
 async function loadScan(name) {
   setStatus("loading", "run");
   try {
+    const q = dirQuery();
     const [payload, group] = await Promise.all([
-      fetch(`/api/scan/${name}`).then((r) => r.json()),
-      loadObjFromUrl(`/api/scan/${name}/obj`),
+      fetch(`/api/scan/${name}${q}`).then((r) => r.json()),
+      loadObjFromUrl(`/api/scan/${name}/obj${q}`),
     ]);
     showBody(group);
     polylines = payload.polylines || {};
@@ -367,29 +397,6 @@ async function loadScan(name) {
     setHud(`<b>error:</b> ${err.message || err}`);
   }
 }
-
-// ---- Upload -----------------------------------------------------------
-
-$("upload").addEventListener("change", async (e) => {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  $("upload-name").textContent = `Uploaded ${f.name} (mesh only, no measurements).`;
-  setStatus("loading", "run");
-  try {
-    const text = await f.text();
-    const group = loadObjFromText(text);
-    showBody(group);
-    polylines = {};
-    measurementMeta = [];
-    buildPolylines();
-    renderMeasList();
-    renderHud(f.name);
-    setStatus("loaded", "ok");
-  } catch (err) {
-    setStatus("error", "err");
-    setHud(`<b>error:</b> ${err.message || err}`);
-  }
-});
 
 // ---- Render loop + resize ---------------------------------------------
 

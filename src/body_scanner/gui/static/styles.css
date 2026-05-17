@@ -341,13 +341,27 @@ a.ghost, a.btn-link {
                   to   { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* -------- 3D viewer page -------- */
-.viewer-wrap { max-width: 1480px; }
+/* Viewer page is fixed-viewport (no page scroll). Override body's
+ * default 80px bottom padding and turn the layout into a flex column
+ * so the viewer-layout flex:1 absorbs whatever remains under the
+ * header without a magic-number height. */
+body.viewer-page {
+  padding: 24px;
+  height: 100vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+body.viewer-page > .wrap {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+}
+.viewer-wrap { max-width: 1480px; width: 100%; margin: 0 auto; }
 .viewer-layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 440px 1fr;
   gap: 22px;
-  height: calc(100vh - 140px);
-  min-height: 520px;
+  flex: 1;
+  min-height: 0;
 }
 .viewer-sidebar { display: flex; flex-direction: column; gap: 22px;
                   min-height: 0; }
@@ -385,6 +399,16 @@ a.ghost, a.btn-link {
                  color: var(--ink-faint); font-size: 11.5px; }
 .meas-row.unavailable { opacity: .5; cursor: not-allowed; }
 .meas-row.unavailable input { display: none; }
+.meas-row .fx {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  cursor: help;
+}
 .pill.counter { background: var(--accent-soft); color: var(--accent-ink); }
 
 .viewer-stage { min-width: 0; height: 100%; }

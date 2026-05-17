@@ -586,10 +586,14 @@ FORMULAS = {
     "G41": Formula("G33 / 2"),
 
     # H-group computed entries
-    "H08": Formula("H07 - H01"),                  # highbust_to_waist_f = N..H07 - waist
-    "H10": Formula("H09 - H01"),                  # bust_to_waist_f
-    "H22": Formula("H21 - H19"),                  # highbust_to_waist_b
-    "H24": Formula("H23 - H19"),                  # bust_to_waist_b
+    # H08/H10/H22/H24: front/back lower-segment heights = total minus
+    # upper segment. Sign fix: previously written as ``H07 - H01`` etc
+    # which is the wrong operand order — H01/H19 are the totals
+    # (FNP→waist / C7→waist) and the upper segment is subtracted.
+    "H08": Formula("H01 - H07"),                  # highbust_to_waist_f
+    "H10": Formula("H01 - H09"),                  # bust_to_waist_f
+    "H22": Formula("H19 - H21"),                  # highbust_to_waist_b
+    "H24": Formula("H19 - H23"),                  # bust_to_waist_b
     "H42": Formula("H19 - H41"),                  # across_back_to_waist_b
 
     # I-group computed

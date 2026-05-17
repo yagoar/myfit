@@ -14,7 +14,7 @@
   }
 }
 </script>
-</head><body><div class="wrap viewer-wrap">
+</head><body class="viewer-page"><div class="wrap viewer-wrap">
 
 <header>
   <div class="brand">
@@ -40,24 +40,30 @@
     <div class="card">
       <h2>Source</h2>
       <div class="grid">
+        <label class="field-label" for="results-dir">Results folder</label>
+        <div class="row" style="display:flex; gap:6px; align-items:center;">
+          <input id="results-dir" type="text"
+                 value="{{ default_results }}" style="flex:1; min-width:0;">
+          <button type="button" id="dir-refresh" class="ghost icon"
+                  title="Reload scans from this folder" aria-label="Reload">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10
+                       M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+        </div>
+
         <label class="field-label" for="scan-picker">Scan</label>
         <select id="scan-picker"><option value="">— pick a scan —</option></select>
-
-        <label class="field-label" for="upload">Or upload OBJ</label>
-        <div>
-          <label for="upload" class="ghost btn-link upload-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                 stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Choose file
-          </label>
-          <input id="upload" type="file" accept=".obj" hidden>
-          <div class="help" id="upload-name">No file selected.
-            Without a backing fit npz, measurements are unavailable.</div>
-        </div>
+      </div>
+      <div class="help" id="dir-status" style="margin-top:8px;">
+        Each scan is a <code>&lt;prefix&gt;_smplx_fit.npz</code> + matching
+        <code>_fit_body.obj</code> pair. Point this anywhere
+        <code>run_scan.py</code>'s <code>--out-prefix</code> wrote to.
       </div>
     </div>
 

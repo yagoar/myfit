@@ -63,6 +63,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     )
     from body_scanner.measure.seamly_catalog import (
         CODE_TO_NAME,
+        FORMULAS,
         RECIPES,
     )
     from body_scanner.measure.seamly_extractor import extract_catalog
@@ -102,11 +103,13 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     measurements = []
     for code in sorted(set(polylines) | set(report.values)):
         v = report.values.get(code)
+        formula = FORMULAS.get(code)
         measurements.append({
             "code": code,
             "name": CODE_TO_NAME.get(code, ""),
             "value_cm": (float(v) if v is not None else None),
             "has_polyline": code in polylines,
+            "formula": formula.expr if formula is not None else None,
         })
 
     centroid = body_verts.mean(axis=0).tolist()

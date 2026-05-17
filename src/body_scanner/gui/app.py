@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import queue
+from pathlib import Path
 from typing import Any
 
 from flask import (
@@ -95,24 +96,42 @@ def create_app(runner: Runner | None = None) -> Flask:
 
     @app.get("/viewer")
     def viewer() -> str:
-        return render_template("viewer.html", today=dt.date.today().isoformat())
+        return render_template(
+            "viewer.html",
+            today=dt.date.today().isoformat(),
+            default_results=str(DEFAULT_RESULTS_DIR),
+        )
+
+    def _resolve_dir() -> Path:
+        """Pick the results directory: ?dir= query param if provided
+        and a real dir, else the project default."""
+        raw = (request.args.get("dir") or "").strip()
+        if not raw:
+            return DEFAULT_RESULTS_DIR
+        p = Path(raw).expanduser().resolve()
+        if not p.is_dir():
+            abort(400, description=f"not a directory: {raw}")
+        return p
 
     @app.get("/api/scans")
     def api_scans() -> Any:
-        return jsonify(scans=list_scans(DEFAULT_RESULTS_DIR))
+        d = _resolve_dir()
+        return jsonify(dir=str(d), scans=list_scans(d))
 
     @app.get("/api/scan/<name>")
     def api_scan(name: str) -> Any:
+        d = _resolve_dir()
         try:
-            payload = scan_payload(DEFAULT_RESULTS_DIR, name)
+            payload = scan_payload(d, name)
         except FileNotFoundError as e:
             abort(404, description=str(e))
         return jsonify(payload)
 
     @app.get("/api/scan/<name>/obj")
     def api_scan_obj(name: str) -> Any:
-        obj = (DEFAULT_RESULTS_DIR / f"{name}_fit_body.obj").resolve()
-        if not obj.is_file() or DEFAULT_RESULTS_DIR.resolve() not in obj.parents:
+        d = _resolve_dir()
+        obj = (d / f"{name}_fit_body.obj").resolve()
+        if not obj.is_file() or d.resolve() not in obj.parents:
             abort(404)
         return send_file(obj, mimetype="text/plain")
 
