@@ -10,6 +10,10 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
+import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import { Line2 } from "three/addons/lines/Line2.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -94,7 +98,14 @@ function applyPreset(n, animate = true) {
   activeCam = n;
   const az = THREE.MathUtils.degToRad(p.az);
   const el = THREE.MathUtils.degToRad(p.el);
-  const r = radius * 1.6;
+  // Distance derived from FOV + bounding sphere so the whole figure
+  // fits with a small margin regardless of body size. ``radius`` is
+  // half the longest bounding-box edge (set in ``frameToBody``).
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const aspect = camera.aspect || 1;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+  const limitingFov = Math.min(vFov, hFov);
+  const r = (radius / Math.tan(limitingFov / 2)) * 1.25;
   const target = new THREE.Vector3(
     centroid.x + r * Math.cos(el) * Math.sin(az),
     centroid.y + r * Math.sin(el),
@@ -163,29 +174,33 @@ function frameToBody() {
   applyPreset(activeCam, false);
 }
 
+function smoothMeshes(group) {
+  // OBJLoader emits non-indexed geometry with duplicated verts at every
+  // face corner; computeVertexNormals on that produces faceted shading.
+  // Welding identical positions via mergeVertices gives a shared vertex
+  // pool so smooth normals can average across triangles.
+  group.traverse((c) => {
+    if (c.isMesh) {
+      const welded = mergeVertices(c.geometry, 1e-5);
+      welded.computeVertexNormals();
+      c.geometry.dispose();
+      c.geometry = welded;
+      c.material = BODY_MATERIAL;
+    }
+  });
+  return group;
+}
+
 async function loadObjFromUrl(url) {
   return new Promise((resolve, reject) => {
     new OBJLoader().load(url, (group) => {
-      group.traverse((c) => {
-        if (c.isMesh) {
-          c.material = BODY_MATERIAL;
-          c.geometry.computeVertexNormals();
-        }
-      });
-      resolve(group);
+      resolve(smoothMeshes(group));
     }, undefined, reject);
   });
 }
 
 function loadObjFromText(text) {
-  const group = new OBJLoader().parse(text);
-  group.traverse((c) => {
-    if (c.isMesh) {
-      c.material = BODY_MATERIAL;
-      c.geometry.computeVertexNormals();
-    }
-  });
-  return group;
+  return smoothMeshes(new OBJLoader().parse(text));
 }
 
 function showBody(group) {
@@ -197,22 +212,37 @@ function showBody(group) {
 
 // ---- Polyline overlays ------------------------------------------------
 
-const LINE_MATERIAL = new THREE.LineBasicMaterial({
-  color: 0xffd166,
-  linewidth: 2,
-  transparent: true,
-  opacity: 0.95,
-});
+// LineBasicMaterial.linewidth is clamped to 1 on most WebGL drivers,
+// so use Line2 + LineMaterial which renders thick lines as screen-space
+// triangle strips.
+const LINE_RESOLUTION = new THREE.Vector2(
+  host.clientWidth, host.clientHeight,
+);
+
+function makeLineMaterial() {
+  const mat = new LineMaterial({
+    color: 0xffd166,
+    linewidth: 4,           // pixels
+    transparent: true,
+    opacity: 0.95,
+    depthTest: true,
+    worldUnits: false,
+  });
+  mat.resolution.copy(LINE_RESOLUTION);
+  return mat;
+}
 
 function buildPolylines() {
   Object.values(polyObjects).forEach((l) => scene.remove(l));
   polyObjects = {};
   for (const [code, pts] of Object.entries(polylines)) {
     if (!pts || pts.length < 2) continue;
-    const geom = new THREE.BufferGeometry().setFromPoints(
-      pts.map(([x, y, z]) => new THREE.Vector3(x, y, z)),
-    );
-    const line = new THREE.Line(geom, LINE_MATERIAL.clone());
+    const flat = [];
+    for (const [x, y, z] of pts) flat.push(x, y, z);
+    const geom = new LineGeometry();
+    geom.setPositions(flat);
+    const line = new Line2(geom, makeLineMaterial());
+    line.computeLineDistances();
     line.visible = false;
     line.userData.code = code;
     scene.add(line);
@@ -297,6 +327,26 @@ $("scan-picker").addEventListener("change", async (e) => {
   await loadScan(name);
 });
 
+// HUD summary measurements — fixed code list (matches Seamly catalog).
+const HUD_ROWS = [
+  { code: "A01", label: "Height"  },
+  { code: "G04", label: "Bust"    },
+  { code: "G07", label: "Waist"   },
+  { code: "G09", label: "Hip"     },
+];
+
+function renderHud(name) {
+  const byCode = Object.fromEntries(
+    measurementMeta.map((m) => [m.code, m]),
+  );
+  const lines = HUD_ROWS.map((r) => {
+    const m = byCode[r.code];
+    const v = m && m.value_cm != null ? m.value_cm.toFixed(1) + " cm" : "—";
+    return `<div class="hud-row"><span>${r.label}</span><b>${v}</b></div>`;
+  }).join("");
+  $("hud").innerHTML = `<div class="hud-name">${name}</div>${lines}`;
+}
+
 async function loadScan(name) {
   setStatus("loading", "run");
   try {
@@ -309,8 +359,7 @@ async function loadScan(name) {
     measurementMeta = payload.measurements || [];
     buildPolylines();
     renderMeasList();
-    setHud(`<b>${name}</b> · ${measurementMeta.length} measurements
-            · ${Object.keys(polylines).length} curves`);
+    renderHud(name);
     setStatus("loaded", "ok");
   } catch (err) {
     console.error(err);
@@ -334,7 +383,7 @@ $("upload").addEventListener("change", async (e) => {
     measurementMeta = [];
     buildPolylines();
     renderMeasList();
-    setHud(`<b>${f.name}</b> · uploaded mesh`);
+    renderHud(f.name);
     setStatus("loaded", "ok");
   } catch (err) {
     setStatus("error", "err");
@@ -355,6 +404,10 @@ window.addEventListener("resize", () => {
   renderer.setSize(host.clientWidth, host.clientHeight);
   camera.aspect = host.clientWidth / host.clientHeight;
   camera.updateProjectionMatrix();
+  LINE_RESOLUTION.set(host.clientWidth, host.clientHeight);
+  Object.values(polyObjects).forEach((l) =>
+    l.material.resolution.copy(LINE_RESOLUTION),
+  );
 });
 
 // ---- Boot -------------------------------------------------------------
