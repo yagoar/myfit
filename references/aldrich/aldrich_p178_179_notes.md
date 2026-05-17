@@ -24,15 +24,20 @@ sizes are the same except the largest 1–2 sizes which have retuned hips
 and top-arm rows, and the 5th edition's smallest size (size 6, bust 76)
 is dropped entirely in the 6th edition.
 
-Source file: `references/aldrich_full.pdf` (5th edition). 6th edition photos in `references/aldrich/`.
-Book pages **178-179** = PDF pages **181-182** (front-matter offset of +3).
+Source: 6th edition photos in `references/aldrich/IMG_*.jpg` (the 5th-edition
+`references/aldrich_full.pdf` was removed after the 6th-edition photos
+became the canonical source; book page numbering kept since it matches
+both editions).
+Book pages **178-179** = PDF pages **181-182** (front-matter offset of +3)
+in the now-removed 5th-edition PDF; 6th edition uses the same page numbers.
 The Aldrich pages cited by SPEC.md section 5 are these two; the size-chart
 page (book p.13) referenced for "standard measurements" is captured in a
 separate pass.
 
 These notes are the human-readable trail behind every entry under
 `src/tailor_twin/measure/definitions/merged.yaml` that has a
-`references/aldrich_full.pdf p.178` or `p.179` citation. Per GUARDRAILS
+`references/aldrich_full.pdf p.178` or `p.179` citation (the path is
+retained as historical provenance even though the PDF is gone). Per GUARDRAILS
 section 1.3, Aldrich measurement definitions are FORBIDDEN-from-AI-memory
 territory: the entries in `merged.yaml` are transcribed from this source
 and verified by the user before being trusted downstream.

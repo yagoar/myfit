@@ -17,7 +17,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round"
            stroke-linejoin="round">
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
       Scan
     </a>
     <a href="{{ url_for('viewer') }}">
@@ -200,7 +200,7 @@
           <li>Export the Stray capture folder (rgb.mp4, depth/, confidence/, odometry.csv, camera_matrix.csv) into <code>data/captures/&lt;name&gt;/</code>.</li>
           <li>Paste that path into <b>Stray folder</b>.</li>
           <li>Pick the waist colour matching your elastic (or <i>none</i> to fall back to SMPL-X anatomical waist).</li>
-          <li>Pick the pattern system. Aldrich = the 5th-edition size chart; dpm = dresspatternmaking.com drafting; Both writes both CSVs.</li>
+          <li>Pick the pattern system. Aldrich = the 6th-edition size chart; dpm = dresspatternmaking.com drafting; Both writes both CSVs.</li>
           <li>Hit <b>Run scan</b>. First-time runs take ~3-6 min on Apple Silicon. Watch the log for chamfer ≤ 0.0008 and "extracted" counts.</li>
         </ul>
       </section>

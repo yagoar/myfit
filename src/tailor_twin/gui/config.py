@@ -31,7 +31,7 @@ WAIST_COLORS: tuple[str, ...] = (
 
 # Label → run_scan --pattern-system value. Order is the dropdown order.
 PATTERN_SYSTEMS: tuple[tuple[str, str], ...] = (
-    ("aldrich", "Aldrich (5th ed.)"),
+    ("aldrich", "Aldrich (6th ed.)"),
     ("dpm", "dpm (dresspatternmaking.com)"),
     ("all", "Both (Aldrich + dpm)"),
     ("seamly_only", "Seamly catalog only"),
