@@ -99,28 +99,16 @@ FEMALE_ONLY_CODES: frozenset[str] = frozenset({
 })
 
 
-# Codes anchored on the highbust (armpit) plane. Redundant on male /
-# neutral bodies — without bust volume the highbust ring sits at
-# essentially the same Y as the bust/chest ring, so the value
-# duplicates G04 et al. Dropped for non-female fits.
-HIGHBUST_CODES: frozenset[str] = frozenset({
-    "G03",                          # highbust_circ
-    "G11",                          # highbust_arc_f
-    "G19",                          # highbust_arc_half_f
-    "G27", "G35",                   # highbust back arc + half
-    "H07", "H15",                   # neck-front / neck-side → highbust
-    "H21",                          # neck_back → highbust
-    "H08", "H22",                   # highbust → waist (formula)
-})
-
-
 def gender_skipped_codes(gender: str) -> frozenset[str]:
     """Return the set of catalog codes that should NOT be extracted for
     the given fit gender. Female fits skip nothing; male / neutral
-    fits drop the female-only set + the highbust set."""
+    fits drop only the female-only set. Highbust codes (G03 / G11 /
+    H07 / H21 etc.) are needed on male patterns too — Aldrich Men
+    derives "Scye Depth" (G-I) and "Sleeve Length for Shirts" (G-M)
+    from `neck_back_to_highbust_b` (= H21)."""
     if gender == "female":
         return frozenset()
-    return FEMALE_ONLY_CODES | HIGHBUST_CODES
+    return FEMALE_ONLY_CODES
 
 
 # Codes whose status is "judgment" or "standard" per extraction_audit.md.

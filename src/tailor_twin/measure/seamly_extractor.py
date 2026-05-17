@@ -48,11 +48,6 @@ def extract_catalog(
     gender_skip = gender_skipped_codes(gender)
 
     def _gender_reason(code: str) -> str:
-        # Imported lazily here so callers that just touch RECIPES don't
-        # have to know about the gender split.
-        from .seamly_catalog import HIGHBUST_CODES
-        if code in HIGHBUST_CODES:
-            return "highbust skipped on non-female fit"
         return "female-only measurement"
 
     # Pass 1 — primary recipes (Height / PlanarGirth / etc.).
