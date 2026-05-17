@@ -21,7 +21,7 @@ _CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 # Bump when the payload shape changes (new fields, renamed fields,
 # different unit conventions). Older persisted payloads are recomputed.
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 
 def list_scans(results_dir: Path) -> list[dict[str, str]]:
@@ -115,6 +115,13 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
 
     polylines: dict[str, list[list[float]]] = {}
     for code, recipe in RECIPES.items():
+        # Skip codes the extractor dropped (female-only on male fits,
+        # judgment-only, non-finite recipe output). No value -> no
+        # selectable row in the viewer; computing the polyline anyway
+        # would waste the heat-method pass and surface a checkbox that
+        # toggles a curve with no number.
+        if code not in report.values:
+            continue
         try:
             poly = recipe_polyline(recipe, verts, faces, landmarks)
         except Exception:  # noqa: BLE001 — recipe may fail on any figure.
