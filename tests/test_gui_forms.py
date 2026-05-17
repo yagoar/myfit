@@ -116,13 +116,15 @@ def test_validate_unknown_gender(tmp_path: Path) -> None:
     assert err and "gender" in err.lower()
 
 
-def test_validate_male_gender_disabled(tmp_path: Path) -> None:
-    err = validate(_good(tmp_path, gender="male"))
-    assert err and "not currently supported" in err.lower()
-
-
 def test_validate_female_gender_ok(tmp_path: Path) -> None:
     assert validate(_good(tmp_path, gender="female")) is None
+
+
+def test_validate_enabled_genders_pass(tmp_path: Path) -> None:
+    from tailor_twin.gui.config import ENABLED_GENDERS
+    for g in ENABLED_GENDERS:
+        assert validate(_good(tmp_path, gender=g)) is None, (
+            f"enabled gender {g!r} should validate")
 
 
 # ---------------------------------------------------------------------------

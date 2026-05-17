@@ -44,7 +44,11 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Extract measurements from a fit.")
     p.add_argument("fit_npz", type=Path)
     p.add_argument("--model-folder", default="data/body_models")
-    p.add_argument("--gender", default="female")
+    p.add_argument(
+        "--gender", default=None,
+        help="SMPL-X model gender. Defaults to the gender persisted in "
+             "the fit npz; legacy fits without that field fall back to "
+             "female.")
     p.add_argument("--num-betas", type=int, default=100)
     p.add_argument("--show-skipped", action="store_true")
     p.add_argument(
@@ -148,15 +152,18 @@ def main(argv: list[str] | None = None) -> int:
     verts = fit["smplx_vertices"].astype(np.float32)
     joints = (fit["smplx_joints"].astype(np.float32)
               if "smplx_joints" in fit.files else None)
+    from ..fit.fit import fit_gender
+    gender = args.gender or fit_gender(fit)
     bm = smplx.create(
         model_path=args.model_folder, model_type="smplx",
-        gender=args.gender, num_betas=args.num_betas,
+        gender=gender, num_betas=args.num_betas,
         use_pca=False, batch_size=1,
     )
     faces = np.asarray(bm.faces, dtype=np.int32)
 
     cat = extract_catalog(verts, faces, joints=joints,
-                          waist_y_override=waist_y_override)
+                          waist_y_override=waist_y_override,
+                          gender=gender)
     # Bent-arm override: L01/L02/L04 (and the L03 formula) need an
     # elbow-flexed mesh. Re-pose the SMPL-X body, recompute those
     # codes on the bent verts, then overwrite the A-pose values.

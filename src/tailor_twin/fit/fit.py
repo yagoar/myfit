@@ -108,6 +108,10 @@ class FitResult:
     smplx_joints: np.ndarray
     final_chamfer: float
     displacement: np.ndarray | None = None  # per-vertex D (10475, 3)
+    gender: str = "female"  # one of: female / male / neutral. Persisted
+    # in the fit npz so the viewer + bent-arm re-pose pick the matching
+    # SMPL-X model file at load time (legacy fits without this key
+    # fall back to female).
 
 
 def _set_requires_grad(body_model, transl, z, d, names: tuple[str, ...]):
@@ -364,6 +368,7 @@ def fit_scan(
         smplx_joints=out.joints[0].detach().cpu().numpy(),
         final_chamfer=final_loss,
         displacement=d_param.detach().cpu().numpy(),
+        gender=cfg.gender,
     )
 
 
@@ -382,4 +387,14 @@ def save_fit(result: FitResult, out_path: Path) -> None:
         displacement=(result.displacement if result.displacement is not None
                       else np.zeros((result.smplx_vertices.shape[0], 3),
                                     dtype=np.float32)),
+        gender=np.array(result.gender),
     )
+
+
+def fit_gender(fit: dict | "np.lib.npyio.NpzFile") -> str:
+    """Read the persisted gender from a fit npz mapping. Falls back to
+    ``"female"`` for legacy fits saved before the gender field landed."""
+    if "gender" not in getattr(fit, "files", fit):
+        return "female"
+    g = fit["gender"]
+    return str(g.item() if hasattr(g, "item") else g)

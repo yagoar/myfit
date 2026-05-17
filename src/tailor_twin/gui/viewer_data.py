@@ -55,6 +55,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     # Deferred imports — heavy.
     import numpy as np
 
+    from tailor_twin.fit.fit import fit_gender
     from tailor_twin.measure.landmarks import build_landmark_set
     from tailor_twin.measure.primitives import (
         drape_polyline_on_body,
@@ -74,11 +75,12 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         _vertex_normals,
     )
 
+    gender = fit_gender(np.load(npz))
     verts, faces, joints = _load_fit(
-        npz, "data/body_models", "female", 300,
+        npz, "data/body_models", gender, 300,
     )
     landmarks = build_landmark_set(verts, joints=joints, faces=faces)
-    report = extract_catalog(verts, faces, joints=joints)
+    report = extract_catalog(verts, faces, joints=joints, gender=gender)
 
     body_verts, body_faces = (
         _load_obj(obj) if obj.is_file() else (verts, faces)
@@ -118,6 +120,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
 
     payload = {
         "name": name,
+        "gender": gender,
         "obj_url": f"/api/scan/{name}/obj" if obj.is_file() else "",
         "centroid": centroid,
         "extent": extent,

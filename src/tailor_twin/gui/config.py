@@ -30,16 +30,38 @@ WAIST_COLORS: tuple[str, ...] = (
 )
 
 # Gender values match SeamlyMe (Seamly2D/src/libs/vformat/measurements.cpp):
-# {"male", "female", "unknown"}. Only "female" is currently usable
-# because we ship only SMPLX_FEMALE.npz under data/body_models/smplx/.
-# The HTML disables the others; ``VALID_GENDERS`` here mirrors what the
-# backend accepts so the SMIS export keeps working if a future scan
-# enables them.
-GENDERS: tuple[tuple[str, str, bool], ...] = (
-    # (value, label, enabled?)
-    ("female",  "Female",  True),
-    ("male",    "Male — SMPL-X model not present", False),
-    ("unknown", "Unknown — SMPL-X model not present", False),
+# {"male", "female", "unknown"}. The HTML lists all three; availability
+# is derived from which SMPL-X model files actually sit under
+# data/body_models/smplx/. Anything that's never produced a body has to
+# go to "Unknown" in SeamlyMe terms, so we keep "neutral" mapped to
+# SMPLX_NEUTRAL.npz but label it as "Unknown / Neutral" to match
+# SeamlyMe's wording.
+_SMPLX_DIR = REPO_ROOT / "data" / "body_models" / "smplx"
+_GENDER_MODEL_FILE: dict[str, str] = {
+    "female":  "SMPLX_FEMALE.npz",
+    "male":    "SMPLX_MALE.npz",
+    "neutral": "SMPLX_NEUTRAL.npz",
+}
+
+
+def _gender_enabled(gender: str) -> bool:
+    fname = _GENDER_MODEL_FILE.get(gender)
+    return bool(fname and (_SMPLX_DIR / fname).is_file())
+
+
+def _gender_label(gender: str, base: str) -> str:
+    if _gender_enabled(gender):
+        return base
+    return f"{base} — SMPL-X model not present"
+
+
+GENDERS: tuple[tuple[str, str, bool], ...] = tuple(
+    (g, _gender_label(g, lbl), _gender_enabled(g))
+    for g, lbl in (
+        ("female",  "Female"),
+        ("male",    "Male"),
+        ("neutral", "Unknown / Neutral"),
+    )
 )
 VALID_GENDERS: frozenset[str] = frozenset(v for v, _, _ in GENDERS)
 ENABLED_GENDERS: frozenset[str] = frozenset(v for v, _, e in GENDERS if e)

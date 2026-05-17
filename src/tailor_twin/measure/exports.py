@@ -160,7 +160,11 @@ def _personal_block(p: PersonalInfo | None) -> str:
     family = xml_escape(p.family_name) if p and p.family_name else ""
     given = xml_escape(p.given_name) if p and p.given_name else ""
     birth = (p.birth_date if p and p.birth_date else "1800-01-01")
-    gender = (p.gender if p and p.gender else "unknown")
+    # SeamlyMe SMIS schema accepts only female / male / unknown — map
+    # SMPL-X's "neutral" gender token onto "unknown" so the .smis stays
+    # valid.
+    raw_gender = (p.gender if p and p.gender else "unknown")
+    gender = "unknown" if raw_gender == "neutral" else raw_gender
     email = xml_escape(p.email) if p and p.email else ""
     family_el = f"<family-name>{family}</family-name>" if family else "<family-name/>"
     given_el = f"<given-name>{given}</given-name>" if given else "<given-name/>"

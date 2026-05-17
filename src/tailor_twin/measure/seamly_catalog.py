@@ -76,6 +76,36 @@ CODE_TO_NAME: dict[str, str] = _load_code_to_name()
 CODE_TO_DIAGRAM: dict[str, str] = _load_code_to_diagram()
 
 
+# Codes whose definitions assume a female bust (bust_apex / lowbust /
+# bustpoint landmarks). On male / neutral fits the underlying searches
+# either return geometric noise (no inframammary crease on a flat
+# chest) or anatomically meaningless points (apex lerp lands on the
+# upper pectoral). The extractor drops these codes when the fit's
+# gender is not "female"; they show up in the skipped report with the
+# reason "female-only measurement".
+FEMALE_ONLY_CODES: frozenset[str] = frozenset({
+    # Primary recipes anchored on bust_apex / bust_level / lowbust_level
+    "A14",          # height_bustpoint
+    "B02",          # width_bust
+    "G04", "G05",   # bust_circ / lowbust_circ
+    "G12", "G13",   # bust_arc_f / lowbust_arc_f
+    "H01", "H02",   # neck-front → apex → waist polyline / geodesic
+    "H09", "H11",   # neck-front → bust_level / lowbust → waist
+    "H14", "H23",   # neck-side / c7 → bust_level
+    "H25", "H27",   # waist-back / shoulder-neck → lowbust / bust back
+    "J01", "J02", "J03", "J04",
+    "J07", "J08", "J10", "J11",
+    "P01", "P09", "P10",
+    # Formulas that derive from the above
+    "G20", "G21",   # bust/lowbust arc halves
+    "G28", "G29",   # bust/lowbust back arcs
+    "G36", "G37",   # bust/lowbust back arc halves
+    "H10", "H24",   # bust → waist (front / back) derived
+    "H08",          # H01 (polyline via apex) − H07
+    "J05",          # J01 (bustpoint span) / 2
+})
+
+
 # Codes whose status is "judgment" or "standard" per extraction_audit.md.
 # Listed here for clarity (and so we can skip them with a known reason).
 JUDGMENT_OR_STANDARD: dict[str, str] = {

@@ -49,7 +49,10 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("fit_npz", type=Path)
     p.add_argument("--model-folder", default="data/body_models")
-    p.add_argument("--gender", default="female")
+    p.add_argument(
+        "--gender", default=None,
+        help="SMPL-X model gender. Defaults to the gender persisted in "
+             "the fit npz; legacy fits fall back to female.")
     p.add_argument("--num-betas", type=int, default=300)
     p.add_argument(
         "--elbow-flex-deg", type=float, default=DEFAULT_ELBOW_FLEX_DEG,
@@ -75,10 +78,12 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
 
     fit = np.load(args.fit_npz, allow_pickle=True)
+    from ..fit.fit import fit_gender
+    gender = args.gender or fit_gender(fit)
     body_model = smplx.create(
         model_path=args.model_folder,
         model_type="smplx",
-        gender=args.gender,
+        gender=gender,
         num_betas=args.num_betas,
         use_pca=False,
         batch_size=1,

@@ -11,7 +11,12 @@ from pathlib import Path
 import numpy as np
 
 from .landmarks import build_landmark_set
-from .seamly_catalog import FORMULAS, JUDGMENT_OR_STANDARD, RECIPES
+from .seamly_catalog import (
+    FEMALE_ONLY_CODES,
+    FORMULAS,
+    JUDGMENT_OR_STANDARD,
+    RECIPES,
+)
 
 
 @dataclass
@@ -26,6 +31,7 @@ def extract_catalog(
     review_json: str | Path | None = None,
     joints: np.ndarray | None = None,
     waist_y_override: float | None = None,
+    gender: str = "female",
 ) -> CatalogReport:
     if review_json is not None:
         landmarks = build_landmark_set(
@@ -39,9 +45,13 @@ def extract_catalog(
         )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}
+    female_only_skip = gender != "female"
 
     # Pass 1 — primary recipes (Height / PlanarGirth / etc.).
     for code, recipe in RECIPES.items():
+        if female_only_skip and code in FEMALE_ONLY_CODES:
+            skipped[code] = "female-only measurement"
+            continue
         try:
             v = recipe.compute(fitted_verts, smplx_faces, landmarks)
         except KeyError as e:
@@ -57,6 +67,9 @@ def extract_catalog(
 
     # Pass 2 — formulas.
     for code, recipe in FORMULAS.items():
+        if female_only_skip and code in FEMALE_ONLY_CODES:
+            skipped[code] = "female-only measurement"
+            continue
         try:
             v = recipe.compute_from(values)
         except Exception as e:
