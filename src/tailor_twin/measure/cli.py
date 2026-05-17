@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             bent_landmarks = build_landmark_set(
                 pose.verts, joints=pose.joints, faces=faces,
-                waist_y_override=waist_y_override,
+                waist_y_override=waist_y_override, gender=gender,
             )
             for code in BENT_ARM_CODES:
                 try:

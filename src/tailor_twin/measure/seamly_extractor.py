@@ -12,10 +12,10 @@ import numpy as np
 
 from .landmarks import build_landmark_set
 from .seamly_catalog import (
-    FEMALE_ONLY_CODES,
     FORMULAS,
     JUDGMENT_OR_STANDARD,
     RECIPES,
+    gender_skipped_codes,
 )
 
 
@@ -36,21 +36,29 @@ def extract_catalog(
     if review_json is not None:
         landmarks = build_landmark_set(
             fitted_verts, review_json, joints=joints, faces=smplx_faces,
-            waist_y_override=waist_y_override,
+            waist_y_override=waist_y_override, gender=gender,
         )
     else:
         landmarks = build_landmark_set(
             fitted_verts, joints=joints, faces=smplx_faces,
-            waist_y_override=waist_y_override,
+            waist_y_override=waist_y_override, gender=gender,
         )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}
-    female_only_skip = gender != "female"
+    gender_skip = gender_skipped_codes(gender)
+
+    def _gender_reason(code: str) -> str:
+        # Imported lazily here so callers that just touch RECIPES don't
+        # have to know about the gender split.
+        from .seamly_catalog import HIGHBUST_CODES
+        if code in HIGHBUST_CODES:
+            return "highbust skipped on non-female fit"
+        return "female-only measurement"
 
     # Pass 1 — primary recipes (Height / PlanarGirth / etc.).
     for code, recipe in RECIPES.items():
-        if female_only_skip and code in FEMALE_ONLY_CODES:
-            skipped[code] = "female-only measurement"
+        if code in gender_skip:
+            skipped[code] = _gender_reason(code)
             continue
         try:
             v = recipe.compute(fitted_verts, smplx_faces, landmarks)
@@ -67,8 +75,8 @@ def extract_catalog(
 
     # Pass 2 — formulas.
     for code, recipe in FORMULAS.items():
-        if female_only_skip and code in FEMALE_ONLY_CODES:
-            skipped[code] = "female-only measurement"
+        if code in gender_skip:
+            skipped[code] = _gender_reason(code)
             continue
         try:
             v = recipe.compute_from(values)

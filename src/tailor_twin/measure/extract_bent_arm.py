@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
         shoulder_forward_deg=args.shoulder_forward_deg,
     )
     landmarks = build_landmark_set(
-        pose.verts, joints=pose.joints, faces=faces,
+        pose.verts, joints=pose.joints, faces=faces, gender=gender,
     )
 
     # Use the catalog's bent-arm recipes directly so the script's output

@@ -79,7 +79,8 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     verts, faces, joints = _load_fit(
         npz, "data/body_models", gender, 300,
     )
-    landmarks = build_landmark_set(verts, joints=joints, faces=faces)
+    landmarks = build_landmark_set(verts, joints=joints, faces=faces,
+                                    gender=gender)
     report = extract_catalog(verts, faces, joints=joints, gender=gender)
 
     body_verts, body_faces = (

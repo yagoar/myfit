@@ -392,6 +392,35 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
 }
 
 
+# Per-leaf fallback resolution that only kicks in when the LandmarkSet's
+# gender is not "female". The female-tuned vertex IDs in
+# `references/smplx_landmark_review.json` land on the correct anatomy
+# for the female SMPL-X model but slide up/down the male / neutral
+# topology (the bust_apex vids end up near the male armpit, for
+# instance). Each entry here points at a dynamic search whose result
+# replaces the female anchor for the named landmark only on non-female
+# fits.
+MALE_FALLBACK_LANDMARKS: dict[str, dict] = {
+    # Chest-fullest plane for male / neutral. The female bust_apex
+    # midpoint sits ~4cm above the male armpit on the SMPL-X mesh and
+    # produces an empty torso slice, so PlanarGirth at bust_level
+    # fails (NaN G04). Use the same max_front_z_y search we use for
+    # high_hip_level, restricted to the chest band between waist and
+    # armfold-front, midline X filter to ignore arm bulges.
+    "bust_level": {
+        "search": "max_front_z_y",
+        "y_lower": "waist_string",
+        "y_upper": "armfold_front_left",
+        "y_lower_offset": 0.10,
+        "y_upper_offset": 0.02,
+        "regions": ("torso",),
+        "x_midline_ref": "waist_cf",
+        "x_midline_band": 0.05,
+        "samples": 30,
+    },
+}
+
+
 WAIST_VID_LANDMARKS: frozenset[str] = frozenset({
     "waist_cf",
     "waist_cb",
@@ -429,6 +458,9 @@ class LandmarkSet:
     # dynamic landmarks that call into recipe polylines, e.g. the SN→apex
     # ↔ G03 intersection used by H16)
     waist_y_override: float | None = None  # world-frame Y from string detection
+    gender: str = "female"  # affects landmarks like bust_level where the
+    # female-tuned vertex IDs land at the wrong anatomical level on
+    # male / neutral meshes; non-female falls back to anatomical searches.
 
     def __getitem__(self, name: str) -> np.ndarray:
         """Resolve `landmarks.<leaf>`, `joint.<NAME>`, or bare `<leaf>` to
@@ -451,6 +483,9 @@ class LandmarkSet:
         the waist-Y post-override (which is applied by the caller)."""
         if leaf in JOINT_OVERRIDES and self.joints is not None:
             return self._joint(JOINT_OVERRIDES[leaf])
+
+        if self.gender != "female" and leaf in MALE_FALLBACK_LANDMARKS:
+            return self._dynamic(leaf, MALE_FALLBACK_LANDMARKS[leaf])
 
         if leaf in DYNAMIC_LANDMARKS:
             return self._dynamic(leaf, DYNAMIC_LANDMARKS[leaf])
@@ -525,6 +560,7 @@ def build_landmark_set(
     joints: np.ndarray | None = None,
     faces: np.ndarray | None = None,
     waist_y_override: float | None = None,
+    gender: str = "female",
 ) -> LandmarkSet:
     """Construct a LandmarkSet from a fitted SMPL-X mesh + verified IDs.
 
@@ -534,13 +570,19 @@ def build_landmark_set(
 
     `waist_y_override` (world-frame Y, metres): replace the Y of every
     landmark in `WAIST_VID_LANDMARKS`. Typical source: the detected
-    waist-string elastic Y from `tailor_twin.preprocess.waist_string`."""
+    waist-string elastic Y from `tailor_twin.preprocess.waist_string`.
+
+    `gender` selects between female-tuned vertex anchors (`bust_level` =
+    `bust_apex_midpoint`) and anatomical searches for non-female bodies
+    where those vids land off-target (`bust_level` = max front-Z slice
+    on the chest, mirroring the high_hip search)."""
     return LandmarkSet(
         verts=fitted_verts,
         vertex_ids=load_vertex_ids(review_json),
         joints=joints,
         faces=faces,
         waist_y_override=waist_y_override,
+        gender=gender,
     )
 
 

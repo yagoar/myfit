@@ -76,34 +76,51 @@ CODE_TO_NAME: dict[str, str] = _load_code_to_name()
 CODE_TO_DIAGRAM: dict[str, str] = _load_code_to_diagram()
 
 
-# Codes whose definitions assume a female bust (bust_apex / lowbust /
-# bustpoint landmarks). On male / neutral fits the underlying searches
-# either return geometric noise (no inframammary crease on a flat
-# chest) or anatomically meaningless points (apex lerp lands on the
-# upper pectoral). The extractor drops these codes when the fit's
-# gender is not "female"; they show up in the skipped report with the
-# reason "female-only measurement".
+# Codes whose definitions need actual female bust geometry — inframammary
+# crease, apex-as-pattern-anchor, bustpoint-anchored chords. On a male /
+# neutral fit these either return geometric noise (no crease on a flat
+# chest) or pattern-specific landmarks that don't carry over (a J-chord
+# from "bust apex" is meaningful only if there is a real apex).
+#
+# The bust_level *plane* (G04 bust_circ etc.) is NOT in this set — on a
+# male body the same Y reads as the chest circumference at the pec /
+# nipple line, which is a valid measurement.
+#
+# Skipped codes appear in the report with reason "female-only measurement".
 FEMALE_ONLY_CODES: frozenset[str] = frozenset({
-    # Primary recipes anchored on bust_apex / bust_level / lowbust_level
-    "A14",          # height_bustpoint
-    "B02",          # width_bust
-    "G04", "G05",   # bust_circ / lowbust_circ
-    "G12", "G13",   # bust_arc_f / lowbust_arc_f
-    "H01", "H02",   # neck-front → apex → waist polyline / geodesic
-    "H09", "H11",   # neck-front → bust_level / lowbust → waist
-    "H14", "H23",   # neck-side / c7 → bust_level
-    "H25", "H27",   # waist-back / shoulder-neck → lowbust / bust back
-    "J01", "J02", "J03", "J04",
-    "J07", "J08", "J10", "J11",
-    "P01", "P09", "P10",
-    # Formulas that derive from the above
-    "G20", "G21",   # bust/lowbust arc halves
-    "G28", "G29",   # bust/lowbust back arcs
-    "G36", "G37",   # bust/lowbust back arc halves
-    "H10", "H24",   # bust → waist (front / back) derived
-    "H08",          # H01 (polyline via apex) − H07
-    "J05",          # J01 (bustpoint span) / 2
+    "A14",                          # height_bustpoint — apex Y as height
+    "G05", "G13", "G21",            # lowbust circ + arc + half
+    "G29", "G37",                   # lowbust back arc + half
+    "H02",                          # neck → lowbust → waist
+    "H11", "H25",                   # lowbust → waist
+    "J01", "J02", "J03", "J04", "J05",
+    "J07", "J08", "J10", "J11",     # bustpoint chord family
+    "P09", "P10",                   # armfold → apex / bust-front
 })
+
+
+# Codes anchored on the highbust (armpit) plane. Redundant on male /
+# neutral bodies — without bust volume the highbust ring sits at
+# essentially the same Y as the bust/chest ring, so the value
+# duplicates G04 et al. Dropped for non-female fits.
+HIGHBUST_CODES: frozenset[str] = frozenset({
+    "G03",                          # highbust_circ
+    "G11",                          # highbust_arc_f
+    "G19",                          # highbust_arc_half_f
+    "G27", "G35",                   # highbust back arc + half
+    "H07", "H15",                   # neck-front / neck-side → highbust
+    "H21",                          # neck_back → highbust
+    "H08", "H22",                   # highbust → waist (formula)
+})
+
+
+def gender_skipped_codes(gender: str) -> frozenset[str]:
+    """Return the set of catalog codes that should NOT be extracted for
+    the given fit gender. Female fits skip nothing; male / neutral
+    fits drop the female-only set + the highbust set."""
+    if gender == "female":
+        return frozenset()
+    return FEMALE_ONLY_CODES | HIGHBUST_CODES
 
 
 # Codes whose status is "judgment" or "standard" per extraction_audit.md.
