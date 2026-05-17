@@ -21,7 +21,15 @@ from .bent_arm import (
     DEFAULT_SHOULDER_FORWARD_DEG,
     repose_bent_arm,
 )
-from .exports import write_csv, write_obj, write_smis_from_catalog
+from .exports import (
+    PersonalInfo,
+    SYSTEM_PREFIXES,
+    filter_by_system,
+    write_csv,
+    write_named_csv,
+    write_obj,
+    write_smis_from_catalog,
+)
 from .extractor import extract
 from .landmarks import build_landmark_set
 from .seamly_catalog import RECIPES
@@ -70,6 +78,37 @@ def main(argv: list[str] | None = None) -> int:
         help="Write SeamlyMe .smis directly (no intermediate JSON)",
     )
     p.add_argument(
+        "--save-named-csv",
+        type=Path,
+        help="Write 'name,value_cm' CSV from the merged.yaml extractor. "
+             "Filtered by --named-filter.",
+    )
+    p.add_argument(
+        "--named-filter",
+        default="all",
+        choices=sorted(SYSTEM_PREFIXES),
+        help="System filter for --save-named-csv: 'aldrich' keeps "
+             "aldrich_* entries, 'dpm' keeps dpm_*/bustpoint_*, 'all' "
+             "keeps everything (default).",
+    )
+    p.add_argument(
+        "--person-given-name", default="",
+        help="Sewer given name for the SMIS <personal> block.",
+    )
+    p.add_argument(
+        "--person-family-name", default="",
+        help="Sewer family name for the SMIS <personal> block.",
+    )
+    p.add_argument(
+        "--person-birth-date", default="",
+        help="ISO date yyyy-mm-dd for the SMIS <personal> block.",
+    )
+    p.add_argument(
+        "--person-gender", default="",
+        help="Sewer gender for the SMIS <personal> block "
+             "(female / male / unknown).",
+    )
+    p.add_argument(
         "--smis-template",
         type=Path,
         default=Path.home() / "seamly2d" / "templates" /
@@ -115,6 +154,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
 
+    personal = PersonalInfo(
+        given_name=args.person_given_name,
+        family_name=args.person_family_name,
+        birth_date=args.person_birth_date,
+        gender=args.person_gender or "unknown",
+    )
+
     # Resolve waist-Y override (CLI value > JSON file > none).
     waist_y_override: float | None = args.waist_y
     if waist_y_override is None and args.waist_y_from is not None:
@@ -134,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     faces = np.asarray(bm.faces, dtype=np.int32)
 
-    run_named = not args.seamly or args.both
+    run_named = not args.seamly or args.both or args.save_named_csv is not None
     run_seamly = args.seamly or args.both
 
     if run_named:
@@ -149,6 +195,11 @@ def main(argv: list[str] | None = None) -> int:
             print("\nSkipped:")
             for k, reason in sorted(rep.skipped.items()):
                 print(f"  {k}: {reason}")
+        if args.save_named_csv:
+            filtered = filter_by_system(rep.values, args.named_filter)
+            write_named_csv(filtered, args.save_named_csv)
+            print(f"saved {args.save_named_csv} "
+                  f"({len(filtered)} rows, filter={args.named_filter})")
 
     if run_seamly:
         cat = extract_catalog(verts, faces, joints=joints,
@@ -203,7 +254,8 @@ def main(argv: list[str] | None = None) -> int:
             template = (args.smis_template
                         if args.smis_template and args.smis_template.is_file()
                         else None)
-            write_smis_from_catalog(cat.values, args.save_smis, template)
+            write_smis_from_catalog(
+                cat.values, args.save_smis, template, personal=personal)
             print(f"saved {args.save_smis}")
 
     if args.save_obj:

@@ -1,9 +1,10 @@
 """Artifact writers for the measurement pipeline.
 
-Three outputs from a single fit + extract run:
-  - .smis  (SeamlyMe / Seamly2D)
-  - .csv   (code, seamly_name, value_cm)
-  - .obj   (fitted SMPL-X body mesh — CLO3D-importable)
+Four outputs from a single fit + extract run:
+  - .smis      (SeamlyMe / Seamly2D)
+  - .csv       (code, seamly_name, value_cm)        — Seamly catalog
+  - .csv       (name, value_cm) named-CSV variant   — Aldrich / dpm
+  - .obj       (fitted SMPL-X body mesh — CLO3D-importable)
 
 The SMIS writer mirrors scripts/export_seamlyme.py's render_smis but is
 importable so the measure CLI can produce the .smis directly.
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import re
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
@@ -19,6 +21,25 @@ from xml.sax.saxutils import escape as xml_escape
 import numpy as np
 
 from .seamly_catalog import CODE_TO_NAME
+
+
+# ---------------------------------------------------------------------------
+# Personal info (optional SMIS <personal> block)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PersonalInfo:
+    """Sewer identity for the SMIS <personal> block.
+
+    Empty / None fields fall through to SeamlyMe defaults (empty
+    element or '1800-01-01' for birth_date)."""
+
+    given_name: str = ""
+    family_name: str = ""
+    birth_date: str = ""   # ISO yyyy-mm-dd; falls back to 1800-01-01
+    gender: str = ""       # "female" / "male" / "unknown"
+    email: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -90,9 +111,43 @@ def write_obj(verts: np.ndarray, faces: np.ndarray, out_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
+_PM_SYSTEM_DEFAULT = "998"
+_PM_SYSTEMS: dict[str, str] = {
+    # SeamlyMe pattern-making system codes. 998 = "Individual / custom".
+    # Aldrich + dpm both default to 998 in our pipeline; future codes can
+    # be wired here without touching call sites.
+    "individual": "998",
+    "aldrich": "998",
+    "dpm": "998",
+    "seamly": "998",
+}
+
+
+def _personal_block(p: PersonalInfo | None) -> str:
+    family = xml_escape(p.family_name) if p and p.family_name else ""
+    given = xml_escape(p.given_name) if p and p.given_name else ""
+    birth = (p.birth_date if p and p.birth_date else "1800-01-01")
+    gender = (p.gender if p and p.gender else "unknown")
+    email = xml_escape(p.email) if p and p.email else ""
+    family_el = f"<family-name>{family}</family-name>" if family else "<family-name/>"
+    given_el = f"<given-name>{given}</given-name>" if given else "<given-name/>"
+    email_el = f"<email>{email}</email>" if email else "<email/>"
+    return (
+        "    <personal>\n"
+        f"        {family_el}\n"
+        f"        {given_el}\n"
+        f"        <birth-date>{birth}</birth-date>\n"
+        f"        <gender>{xml_escape(gender)}</gender>\n"
+        f"        {email_el}\n"
+        "    </personal>\n"
+    )
+
+
 def render_smis(
     seamly_values: dict[str, float],
     template_order: list[str],
+    personal: PersonalInfo | None = None,
+    pm_system: str = _PM_SYSTEM_DEFAULT,
 ) -> str:
     """Same XML shape as scripts/export_seamlyme.py::render_smis.
     seamly_values is keyed by SEAMLY NAME (e.g. 'bust_circ'), not code."""
@@ -105,15 +160,9 @@ def render_smis(
         "    <read-only>false</read-only>\n"
         "    <notes/>\n"
         "    <unit>cm</unit>\n"
-        "    <pm_system>998</pm_system>\n"
-        "    <personal>\n"
-        "        <family-name/>\n"
-        "        <given-name/>\n"
-        "        <birth-date>1800-01-01</birth-date>\n"
-        "        <gender>unknown</gender>\n"
-        "        <email/>\n"
-        "    </personal>\n"
-        "    <body-measurements>\n"
+        f"    <pm_system>{xml_escape(str(pm_system))}</pm_system>\n"
+        + _personal_block(personal)
+        + "    <body-measurements>\n"
     )
     rows: list[str] = []
     seen: set[str] = set()
@@ -136,9 +185,11 @@ def write_smis_from_catalog(
     catalog_values: dict[str, float],
     out_path: Path,
     template_path: Path | None = None,
+    personal: PersonalInfo | None = None,
+    pm_system: str = _PM_SYSTEM_DEFAULT,
 ) -> None:
     """Convert {code: value} -> {seamly_name: value} via CODE_TO_NAME, render
-    XML, write to disk."""
+    XML, write to disk. ``personal`` populates the SMIS <personal> block."""
     by_name: dict[str, float] = {}
     for code, val in catalog_values.items():
         name = CODE_TO_NAME.get(code)
@@ -152,4 +203,46 @@ def write_smis_from_catalog(
         )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(render_smis(by_name, template_order))
+    out_path.write_text(
+        render_smis(by_name, template_order,
+                    personal=personal, pm_system=pm_system))
+
+
+# ---------------------------------------------------------------------------
+# Named CSV (Aldrich / dpm — merged.yaml output)
+# ---------------------------------------------------------------------------
+
+
+# Name-prefix → pattern-making system. Used to filter merged.yaml output
+# when the GUI / CLI asks for a single-system CSV export.
+SYSTEM_PREFIXES: dict[str, tuple[str, ...]] = {
+    "all": (),
+    "aldrich": ("aldrich_",),
+    "dpm": ("dpm_", "bustpoint_"),
+}
+
+
+def filter_by_system(
+    values: dict[str, float], system: str,
+) -> dict[str, float]:
+    """Keep only entries whose name starts with one of SYSTEM_PREFIXES[system].
+
+    ``system='all'`` returns the input dict unchanged. Unknown systems
+    raise KeyError so typos surface early."""
+    prefixes = SYSTEM_PREFIXES[system]
+    if not prefixes:
+        return dict(values)
+    return {k: v for k, v in values.items() if k.startswith(prefixes)}
+
+
+def write_named_csv(
+    values: dict[str, float], out_path: Path,
+) -> None:
+    """Emit ``name, value_cm`` rows ordered alphabetically. ``values`` is
+    keyed by the merged.yaml entry name (e.g. 'aldrich_bust')."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["name", "value_cm"])
+        for k in sorted(values):
+            w.writerow([k, f"{float(values[k]):.4f}"])

@@ -118,8 +118,23 @@ def run(
     waist_color: str | None,
     waist_hsv_low: tuple[int, int, int] | None,
     waist_hsv_high: tuple[int, int, int] | None,
+    export_csv: bool = True,
+    export_obj: bool = True,
+    export_smis: bool = True,
+    pattern_system: str = "all",
+    person_given_name: str = "",
+    person_family_name: str = "",
+    person_birth_date: str = "",
 ) -> int:
-    """Run the full pipeline; return process exit code."""
+    """Run the full pipeline; return process exit code.
+
+    ``pattern_system`` controls the named-CSV emitted alongside the
+    Seamly CSV. Values: 'all' / 'aldrich' / 'dpm' / 'seamly_only'.
+    When 'seamly_only', no named CSV is written and only the existing
+    Seamly catalog CSV is produced (Aldrich/dpm-specific exports are
+    skipped). 'all' / 'aldrich' / 'dpm' all also emit the Seamly CSV
+    and an additional ``<prefix>_<system>.csv`` named CSV.
+    """
     out_prefix.parent.mkdir(parents=True, exist_ok=True)
     scan_obj = out_prefix.with_name(out_prefix.name + "_scan.obj")
     fit_npz = out_prefix.with_name(out_prefix.name + "_smplx_fit.npz")
@@ -127,6 +142,8 @@ def run(
     csv_path = out_prefix.with_name(out_prefix.name + "_measurements.csv")
     json_path = out_prefix.with_name(out_prefix.name + "_seamly_catalog.json")
     smis_path = out_prefix.with_name(out_prefix.name + ".smis")
+    named_csv_path = out_prefix.with_name(
+        f"{out_prefix.name}_{pattern_system}.csv")
     waist_json = out_prefix.with_name(out_prefix.name + "_waist_y.json")
 
     # ---- 1. Stray → segmented/filtered frames → TSDF mesh.
@@ -204,11 +221,25 @@ def run(
     cmd = [
         ".venv/bin/python", "-m", "body_scanner.measure.cli", str(fit_npz),
         "--both", "--num-betas", str(num_betas),
-        "--save-csv", str(csv_path),
         "--save-seamly-json", str(json_path),
-        "--save-smis", str(smis_path),
-        "--save-obj", str(fit_obj),
     ]
+    if export_csv:
+        cmd.extend(["--save-csv", str(csv_path)])
+    if export_smis:
+        cmd.extend(["--save-smis", str(smis_path)])
+    if export_obj:
+        cmd.extend(["--save-obj", str(fit_obj)])
+    if pattern_system in {"aldrich", "dpm", "all"} and export_csv:
+        cmd.extend(["--save-named-csv", str(named_csv_path),
+                    "--named-filter", pattern_system])
+    if person_given_name:
+        cmd.extend(["--person-given-name", person_given_name])
+    if person_family_name:
+        cmd.extend(["--person-family-name", person_family_name])
+    if person_birth_date:
+        cmd.extend(["--person-birth-date", person_birth_date])
+    if gender:
+        cmd.extend(["--person-gender", gender])
     if waist_json is not None and waist_json.is_file():
         cmd.extend(["--waist-y-from", str(waist_json)])
     r = subprocess.run(cmd)
@@ -231,9 +262,14 @@ def run(
     print("\nDONE.")
     print(f"  scan mesh:     {scan_obj}")
     print(f"  fit npz:       {fit_npz}")
-    print(f"  fit body obj:  {fit_obj}")
-    print(f"  csv:           {csv_path}")
-    print(f"  smis:          {smis_path}")
+    if export_obj:
+        print(f"  fit body obj:  {fit_obj}")
+    if export_csv:
+        print(f"  csv:           {csv_path}")
+        if pattern_system in {"aldrich", "dpm", "all"}:
+            print(f"  named csv:     {named_csv_path}")
+    if export_smis:
+        print(f"  smis:          {smis_path}")
     print(f"  catalog json:  {json_path}")
     print("\nReview viewer:")
     print(f"  python -m body_scanner.measure.review_viewer {fit_npz} "
@@ -296,6 +332,27 @@ def main() -> int:
     p.add_argument(
         "--waist-hsv-high", default=None,
         help="Custom HSV upper bound, same format as --waist-hsv-low.")
+    p.add_argument(
+        "--export-csv", action=argparse.BooleanOptionalAction, default=True,
+        help="Write the Seamly catalog CSV (+ filtered named CSV).")
+    p.add_argument(
+        "--export-obj", action=argparse.BooleanOptionalAction, default=True,
+        help="Write the fitted SMPL-X body as a Wavefront OBJ.")
+    p.add_argument(
+        "--export-smis", action=argparse.BooleanOptionalAction, default=True,
+        help="Write the SeamlyMe .smis file.")
+    p.add_argument(
+        "--pattern-system", default="all",
+        choices=("all", "aldrich", "dpm", "seamly_only"),
+        help="Pattern-making system filter for the named CSV. "
+             "'aldrich' keeps aldrich_* entries, 'dpm' keeps "
+             "dpm_*/bustpoint_* entries, 'all' writes both, "
+             "'seamly_only' skips the named CSV.")
+    p.add_argument("--person-given-name", default="")
+    p.add_argument("--person-family-name", default="")
+    p.add_argument(
+        "--person-birth-date", default="",
+        help="ISO date yyyy-mm-dd written into the SMIS <personal> block.")
     args = p.parse_args()
 
     def _parse_hsv(spec: str | None) -> tuple[int, int, int] | None:
@@ -336,6 +393,13 @@ def main() -> int:
         waist_color=args.waist_color,
         waist_hsv_low=waist_hsv_low,
         waist_hsv_high=waist_hsv_high,
+        export_csv=args.export_csv,
+        export_obj=args.export_obj,
+        export_smis=args.export_smis,
+        pattern_system=args.pattern_system,
+        person_given_name=args.person_given_name,
+        person_family_name=args.person_family_name,
+        person_birth_date=args.person_birth_date,
     )
 
 
