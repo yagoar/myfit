@@ -3,10 +3,14 @@
 Heavy imports (numpy, smplx, the measure subpackage) are deferred to
 the first call so importing the GUI module stays cheap. Results are
 cached per scan prefix to amortise the SMPL-X-load cost across page
-reloads.
+reloads, and persisted to a `<name>_viewer_payload.json` next to the
+fit npz so subsequent process restarts are instant. The on-disk
+payload is invalidated when its mtime is older than the fit npz, or
+when the persisted ``schema_version`` doesn't match ``_SCHEMA_VERSION``.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +18,10 @@ from typing import Any
 # scan prefix so different repos / out dirs don't collide if anyone
 # imports this from a custom path.
 _CACHE: dict[tuple[str, str], dict[str, Any]] = {}
+
+# Bump when the payload shape changes (new fields, renamed fields,
+# different unit conventions). Older persisted payloads are recomputed.
+_SCHEMA_VERSION = 1
 
 
 def list_scans(results_dir: Path) -> list[dict[str, str]]:
@@ -42,6 +50,11 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
 
     Returns measurement values + per-code polylines (lists of ``[x, y,
     z]`` points in metres, world frame) + the scan name + OBJ URL.
+
+    Read order: in-process cache → ``<name>_viewer_payload.json`` on
+    disk (if newer than the fit npz) → fresh compute. The fresh-compute
+    path also writes the disk cache so subsequent process restarts
+    skip the ~30s recipe evaluation.
     """
     key = (str(results_dir.resolve()), name)
     if key in _CACHE:
@@ -51,6 +64,18 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     obj = results_dir / f"{name}_fit_body.obj"
     if not npz.is_file():
         raise FileNotFoundError(f"fit npz not found: {npz}")
+
+    cache_path = results_dir / f"{name}_viewer_payload.json"
+    if (cache_path.is_file()
+            and cache_path.stat().st_mtime >= npz.stat().st_mtime):
+        try:
+            persisted = json.loads(cache_path.read_text())
+            if persisted.get("schema_version") == _SCHEMA_VERSION:
+                _CACHE[key] = persisted
+                return persisted
+        except (json.JSONDecodeError, OSError):
+            # Corrupt or unreadable cache — fall through to recompute.
+            pass
 
     # Deferred imports — heavy.
     import numpy as np
@@ -120,6 +145,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         body_verts.max(axis=0) - body_verts.min(axis=0)))
 
     payload = {
+        "schema_version": _SCHEMA_VERSION,
         "name": name,
         "gender": gender,
         "obj_url": f"/api/scan/{name}/obj" if obj.is_file() else "",
@@ -128,5 +154,9 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         "measurements": measurements,
         "polylines": polylines,
     }
+    try:
+        cache_path.write_text(json.dumps(payload))
+    except OSError:
+        pass  # read-only filesystem etc. — keep the in-memory cache.
     _CACHE[key] = payload
     return payload
