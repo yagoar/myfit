@@ -21,7 +21,59 @@ _CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 # Bump when the payload shape changes (new fields, renamed fields,
 # different unit conventions). Older persisted payloads are recomputed.
-_SCHEMA_VERSION = 3
+_SCHEMA_VERSION = 7
+
+
+def _vertical_ruler(anchor_floor, anchor_top, body_v, offset: float = 0.10):
+    """Build off-body vertical bar + two horizontal dashed leaders.
+
+    Bar sits to the left of the body bbox at the landmark's Z so each
+    leader is a clean horizontal X-only segment.
+    """
+    bar_x = float(body_v[:, 0].min()) - offset
+    ax = float(anchor_top[0])
+    az = float(anchor_top[2])
+    y_floor = float(anchor_floor[1])
+    y_top = float(anchor_top[1])
+    bar = [[bar_x, y_floor, az], [bar_x, y_top, az]]
+    leaders = [
+        [[ax, y_floor, az], [bar_x, y_floor, az]],
+        [[ax, y_top, az], [bar_x, y_top, az]],
+    ]
+    return bar, leaders
+
+
+def _horizontal_ruler(anchor_a, anchor_b, body_v, offset: float = 0.10):
+    """Build off-body horizontal bar + two short dashed leaders.
+
+    Picks orientation from the dominant horizontal axis of the anchor
+    pair: X-spread (L↔R widths like B01/B02) puts the bar in front of
+    the body; Z-spread (front↔back chords like L21) puts the bar out
+    to the side. Either way each leader is a short single-axis segment
+    from anchor → bar endpoint.
+    """
+    ax = float(anchor_a[0]); ay = float(anchor_a[1]); az = float(anchor_a[2])
+    bx = float(anchor_b[0]); by = float(anchor_b[1]); bz = float(anchor_b[2])
+    bar_y = ay  # planar — anchors usually share Y
+    if abs(bx - ax) >= abs(bz - az):
+        # X-dominant: bar in front (max Z + offset), runs along X.
+        bar_z = float(body_v[:, 2].max()) + offset
+        bar = [[ax, bar_y, bar_z], [bx, bar_y, bar_z]]
+        leaders = [
+            [[ax, ay, az], [ax, bar_y, bar_z]],
+            [[bx, by, bz], [bx, bar_y, bar_z]],
+        ]
+    else:
+        # Z-dominant: bar to the side that the chord lives on.
+        side_x = ax if abs(ax) >= abs(bx) else bx
+        bar_x = (float(body_v[:, 0].max()) + offset if side_x > 0
+                 else float(body_v[:, 0].min()) - offset)
+        bar = [[bar_x, bar_y, az], [bar_x, bar_y, bz]]
+        leaders = [
+            [[ax, ay, az], [bar_x, bar_y, az]],
+            [[bx, by, bz], [bar_x, bar_y, bz]],
+        ]
+    return bar, leaders
 
 
 def list_scans(results_dir: Path) -> list[dict[str, str]]:
@@ -95,6 +147,8 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     from tailor_twin.fit.fit import fit_gender
     from tailor_twin.measure.landmarks import build_landmark_set
     from tailor_twin.measure.primitives import (
+        Height,
+        LateralChord,
         drape_polyline_on_body,
         recipe_polyline,
         should_drape,
@@ -118,7 +172,11 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     )
     landmarks = build_landmark_set(verts, joints=joints, faces=faces,
                                     gender=gender)
-    report = extract_catalog(verts, faces, joints=joints, gender=gender)
+    # Reuse the same landmark set inside extract_catalog so male/neutral
+    # fallback searches (max_back_z_y, max_girth_y — each ~25 mesh slices)
+    # don't run twice for nothing.
+    report = extract_catalog(verts, faces, joints=joints, gender=gender,
+                              landmarks=landmarks)
 
     body_verts, body_faces = (
         _load_obj(obj) if obj.is_file() else (verts, faces)
@@ -154,7 +212,14 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     except Exception:  # noqa: BLE001
         bent_verts = None  # pipeline runs without bent-arm if smplx unavailable
 
+    # Codes whose recipe is a LandmarkChord but anatomically reads as a
+    # left↔right horizontal width — render as ruler bar so the value
+    # (still computed as 3D point-to-point distance) is shown with
+    # off-body geometry instead of a body-draped chord.
+    HORIZONTAL_RULER_LANDMARKCHORDS = {"B01", "I07", "I14", "J01", "L21"}
+
     polylines: dict[str, list[list[float]]] = {}
+    leaders: dict[str, list[list[list[float]]]] = {}
     polyline_pose: dict[str, str] = {}  # code -> "a_pose" | "bent_arm"
     for code, recipe in RECIPES.items():
         # Skip codes the extractor dropped (female-only on male fits,
@@ -175,6 +240,18 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         except Exception:  # noqa: BLE001 — recipe may fail on any figure.
             poly = None
         if poly is None or len(poly) < 2:
+            continue
+        is_horiz_chord = code in HORIZONTAL_RULER_LANDMARKCHORDS
+        if isinstance(recipe, (Height, LateralChord)) or is_horiz_chord:
+            # Ruler-style render: bar offset from body + dashed leaders
+            # pointing to the anatomical anchors. Skip drape/normal-offset
+            # since the bar lives in free space.
+            ruler_fn = (_vertical_ruler if isinstance(recipe, Height)
+                        else _horizontal_ruler)
+            bar, leads = ruler_fn(poly[0], poly[1], body_v)
+            polylines[code] = bar
+            leaders[code] = leads
+            polyline_pose[code] = "bent_arm" if use_bent else "a_pose"
             continue
         if should_drape(recipe):
             poly = drape_polyline_on_body(
@@ -213,6 +290,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         "extent": extent,
         "measurements": measurements,
         "polylines": polylines,
+        "leaders": leaders,
         "polyline_pose": polyline_pose,
     }
     try:

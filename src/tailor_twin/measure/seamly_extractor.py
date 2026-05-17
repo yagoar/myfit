@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .landmarks import build_landmark_set
+from .landmarks import LandmarkSet, build_landmark_set
 from .seamly_catalog import (
     FORMULAS,
     JUDGMENT_OR_STANDARD,
@@ -32,17 +32,19 @@ def extract_catalog(
     joints: np.ndarray | None = None,
     waist_y_override: float | None = None,
     gender: str = "female",
+    landmarks: LandmarkSet | None = None,
 ) -> CatalogReport:
-    if review_json is not None:
-        landmarks = build_landmark_set(
-            fitted_verts, review_json, joints=joints, faces=smplx_faces,
-            waist_y_override=waist_y_override, gender=gender,
-        )
-    else:
-        landmarks = build_landmark_set(
-            fitted_verts, joints=joints, faces=smplx_faces,
-            waist_y_override=waist_y_override, gender=gender,
-        )
+    if landmarks is None:
+        if review_json is not None:
+            landmarks = build_landmark_set(
+                fitted_verts, review_json, joints=joints, faces=smplx_faces,
+                waist_y_override=waist_y_override, gender=gender,
+            )
+        else:
+            landmarks = build_landmark_set(
+                fitted_verts, joints=joints, faces=smplx_faces,
+                waist_y_override=waist_y_override, gender=gender,
+            )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}
     gender_skip = gender_skipped_codes(gender)

@@ -76,7 +76,9 @@ let bodyMesh = null;
 let centroid = new THREE.Vector3(0, 1.0, 0);
 let radius = 2.5;
 let polylines = {};    // { code: [[x,y,z],...] }
+let leadersByCode = {};  // { code: [[[x,y,z],[x,y,z]], ...] }
 let polyObjects = {};  // { code: THREE.Line }
+let leaderObjects = {};  // { code: [Line2, ...] }
 let measurementMeta = [];
 let activeCam = 1;
 // Codes the user has toggled on. Persists across scan switches so a
@@ -185,6 +187,8 @@ function clearBody() {
   bodyMesh = null;
   Object.values(polyObjects).forEach((l) => scene.remove(l));
   polyObjects = {};
+  Object.values(leaderObjects).flat().forEach((l) => scene.remove(l));
+  leaderObjects = {};
 }
 
 const BODY_MATERIAL = new THREE.MeshPhysicalMaterial({
@@ -269,9 +273,28 @@ function makeLineMaterial() {
   return mat;
 }
 
+function makeLeaderMaterial() {
+  const mat = new LineMaterial({
+    color: 0xffd166,
+    linewidth: 1.5,           // pixels
+    transparent: true,
+    opacity: 0.55,
+    dashed: true,
+    dashScale: 1,
+    dashSize: 0.02,           // world units (line-distance space)
+    gapSize: 0.015,
+    depthTest: true,
+    worldUnits: false,
+  });
+  mat.resolution.copy(LINE_RESOLUTION);
+  return mat;
+}
+
 function buildPolylines() {
   Object.values(polyObjects).forEach((l) => scene.remove(l));
   polyObjects = {};
+  Object.values(leaderObjects).flat().forEach((l) => scene.remove(l));
+  leaderObjects = {};
   for (const [code, pts] of Object.entries(polylines)) {
     if (!pts || pts.length < 2) continue;
     const flat = [];
@@ -287,6 +310,23 @@ function buildPolylines() {
     scene.add(line);
     polyObjects[code] = line;
   }
+  for (const [code, segs] of Object.entries(leadersByCode)) {
+    if (!segs) continue;
+    const arr = [];
+    for (const seg of segs) {
+      if (!seg || seg.length < 2) continue;
+      const flat = [];
+      for (const [x, y, z] of seg) flat.push(x, y, z);
+      const geom = new LineGeometry();
+      geom.setPositions(flat);
+      const line = new Line2(geom, makeLeaderMaterial());
+      line.computeLineDistances();
+      line.visible = selectedCodes.has(code);
+      scene.add(line);
+      arr.push(line);
+    }
+    if (arr.length) leaderObjects[code] = arr;
+  }
 }
 
 function setPolylineVisible(code, visible) {
@@ -294,6 +334,8 @@ function setPolylineVisible(code, visible) {
   else selectedCodes.delete(code);
   const l = polyObjects[code];
   if (l) l.visible = visible;
+  const leads = leaderObjects[code];
+  if (leads) leads.forEach((x) => (x.visible = visible));
   applyPose(recomputeActivePose());
 }
 
@@ -440,6 +482,7 @@ async function loadScan(name) {
     }
     showBody(aPoseGroup, bentGroup);
     polylines = payload.polylines || {};
+    leadersByCode = payload.leaders || {};
     Object.assign(polylinePose, {});  // reset
     for (const k of Object.keys(polylinePose)) delete polylinePose[k];
     Object.assign(polylinePose, payload.polyline_pose || {});
@@ -471,6 +514,9 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
   LINE_RESOLUTION.set(host.clientWidth, host.clientHeight);
   Object.values(polyObjects).forEach((l) =>
+    l.material.resolution.copy(LINE_RESOLUTION),
+  );
+  Object.values(leaderObjects).flat().forEach((l) =>
     l.material.resolution.copy(LINE_RESOLUTION),
   );
 });

@@ -625,7 +625,12 @@ body.scan-page > .wrap {
     grid-template-columns: 1fr;
     height: auto;
   }
-  .viewer-sidebar { position: static; }
+  /* Promote sidebar children to grid items so we can put the canvas
+   * between the Source card and the (long) Measurements card. */
+  .viewer-sidebar { display: contents; }
+  .viewer-sidebar > .card:first-child { order: 1; }
+  .viewer-stage { order: 2; }
+  .measurements-card { order: 3; max-height: 55vh; }
   .canvas-shell { min-height: 560px; }
 }
 
