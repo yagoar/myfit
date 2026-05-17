@@ -421,19 +421,22 @@ MALE_FALLBACK_LANDMARKS: dict[str, dict] = {
     },
     # Seat plane for male / neutral. The female default (midpoint of
     # SMPL-X L_Hip / R_Hip joint Y) lands ~2.5cm below the seat curve
-    # on male meshes — the male femur-head joint sits lower relative
-    # to the buttock cap than on the female regression. Use max-girth
-    # in [crotch+2cm, waist-4cm] instead; on Oscar this picks the
-    # actual seat curve at Y=-0.291 vs the joint at -0.317. G09
-    # extracted = 101.26cm vs 101.27cm tape (essentially exact).
+    # on male meshes. Max-girth in the same window degenerates to the
+    # upper thigh on slim-hipped figures (Eric — narrow hips, full
+    # thighs => peak girth at -0.351 instead of the seat curve).
+    # Use the buttock-cap Y (max -Z = furthest backward protrusion)
+    # which is the actual anatomical landmark a hip tape sits on,
+    # regardless of hip / thigh ratio.
+    # Oscar: G09 = 101.31 vs 101.27 truth   (+0.04 %).
+    # Eric:  G09 = 95.82  vs 96.98 truth    (-1.19 %), and the ring
+    #        now sits on the seat curve instead of the thigh.
     "hip_level": {
-        "search": "max_girth_y",
+        "search": "max_back_z_y",
         "y_lower": "crotch_midpoint",
         "y_upper": "waist_string",
         "y_lower_offset": 0.02,
         "y_upper_offset": 0.04,
         "regions": ("torso", "left_leg", "right_leg"),
-        "x_ref": "waist_cf",
         "samples": 30,
     },
 }
@@ -1106,6 +1109,46 @@ def _scan_slices(lm, spec):
         yield float(y), loop
 
 
+def _search_extreme_z_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+    sign: int,
+) -> np.ndarray:
+    """Shared front/back-Z scan. ``sign=+1`` picks max Z (forward
+    protrusion), ``sign=-1`` picks min Z (backward protrusion)."""
+    x_band = spec.get("x_midline_band")
+    x_mid = (float(lm[spec["x_midline_ref"]][0])
+             if "x_midline_ref" in spec else 0.0)
+    best_y: float | None = None
+    best_score = -np.inf
+    best_loop: np.ndarray | None = None
+    for y, loop in _scan_slices(lm, spec):
+        pts = loop
+        if x_band is not None:
+            keep = np.abs(pts[:, 0] - x_mid) < float(x_band)
+            if not keep.any():
+                continue
+            pts = pts[keep]
+        score = float((pts[:, 2] * sign).max())  # sign flips min→max
+        if score > best_score:
+            best_score = score
+            best_y = y
+            best_loop = loop
+    if best_y is None or best_loop is None:
+        raise KeyError(f"{name!r}: no slices found")
+    centroid = best_loop.mean(axis=0)
+    return np.array([centroid[0], best_y, centroid[2]])
+
+
+def _search_max_back_z_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Y where the slice's back (min Z) protrusion is greatest. Mirror
+    of `_search_max_front_z_y`, used for `hip_level` on male / neutral
+    fits to anchor on the buttock cap regardless of thigh / hip ratio
+    (max-girth lands on the thigh for slim-hipped figures)."""
+    return _search_extreme_z_y(lm, name, spec, mask, sign=-1)
+
+
 def _search_max_front_z_y(
     lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
 ) -> np.ndarray:
@@ -1117,28 +1160,7 @@ def _search_max_front_z_y(
     restricts the max-Z search to slice points near the body midline
     so a wide hip flare can't outvote the belly.
     """
-    x_band = spec.get("x_midline_band")
-    x_mid = (float(lm[spec["x_midline_ref"]][0])
-             if "x_midline_ref" in spec else 0.0)
-    best_y: float | None = None
-    best_z = -np.inf
-    best_loop: np.ndarray | None = None
-    for y, loop in _scan_slices(lm, spec):
-        pts = loop
-        if x_band is not None:
-            keep = np.abs(pts[:, 0] - x_mid) < float(x_band)
-            if not keep.any():
-                continue
-            pts = pts[keep]
-        zmax = float(pts[:, 2].max())
-        if zmax > best_z:
-            best_z = zmax
-            best_y = y
-            best_loop = loop
-    if best_y is None or best_loop is None:
-        raise KeyError(f"max_front_z_y {name!r}: no slices found")
-    centroid = best_loop.mean(axis=0)
-    return np.array([centroid[0], best_y, centroid[2]])
+    return _search_extreme_z_y(lm, name, spec, mask, sign=+1)
 
 
 def _search_max_lateral_x_y(
@@ -1239,6 +1261,7 @@ DYNAMIC_SEARCHES: dict[str, Callable[
     "min_girth_y": _search_min_girth_y,
     "max_girth_y": _search_max_girth_y,
     "max_front_z_y": _search_max_front_z_y,
+    "max_back_z_y": _search_max_back_z_y,
     "max_lateral_x_y": _search_max_lateral_x_y,
     "underbust_crease": _search_underbust_crease,
 }
