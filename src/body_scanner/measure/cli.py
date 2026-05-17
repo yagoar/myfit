@@ -83,6 +83,20 @@ def main(argv: list[str] | None = None) -> int:
              "fall through as A-pose values, which are incorrect).",
     )
     p.add_argument(
+        "--waist-y", type=float, default=None,
+        help="World-frame Y (metres) of the detected waist-string elastic. "
+             "Overrides the SMPL-X anatomical waist Y for every waist-"
+             "anchored landmark (waist_cf, waist_cb, waist_side_left/right "
+             "and everything that derives from them). Source: "
+             "`scripts/run_scan.py` writes `<prefix>_waist_y.json`.",
+    )
+    p.add_argument(
+        "--waist-y-from", type=Path, default=None,
+        help="JSON file written by waist_string.detect_waist_y "
+             "(`{ \"y_m\": float, ... }`). Reads y_m; equivalent to "
+             "--waist-y but persists the detection metadata alongside.",
+    )
+    p.add_argument(
         "--bent-elbow-flex-deg", type=float, default=DEFAULT_ELBOW_FLEX_DEG,
         help=f"Elbow flex angle for the bent-arm override "
              f"(default {DEFAULT_ELBOW_FLEX_DEG}°).",
@@ -101,6 +115,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
 
+    # Resolve waist-Y override (CLI value > JSON file > none).
+    waist_y_override: float | None = args.waist_y
+    if waist_y_override is None and args.waist_y_from is not None:
+        from ..preprocess.waist_string import WaistStringDetection
+        waist_y_override = WaistStringDetection.from_json(args.waist_y_from).y_m
+    if waist_y_override is not None:
+        print(f"waist-string Y override: {waist_y_override:.4f} m")
+
     fit = np.load(args.fit_npz)
     verts = fit["smplx_vertices"].astype(np.float32)
     joints = (fit["smplx_joints"].astype(np.float32)
@@ -116,7 +138,8 @@ def main(argv: list[str] | None = None) -> int:
     run_seamly = args.seamly or args.both
 
     if run_named:
-        rep = extract(verts, faces, joints=joints)
+        rep = extract(verts, faces, joints=joints,
+                      waist_y_override=waist_y_override)
         print("=" * 52)
         print("merged.yaml (Aldrich + dpm) extractor")
         print("=" * 52)
@@ -128,7 +151,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  {k}: {reason}")
 
     if run_seamly:
-        cat = extract_catalog(verts, faces, joints=joints)
+        cat = extract_catalog(verts, faces, joints=joints,
+                              waist_y_override=waist_y_override)
         # Bent-arm override: L01/L02/L04 (and the L03 formula) need an
         # elbow-flexed mesh. Re-pose the SMPL-X body, recompute those
         # codes on the bent verts, then overwrite the A-pose values.
@@ -142,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 bent_landmarks = build_landmark_set(
                     pose.verts, joints=pose.joints, faces=faces,
+                    waist_y_override=waist_y_override,
                 )
                 for code in BENT_ARM_CODES:
                     try:

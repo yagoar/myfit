@@ -38,6 +38,10 @@ from body_scanner.preprocess.depth_filter import (
     filter_depth,
 )
 from body_scanner.preprocess.segment import Segmenter, available_backends
+from body_scanner.preprocess.waist_string import (
+    COLOR_PRESETS,
+    detect_waist_y,
+)
 from body_scanner.reconstruct.cleanup import cleanup_mesh
 from body_scanner.reconstruct.tsdf import (
     DEFAULT_SDF_TRUNC_M,
@@ -111,6 +115,9 @@ def run(
     num_betas: int,
     use_displacement: bool,
     smooth_d: bool,
+    waist_color: str | None,
+    waist_hsv_low: tuple[int, int, int] | None,
+    waist_hsv_high: tuple[int, int, int] | None,
 ) -> int:
     """Run the full pipeline; return process exit code."""
     out_prefix.parent.mkdir(parents=True, exist_ok=True)
@@ -120,6 +127,7 @@ def run(
     csv_path = out_prefix.with_name(out_prefix.name + "_measurements.csv")
     json_path = out_prefix.with_name(out_prefix.name + "_seamly_catalog.json")
     smis_path = out_prefix.with_name(out_prefix.name + ".smis")
+    waist_json = out_prefix.with_name(out_prefix.name + "_waist_y.json")
 
     # ---- 1. Stray → segmented/filtered frames → TSDF mesh.
     if not skip_fusion:
@@ -149,6 +157,27 @@ def run(
             print(f"ERROR: --skip-fusion but {scan_obj} not found")
             return 1
         print(f"[1-2/5] reuse {scan_obj}")
+
+    # ---- 2b. Waist-string colour detection (optional).
+    if waist_color is not None or (waist_hsv_low and waist_hsv_high):
+        label = waist_color if waist_color is not None else "custom"
+        print(f"[2b] waist-string detection (colour={label})")
+        try:
+            det = detect_waist_y(
+                load_capture(capture, decode_rgb=True),
+                color=waist_color or "red",
+                hsv_low=waist_hsv_low,
+                hsv_high=waist_hsv_high,
+                intrinsics_native_size=intrinsics_native_size,
+            )
+            det.to_json(waist_json)
+            print(f"  wrote {waist_json}  (y_m={det.y_m:.4f})")
+        except Exception as e:  # noqa: BLE001
+            print(f"  waist-string detection FAILED ({e}); "
+                  "measurements will use SMPL-X anatomical waist Y")
+            waist_json = None
+    else:
+        waist_json = None
 
     # ---- 3. SMPL-X fit.
     print(f"[3/5] SMPL-X fit (num_betas={num_betas})")
@@ -180,6 +209,8 @@ def run(
         "--save-smis", str(smis_path),
         "--save-obj", str(fit_obj),
     ]
+    if waist_json is not None and waist_json.is_file():
+        cmd.extend(["--waist-y-from", str(waist_json)])
     r = subprocess.run(cmd)
     if r.returncode != 0:
         print(f"  measure.cli failed (exit {r.returncode})")
@@ -251,7 +282,33 @@ def main() -> int:
     p.add_argument("--num-betas", type=int, default=300)
     p.add_argument("--use-displacement", action="store_true")
     p.add_argument("--smooth-d", action="store_true")
+    p.add_argument(
+        "--waist-color", default=None,
+        choices=sorted(COLOR_PRESETS),
+        help="Detect the natural-waist elastic by HSV colour preset and "
+             "override the SMPL-X anatomical waist Y in every waist-"
+             "anchored measurement. Pair the colour with a contrasting "
+             "elastic in the capture (red/cyan/green/magenta/yellow/...).")
+    p.add_argument(
+        "--waist-hsv-low", default=None,
+        help="Custom HSV lower bound (OpenCV: H 0-179, S/V 0-255). "
+             "Format 'h,s,v'. Overrides --waist-color when both are set.")
+    p.add_argument(
+        "--waist-hsv-high", default=None,
+        help="Custom HSV upper bound, same format as --waist-hsv-low.")
     args = p.parse_args()
+
+    def _parse_hsv(spec: str | None) -> tuple[int, int, int] | None:
+        if spec is None:
+            return None
+        parts = [int(x) for x in spec.split(",")]
+        if len(parts) != 3:
+            raise SystemExit(
+                f"--waist-hsv-*: expected 'h,s,v', got {spec!r}")
+        return (parts[0], parts[1], parts[2])
+
+    waist_hsv_low = _parse_hsv(args.waist_hsv_low)
+    waist_hsv_high = _parse_hsv(args.waist_hsv_high)
 
     native_size = None
     if args.intrinsics_native_w and args.intrinsics_native_h:
@@ -276,6 +333,9 @@ def main() -> int:
         num_betas=args.num_betas,
         use_displacement=args.use_displacement,
         smooth_d=args.smooth_d,
+        waist_color=args.waist_color,
+        waist_hsv_low=waist_hsv_low,
+        waist_hsv_high=waist_hsv_high,
     )
 
 

@@ -338,9 +338,35 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
 }
 
 
+WAIST_VID_LANDMARKS: frozenset[str] = frozenset({
+    "waist_cf",
+    "waist_cb",
+    "waist_side_left",
+    "waist_side_right",
+})
+# Names whose Y must follow the detected waist-string Y when override is
+# set. Compound landmarks that derive from these (waist_side_midpoint,
+# waist_string, waist_string-anchored snap_y_landmark / extend_to_y /
+# offset_y / body_at_xy entries) inherit the override automatically
+# because they call back through `__getitem__`.
+
+
 @dataclass(frozen=True)
 class LandmarkSet:
-    """Resolved 3D points for every named landmark on a specific mesh."""
+    """Resolved 3D points for every named landmark on a specific mesh.
+
+    `waist_y_override`: when set, overrides the Y coordinate of every
+    landmark in `WAIST_VID_LANDMARKS`. The X/Z columns stay at the
+    verified vertex IDs. Downstream landmarks (waist_string alias,
+    waist-anchored snap_y_landmark / extend_to_y / offset_y / body_at_xy)
+    inherit automatically.
+
+    Use this to plumb the detected waist-string Y (from
+    `body_scanner.preprocess.waist_string.detect_waist_y`) into the
+    measurement step so Aldrich #2, H05, J04, hip-level offsets, etc.
+    are anchored at the user's tied waist instead of SMPL-X's CAESAR-
+    learned anatomical waist.
+    """
 
     verts: np.ndarray  # (V, 3) fitted SMPL-X vertices
     vertex_ids: dict[str, int]  # leaf name -> vertex id
@@ -348,6 +374,7 @@ class LandmarkSet:
     faces: np.ndarray | None = None  # (F, 3) triangle indices (needed by
     # dynamic landmarks that call into recipe polylines, e.g. the SN→apex
     # ↔ G03 intersection used by H16)
+    waist_y_override: float | None = None  # world-frame Y from string detection
 
     def __getitem__(self, name: str) -> np.ndarray:
         """Resolve `landmarks.<leaf>`, `joint.<NAME>`, or bare `<leaf>` to
@@ -355,7 +382,19 @@ class LandmarkSet:
         if name.startswith("joint."):
             return self._joint(name.split(".", 1)[1])
         leaf = name.split(".", 1)[1] if name.startswith("landmarks.") else name
+        pt = self._resolve(leaf)
+        # Apply detected-waist-string Y override AT the end, after compound
+        # / dynamic resolution. Y-only — preserves the verified X/Z of
+        # waist_cf / waist_cb / waist_side_left / waist_side_right.
+        if (self.waist_y_override is not None
+                and leaf in WAIST_VID_LANDMARKS):
+            pt = pt.copy()
+            pt[1] = float(self.waist_y_override)
+        return pt
 
+    def _resolve(self, leaf: str) -> np.ndarray:
+        """Internal resolver — same dispatch chain as `__getitem__` minus
+        the waist-Y post-override (which is applied by the caller)."""
         if leaf in JOINT_OVERRIDES and self.joints is not None:
             return self._joint(JOINT_OVERRIDES[leaf])
 
@@ -431,17 +470,23 @@ def build_landmark_set(
     review_json: Path | str = DEFAULT_REVIEW_JSON,
     joints: np.ndarray | None = None,
     faces: np.ndarray | None = None,
+    waist_y_override: float | None = None,
 ) -> LandmarkSet:
     """Construct a LandmarkSet from a fitted SMPL-X mesh + verified IDs.
 
     `joints` is the (J, 3) array from a fit (e.g. fit['smplx_joints']);
     when supplied, it enables `joint.X` resolution and the JOINT_OVERRIDES
-    fallback (acromion -> L_Shoulder, etc.)."""
+    fallback (acromion -> L_Shoulder, etc.).
+
+    `waist_y_override` (world-frame Y, metres): replace the Y of every
+    landmark in `WAIST_VID_LANDMARKS`. Typical source: the detected
+    waist-string elastic Y from `body_scanner.preprocess.waist_string`."""
     return LandmarkSet(
         verts=fitted_verts,
         vertex_ids=load_vertex_ids(review_json),
         joints=joints,
         faces=faces,
+        waist_y_override=waist_y_override,
     )
 
 

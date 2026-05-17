@@ -51,6 +51,7 @@ def extract(
     review_json: Path | str | None = None,
     only: set[str] | None = None,
     joints: np.ndarray | None = None,
+    waist_y_override: float | None = None,
 ) -> ExtractionReport:
     """Run the extractor end-to-end.
 
@@ -62,9 +63,15 @@ def extract(
     """
     spec = yaml.safe_load(Path(yaml_path).read_text())
     if review_json is not None:
-        landmarks = build_landmark_set(fitted_verts, review_json, joints=joints)
+        landmarks = build_landmark_set(
+            fitted_verts, review_json, joints=joints,
+            waist_y_override=waist_y_override,
+        )
     else:
-        landmarks = build_landmark_set(fitted_verts, joints=joints)
+        landmarks = build_landmark_set(
+            fitted_verts, joints=joints,
+            waist_y_override=waist_y_override,
+        )
 
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}

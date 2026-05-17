@@ -25,14 +25,17 @@ def extract_catalog(
     smplx_faces: np.ndarray,
     review_json: str | Path | None = None,
     joints: np.ndarray | None = None,
+    waist_y_override: float | None = None,
 ) -> CatalogReport:
     if review_json is not None:
         landmarks = build_landmark_set(
             fitted_verts, review_json, joints=joints, faces=smplx_faces,
+            waist_y_override=waist_y_override,
         )
     else:
         landmarks = build_landmark_set(
             fitted_verts, joints=joints, faces=smplx_faces,
+            waist_y_override=waist_y_override,
         )
     values: dict[str, float] = {}
     skipped: dict[str, str] = {}
