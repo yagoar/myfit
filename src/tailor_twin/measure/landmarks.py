@@ -116,10 +116,10 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     # into the upper neck (−10%). +4cm is the sweet spot for the base of
     # the actual neck cylinder where a tape is normally placed.
     "neck_base_level": ("offset_y", ["front_neck_point", "0.04"]),
-    # ankle_high_level: ~3cm above the lateral malleolus, where the leg
-    # is narrowest (the "ankle high" tape-measure level, distinct from
-    # the ankle bone itself).
-    "ankle_high_level": ("offset_y", ["ankle_bone_lateral_left", "0.03"]),
+    # ankle_high_level: see DYNAMIC_LANDMARKS — min-girth search between
+    # ankle bone and knee. Previous fixed +0.03m offset failed on taller
+    # figures (carmen 174cm showed A11 +38% / M09 ankle_circ −11% drift
+    # vs height-scaled yaiza). Defining as a dynamic landmark below.
     # Synthetic plumb-line waypoints — X/Z from one landmark, Y from a
     # horizontal plane. Used by PolylineChord recipes (e.g. H01) so the
     # tape goes straight down from neck-front to the bust-level line,
@@ -134,8 +134,8 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
                                 ["shoulder_neck_left", "armfold_front_left"]),
     "fnp_at_highbust_y": ("snap_y_landmark",
                             ["front_neck_point", "armfold_front_left"]),
-    "waist_side_left_at_lowhip_y": ("snap_y_landmark",
-                                      ["waist_side_left", "low_hip_level"]),
+    "waist_side_left_at_hip_y": ("snap_y_landmark",
+                                      ["waist_side_left", "hip_level"]),
     "waist_side_left_at_floor": ("snap_y_landmark",
                                    ["waist_side_left", "floor_anchor"]),
     "waist_side_left_at_highhip_y": ("snap_y_landmark",
@@ -190,14 +190,19 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
                                       ["bust_apex_left", "lowbust_level"]),
     "bust_apex_left_at_waist_y": ("snap_y_landmark",
                                     ["bust_apex_left", "waist_string"]),
-    # high_hip_level: rule per dpm pants_1 = 4-5" below waist (~11cm). Use a
-    # fixed mid-value here; refine when scan calibration validates.
-    # Stored as point with y = waist_cf.y - 0.11; x/z unused as plane origin.
-    "high_hip_level": ("offset_y", ["waist_string", "-0.11"]),
-    # low_hip_level: dpm "widest girth below waist". For scaffolding we use
-    # 20cm below the waist as a placeholder horizontal level; the proper
-    # implementation searches for the maximum-girth slice in a Y range.
-    "low_hip_level": ("offset_y", ["waist_string", "-0.20"]),
+    # high_hip_level lives in DYNAMIC_LANDMARKS — anatomical search for
+    # the abdomen's max forward protrusion (Seamly A12 / G08).
+    # hip_level: midpoint of SMPL-X L_Hip and R_Hip joint Y. The joints
+    # are the femur-head rotation centres = greater trochanter region,
+    # CAESAR-regressed across betas so they scale with body shape and
+    # height automatically. On yaiza this lands G09 hip_circ at 92.95 cm
+    # vs 92.13 cm truth tape (+0.9 %) — beats the dpm crotch+7 cm rule
+    # (90.14 cm, −2.2 %) and the prior fixed waist−20 cm offset
+    # (90.68 cm, −1.6 %). Midpoint is symmetry-tolerant (L_Hip ≠ R_Hip
+    # by ~5 mm even at rest pose). X/Z of the joint are interior
+    # (rotation centre, ~5 cm inside the body); downstream consumers
+    # only use Y so the interior X/Z is irrelevant.
+    "hip_level": ("lerp_joint", ["L_Hip", "R_Hip", "0.5"]),
 }
 
 
@@ -212,6 +217,39 @@ DYNAMIC_LANDMARKS: dict[str, dict] = {
     # to floor level for plumb-line measurements that terminate at the
     # ground (e.g. M02 outseam).
     "floor_anchor": {"search": "min_y"},
+    # ankle_high_level: narrowest leg girth between ankle bone and knee.
+    # Replaces the prior fixed +0.03m offset (which drifted on figures
+    # with different leg proportions — A11 +38% / M09 -11% on carmen
+    # vs height-scaled yaiza). Search window is the lower 35% of the
+    # ankle→knee span starting 1.5cm above the malleolus (skips the
+    # bone widest point, stops before the calf belly).
+    "ankle_high_level": {
+        "search": "min_girth_y",
+        "y_lower": "ankle_bone_lateral_left",
+        "y_upper": "knee_back_left",
+        "regions": ("left_leg",),
+        "y_lower_offset": 0.015,
+        "y_upper_frac_of_span": 0.35,
+        "samples": 30,
+        "x_ref": "ankle_bone_lateral_left",
+    },
+    # high_hip_level: front abdomen most prominent (Seamly A12, G08).
+    # Search the Y window between the waist string and crotch for the
+    # slice with the largest max-Z among centre-line vertices. The
+    # midline X band (±0.05m around waist_cf.x) prevents wide hip
+    # flares from outvoting the belly.
+    "high_hip_level": {
+        "search": "max_front_z_y",
+        "y_lower": "crotch_midpoint",
+        "y_upper": "waist_string",
+        "y_lower_offset": 0.02,
+        "y_upper_offset": 0.04,
+        "regions": ("torso",),
+        "x_midline_ref": "waist_cf",
+        "x_midline_band": 0.05,
+        "samples": 30,
+    },
+    # (hip_level moved back to COMPOUND_LANDMARKS — see crotch+0.07 entry.)
     # Waist front body point at the bust apex X — used as the endpoint
     # of J04 (bust apex to waist at apex X on the G07 line).
     "waist_front_at_apex_x_left": {
@@ -858,6 +896,192 @@ def _search_intersect_line_with_recipe(
     return sub[int(np.argmin(d))]
 
 
+def _search_min_girth_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Y of the narrowest convex-hull slice in a vertical window.
+
+    Scans `samples` horizontal slices between `y_lower` and `y_upper`
+    (optionally offset / fractionally clipped), restricted to vertices
+    in `regions` (e.g. ("left_leg",) so the slice tube is just one leg).
+    Picks the Y whose slice has the smallest convex-hull perimeter.
+
+    Returns a point at that Y, with X/Z taken from `x_ref` if given,
+    else the loop centroid. Used by `ankle_high_level` to find the
+    "high ankle" — narrowest point above the malleolus, distinct from
+    the ankle bone itself.
+
+    Spec keys (only `y_lower` / `y_upper` required):
+      y_lower, y_upper     — landmarks defining the Y window.
+      regions              — region names (see regions.REGIONS).
+      y_lower_offset       — metres to add to y_lower (clears the malleolus
+                             bulge for ankle_high; default 0).
+      y_upper_offset       — metres to subtract from y_upper (default 0).
+      y_upper_frac_of_span — alternative to y_upper_offset: clip the
+                             upper Y to y_lower + frac * (y_upper - y_lower).
+                             Lets us scan the lower N% of the limb only.
+      samples              — number of Y slices to evaluate (default 25).
+      x_ref                — landmark whose X/Z is copied into the result
+                             (and used to disambiguate when multiple loops
+                             survive — e.g. both legs in a torso slice).
+    """
+    from .mesh_ops import (
+        _build_loops, _convex_hull_perimeter, _loop_xz,
+        _pick_loop_near_point, slice_mesh,
+    )
+    from .regions import region_vertex_mask
+
+    if lm.faces is None:
+        raise KeyError(f"min_girth_y {name!r}: faces required")
+
+    y_lo = float(lm[spec["y_lower"]][1])
+    y_hi = float(lm[spec["y_upper"]][1])
+    span = y_hi - y_lo
+    y_start = y_lo + float(spec.get("y_lower_offset", 0.0))
+    if "y_upper_frac_of_span" in spec:
+        y_end = y_lo + float(spec["y_upper_frac_of_span"]) * span
+    else:
+        y_end = y_hi - float(spec.get("y_upper_offset", 0.0))
+    if y_start >= y_end:
+        raise KeyError(f"min_girth_y {name!r}: empty Y range "
+                       f"[{y_start:.3f}, {y_end:.3f}]")
+
+    samples = int(spec.get("samples", 25))
+    regions = tuple(spec.get("regions", ()))
+    region_mask = region_vertex_mask(regions) if regions else None
+
+    x_ref_pt = lm[spec["x_ref"]] if "x_ref" in spec else None
+    y_axis = np.array([0.0, 1.0, 0.0])
+
+    best_y: float | None = None
+    best_girth = np.inf
+    best_centroid: np.ndarray | None = None
+    for y in np.linspace(y_start, y_end, samples):
+        origin = np.array([0.0, float(y), 0.0])
+        segs = slice_mesh(lm.verts, lm.faces, origin, y_axis,
+                          vertex_mask=region_mask)
+        loops = _build_loops(segs)
+        if not loops:
+            continue
+        loop = (_pick_loop_near_point(loops, x_ref_pt)
+                if x_ref_pt is not None else loops[0])
+        if loop is None or len(loop) < 3:
+            continue
+        xy = _loop_xz(loop, y_axis)
+        g = float(_convex_hull_perimeter(xy))
+        if g < best_girth:
+            best_girth = g
+            best_y = float(y)
+            best_centroid = loop.mean(axis=0)
+    if best_y is None:
+        raise KeyError(f"min_girth_y {name!r}: no slices found in window")
+
+    if x_ref_pt is not None:
+        return np.array([x_ref_pt[0], best_y, x_ref_pt[2]])
+    assert best_centroid is not None
+    return np.array([best_centroid[0], best_y, best_centroid[2]])
+
+
+def _scan_slices(lm, spec):
+    """Iterate Y-plane slice loops for hip-style anatomical searches.
+
+    Yields (y, loop) for each Y between `y_lower` and `y_upper`
+    landmarks (with optional offsets / fractional clip), restricted to
+    `regions`. Picks the torso loop when `torso` is among the regions
+    so the buttock + abdomen surface comes through in one loop.
+    """
+    from .mesh_ops import (_build_loops, _pick_largest_loop,
+                            _pick_torso_loop, slice_mesh)
+    from .regions import region_vertex_mask
+
+    if lm.faces is None:
+        raise KeyError("hip search: faces required")
+    y_lo = float(lm[spec["y_lower"]][1])
+    y_hi = float(lm[spec["y_upper"]][1])
+    y_start = y_lo + float(spec.get("y_lower_offset", 0.0))
+    y_end = y_hi - float(spec.get("y_upper_offset", 0.0))
+    if y_start >= y_end:
+        raise KeyError(f"hip search: empty Y range "
+                       f"[{y_start:.3f}, {y_end:.3f}]")
+    samples = int(spec.get("samples", 25))
+    regions = tuple(spec.get("regions", ("torso",)))
+    region_mask = region_vertex_mask(regions) if regions else None
+    y_axis = np.array([0.0, 1.0, 0.0])
+    pick_torso = "torso" in regions
+    for y in np.linspace(y_start, y_end, samples):
+        origin = np.array([0.0, float(y), 0.0])
+        segs = slice_mesh(lm.verts, lm.faces, origin, y_axis,
+                          vertex_mask=region_mask)
+        loops = _build_loops(segs)
+        if not loops:
+            continue
+        loop = _pick_torso_loop(loops) if pick_torso else _pick_largest_loop(loops)
+        if loop is None or len(loop) < 3:
+            continue
+        yield float(y), loop
+
+
+def _search_max_front_z_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Y where the slice's front (max Z) protrusion is greatest.
+
+    Used for `high_hip_level` per the Seamly definition: "Highhip
+    level, where front abdomen is most prominent" (G08 / A12). Optional
+    `x_midline_band` (with `x_midline_ref` defaulting to centre-X = 0)
+    restricts the max-Z search to slice points near the body midline
+    so a wide hip flare can't outvote the belly.
+    """
+    x_band = spec.get("x_midline_band")
+    x_mid = (float(lm[spec["x_midline_ref"]][0])
+             if "x_midline_ref" in spec else 0.0)
+    best_y: float | None = None
+    best_z = -np.inf
+    best_loop: np.ndarray | None = None
+    for y, loop in _scan_slices(lm, spec):
+        pts = loop
+        if x_band is not None:
+            keep = np.abs(pts[:, 0] - x_mid) < float(x_band)
+            if not keep.any():
+                continue
+            pts = pts[keep]
+        zmax = float(pts[:, 2].max())
+        if zmax > best_z:
+            best_z = zmax
+            best_y = y
+            best_loop = loop
+    if best_y is None or best_loop is None:
+        raise KeyError(f"max_front_z_y {name!r}: no slices found")
+    centroid = best_loop.mean(axis=0)
+    return np.array([centroid[0], best_y, centroid[2]])
+
+
+def _search_max_lateral_x_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Y where the slice's lateral (|X|) extent is largest.
+
+    Used for `hip_level` per the Seamly definition: "Hip where Hip
+    protrusion is greatest" (G09, old_name `hips_excluding_protruding_abdomen`).
+    Includes the leg regions in the slice mask so the lateral cap at
+    the trochanter / seat is included (same convention as G09's
+    PlanarGirth regions tuple).
+    """
+    best_y: float | None = None
+    best_w = -np.inf
+    best_loop: np.ndarray | None = None
+    for y, loop in _scan_slices(lm, spec):
+        w = float(loop[:, 0].max() - loop[:, 0].min())
+        if w > best_w:
+            best_w = w
+            best_y = y
+            best_loop = loop
+    if best_y is None or best_loop is None:
+        raise KeyError(f"max_lateral_x_y {name!r}: no slices found")
+    centroid = best_loop.mean(axis=0)
+    return np.array([centroid[0], best_y, centroid[2]])
+
+
 def _search_underbust_crease(
     lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
 ) -> np.ndarray:
@@ -927,5 +1151,8 @@ DYNAMIC_SEARCHES: dict[str, Callable[
     "max_y": _search_max_y,
     "body_at_xy": _search_body_at_xy,
     "intersect_line_with_recipe": _search_intersect_line_with_recipe,
+    "min_girth_y": _search_min_girth_y,
+    "max_front_z_y": _search_max_front_z_y,
+    "max_lateral_x_y": _search_max_lateral_x_y,
     "underbust_crease": _search_underbust_crease,
 }

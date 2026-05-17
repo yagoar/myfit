@@ -76,7 +76,7 @@
 #                               (height-dependent — 4" if short, 4.5" if
 #                               medium, 5" if tall; pants_1 transcript.txt
 #                               :L161-164).
-#   low_hip_level               horizontal plane at the widest girth below the
+#   hip_level                   horizontal plane at the widest girth below the
 #                               waist, with two exceptions: if the widest girth
 #                               below the waist is at the high hip level or at
 #                               the crotch level, the dpm rule is to use a
@@ -1582,7 +1582,7 @@ measurements:
       pose: measurement_default
       side: right
       description: |
-        Vertical drop from waist_side_right to low_hip_level. low_hip
+        Vertical drop from waist_side_right to hip_level. hip_level
         is the widest girth below the waist UNLESS the widest girth
         is at high_hip_level or at crotch_level, in which case the
         rule is to use a plane 2.75 inches (~7 cm) above crotch_level

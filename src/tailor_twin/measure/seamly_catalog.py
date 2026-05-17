@@ -128,7 +128,7 @@ RECIPES = {
     "A02": Height("c7"),
     "A04": Height("underarm_left"),
     "A05": Height("waist_side_left"),
-    "A06": Height("low_hip_level"),
+    "A06": Height("hip_level"),
     "A08": Height("mid_knee_level"),
     "A10": Height("ankle_high_level"),  # height to the narrowest-leg point above the malleolus approx for v1
     "A11": Height("ankle_bone_lateral_left"),
@@ -146,7 +146,7 @@ RECIPES = {
     "B02": LateralChord("bust_level"),
     "B03": LateralChord("waist_string"),
     # Hip is below pelvis joint -> most verts are leg-tagged. Include legs.
-    "B04": LateralChord("low_hip_level",
+    "B04": LateralChord("hip_level",
                         regions=("torso", "left_leg", "right_leg")),
 
     # ------------------------------------------------------------------
@@ -184,7 +184,7 @@ RECIPES = {
     # G06 rib_circ removed — user dropped from spec (too hard to measure without touch)
     "G07": PlanarGirth("waist_string"),
     "G08": PlanarGirth("high_hip_level"),
-    "G09": PlanarGirth("low_hip_level",
+    "G09": PlanarGirth("hip_level",
                        regions=("torso", "left_leg", "right_leg")),
 
     # G10 neck_arc_f: surface geodesic from SN_L through FNP to SN_R.
@@ -197,7 +197,7 @@ RECIPES = {
     "G13": PlanarArc("lowbust_level", "waist_side_left", "waist_side_right", "front"),
     "G15": PlanarArc("waist_string", "waist_side_left", "waist_side_right", "front"),
     "G16": PlanarArc("high_hip_level", "waist_side_left", "waist_side_right", "front"),
-    "G17": PlanarArc("low_hip_level", "waist_side_left", "waist_side_right",
+    "G17": PlanarArc("hip_level", "waist_side_left", "waist_side_right",
                      "front",
                      regions=("torso", "left_leg", "right_leg")),
 
@@ -300,7 +300,7 @@ RECIPES = {
                          side="back"),
     # H29 …_scapula removed — user dropped (scapula location unknown)
     "H30": Geodesic(("waist_cf", "high_hip_level")),
-    "H31": Geodesic(("waist_cf", "low_hip_level")),
+    "H31": Geodesic(("waist_cf", "hip_level")),
     # H32 waist_to_highhip_side: down the side seam (waist_side X/Z) to
     # G08 (high_hip Y) — straight plumb chord on the side.
     # H32 waist_to_highhip_side: surface geodesic down the side seam
@@ -312,11 +312,11 @@ RECIPES = {
     "H33": SurfacePlumb("waist_cb", "high_hip_level", side="back"),
     # H34 waist_to_hip_b: vertical strip on back at waist_cb's X down
     # to G09 (low_hip) Y.
-    "H34": SurfacePlumb("waist_cb", "low_hip_level", side="back"),
+    "H34": SurfacePlumb("waist_cb", "hip_level", side="back"),
     # H35 waist_to_hip_side: surface geodesic down the side seam from
     # waist_side to G09 (low_hip Y at waist_side X/Z). Same contouring
     # convention as M02's waist→hip upper segment.
-    "H35": Geodesic(("waist_side_left", "waist_side_left_at_lowhip_y")),
+    "H35": Geodesic(("waist_side_left", "waist_side_left_at_hip_y")),
     # H37 shoulder_slope_neck_side_height: vertical Y distance from
     # acromion up to SN_L's Y plane (perpendicular-to-floor drop).
     "H37": VerticalDrop("acromion_left", "shoulder_neck_left"),
@@ -501,7 +501,7 @@ RECIPES = {
     # from that body point down to floor Y. Captures the waist→hip
     # curve as a real geodesic instead of a chord.
     "M02": GeodesicThenDrop(
-        waypoints=("waist_side_left", "waist_side_left_at_lowhip_y"),
+        waypoints=("waist_side_left", "waist_side_left_at_hip_y"),
         target_y_landmark="floor_anchor",
     ),
     # Thigh at crotch sits exactly at leg/torso boundary; include torso so
