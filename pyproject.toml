@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "body-scanner"
-version = "0.0.1"
-description = "Personal LiDAR-based body scanner for sewing pattern drafting (SMPL-X fit -> measurements -> blocks)."
+name = "tailor-twin"
+version = "0.1.0"
+description = "TailorTwin — personal LiDAR 3D body scan → measurements → sewing patterns (SMPL-X fit, Aldrich + dpm catalogs)."
 readme = "README.md"
 # Pinned to 3.12 because Open3D 0.19 (latest as of 2026-05) ships wheels only
 # up to 3.12. Revisit when Open3D supports 3.13+.
@@ -32,14 +32,17 @@ dependencies = [
 
 [tool.hatch.build]
 include = [
-  "src/body_scanner/**/*.py",
-  "src/body_scanner/**/*.html",
-  "src/body_scanner/**/*.css",
-  "src/body_scanner/**/*.js",
-  "src/body_scanner/**/*.svg",
-  "src/body_scanner/**/*.yaml",
-  "src/body_scanner/**/*.json",
+  "src/tailor_twin/**/*.py",
+  "src/tailor_twin/**/*.html",
+  "src/tailor_twin/**/*.css",
+  "src/tailor_twin/**/*.js",
+  "src/tailor_twin/**/*.svg",
+  "src/tailor_twin/**/*.yaml",
+  "src/tailor_twin/**/*.json",
 ]
+
+[project.scripts]
+tailor-twin = "tailor_twin.cli:app"
 
 [project.optional-dependencies]
 dev = [
@@ -48,7 +51,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/body_scanner"]
+packages = ["src/tailor_twin"]
 
 [tool.ruff]
 line-length = 100

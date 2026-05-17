@@ -31,7 +31,7 @@ page (book p.13) referenced for "standard measurements" is captured in a
 separate pass.
 
 These notes are the human-readable trail behind every entry under
-`src/body_scanner/measure/definitions/merged.yaml` that has a
+`src/tailor_twin/measure/definitions/merged.yaml` that has a
 `references/aldrich_full.pdf p.178` or `p.179` citation. Per GUARDRAILS
 section 1.3, Aldrich measurement definitions are FORBIDDEN-from-AI-memory
 territory: the entries in `merged.yaml` are transcribed from this source

@@ -2,7 +2,7 @@
 
 Reference for picking the right primitive when wiring a new Seamly
 code into `seamly_catalog.py::RECIPES`. All primitives live in
-`src/body_scanner/measure/primitives.py`. Every recipe is a frozen
+`src/tailor_twin/measure/primitives.py`. Every recipe is a frozen
 dataclass with a `compute(verts, faces, landmarks) -> float` returning
 centimetres.
 

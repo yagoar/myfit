@@ -60,8 +60,8 @@ SMPL-X has 10475 vertices. AI often produces vertex IDs that are plausible-sound
 
 Workflow:
 
-1. AI proposes vertex IDs algorithmically (e.g. `scripts/propose_smplx_landmarks.py` from joint positions + geometric filters)
-2. User opens the T-posed SMPL-X mesh in Blender (SMPL-X addon, v1.1 model) and runs `scripts/blender_landmark_review.py` — N-panel UI selects each proposed vertex; user confirms, corrects, or skips
+1. AI proposes vertex IDs algorithmically (one-off Open3D / Blender helpers — see git history pre-TailorTwin rename for `scripts/propose_smplx_landmarks.py` and `scripts/blender_landmark_review.py`)
+2. User opens the T-posed SMPL-X mesh in Blender (SMPL-X addon, v1.1 model), selects each proposed vertex via the N-panel UI, and confirms, corrects, or skips
 3. Right-side landmarks auto-mirrored from verified left-side picks (X→−X nearest-vertex)
 4. Results saved to `references/smplx_landmark_review.json` (audit trail with per-landmark status: confirmed / corrected / mirrored_from_X / skipped)
 5. Verified IDs flow into `references/smplx_vertex_landmarks.md` (Verified column)
@@ -88,7 +88,7 @@ SMPL-X fitting has many published implementations, each with subtly different co
 
 ## 5. Measurement Definition Guardrail
 
-Every measurement entry in `src/body_scanner/measure/definitions/merged.yaml` must have a `source` field. No exceptions.
+Every measurement entry in `src/tailor_twin/measure/definitions/merged.yaml` must have a `source` field. No exceptions.
 
 If an entry lacks a source, do one of:
 

@@ -1,8 +1,8 @@
-# Personal LiDAR Body Scanner for Pattern Drafting
+# TailorTwin — Spec
 
-A personal project to capture the user's body with an iPhone Pro / iPad Pro LiDAR sensor and extract the measurements needed to draft sewing blocks (bodice, skirt, sleeve, trouser) without needing another person to take tape measurements. Supports the Aldrich and dresspatternmaking.com measurement systems.
+A personal project to capture the user's body with an iPhone Pro / iPad Pro LiDAR sensor and extract the measurements needed to draft sewing blocks (bodice, skirt, sleeve, trouser) without needing another person to take tape measurements. Supports the Aldrich (5th ed.) and dresspatternmaking.com measurement systems.
 
-This document is the authoritative project spec. It should live at the root of the repository. The prompt that bootstraps work on the repository is in `PROMPT.md`.
+This document is the authoritative project spec. The repository ships a Typer console script `tailor-twin` (`pip install -e .`) and a localhost Flask GUI at port 8060.
 
 ## 1. Goals
 
@@ -10,8 +10,8 @@ This document is the authoritative project spec. It should live at the root of t
 - Reconstruct a clean 3D mesh of the body
 - Fit SMPL-X+D (parametric body model with per-vertex displacements) to the scan
 - Place constructional lines (CF, CB, side seam, bust line, waist line, etc.) on the mesh
-- Extract ~45 measurements covering both the Aldrich system and the dresspatternmaking.com bodice list
-- Output a populated worksheet in the dresspatternmaking format and an Aldrich-compatible individual measurement table
+- Extract 160+ measurements covering both the Aldrich system and the dresspatternmaking.com bodice list (Seamly catalog codes)
+- Output a populated SeamlyMe `.smis` file and Aldrich- / dpm-filtered CSVs
 - Stretch goal: auto-generate Aldrich bodice/skirt/sleeve blocks as SVG
 
 ## 2. Non-Goals
@@ -50,7 +50,7 @@ These must be in the repo under `references/` before Phase 6. The PDFs are full 
 - `references/aldrich_full.pdf` — Aldrich *Metric Pattern Cutting for Women's Wear*, full book. Canonical source for the Aldrich measurement definitions (p.178-179 figure-measurement instructions), the standard size chart (p.13), and the drafting formulas for Phase 9 (Chapter 1).
 - `references/dpm_bodice.pdf` — dresspatternmaking.com bodice block instructions (2025 edition). Canonical source for the dpm bodice measurement worksheet and Upper Bust contoured-path definition.
 - `references/dpm_pants.pdf` — dresspatternmaking.com pants block instructions (2025 edition). Canonical source for trouser-related measurements (used in later phases if pants block is in scope).
-- `references/dpm_videos/<topic>/` — per-topic folders produced by `scripts/ingest_video.sh`, containing `transcript.txt`, `transcript.srt`, and periodic `frame_*.jpg` extracted via whisper.cpp + ffmpeg. Citable as `references/dpm_videos/<topic>/transcript.srt:<timestamp>` or `frame_NNNNNN.jpg`. Audio and source videos are gitignored (regenerable via yt-dlp).
+- `references/dpm_videos/<topic>/` — per-topic folders containing `transcript.txt`, `transcript.srt`, and periodic `frame_*.jpg` extracted via whisper.cpp + ffmpeg (the `scripts/ingest_video.sh` helper that produced them was removed during the TailorTwin rename; the artefacts remain). Citable as `references/dpm_videos/<topic>/transcript.srt:<timestamp>` or `frame_NNNNNN.jpg`. Audio and source videos are gitignored (regenerable via yt-dlp).
 
   Folders hold two kinds of content from the same dpm series, kept under a single root for simplicity:
   - **Measurement-taking** videos (e.g. `bodice_measurements/`) — primary Phase 6 source for measurement definitions.
@@ -95,12 +95,11 @@ Local only. No cloud. Replace Stray Scanner with a custom iOS app in optional Ph
 ## 8. Repository Layout
 
 ```
-body-scanner/
+tailor-twin/
   README.md
-  PROMPT.md                   # the kickoff prompt
   SPEC.md                     # this file
-  GUARDRAILS.md               # extracted Section 12 (AI guardrails)
-  pyproject.toml
+  GUARDRAILS.md               # AI-generation rules
+  pyproject.toml              # [project.scripts] tailor-twin = …
   .gitignore
   references/                 # source materials (see Section 5)
   data/
@@ -108,49 +107,58 @@ body-scanner/
     vposer/                   # gitignored
     captures/                 # gitignored
     results/                  # gitignored
-  src/body_scanner/
-    io/
-      stray_loader.py
-      custom_loader.py        # Phase 10
+  src/tailor_twin/
+    cli.py                    # Typer console script entry
+    scan.py                   # end-to-end pipeline (capture → measurements)
+    preflight.py              # capture sanity-check
+    io/stray_loader.py
     preprocess/
-      segment.py
       depth_filter.py
+      segment.py
+      waist_string.py         # HSV elastic detector
     reconstruct/
       tsdf.py
       cleanup.py
     fit/
-      smplx_fit.py
-      priors.py
-      landmarks.py
-    construct/
-      lines.py
-      apex.py
-      armhole.py
+      fit.py                  # SMPL-X+D mesh-to-mesh fitter
+      cli.py
     measure/
       definitions/
-        merged.yaml           # all ~45 measurements with sources
-      extractor.py            # planar slice, geodesic path, contoured path
-      normalize.py            # un-pose to canonical T-pose
-      validation.py
-    blocks/                   # Phase 9
-      aldrich_bodice.py
-      aldrich_skirt.py
-      aldrich_sleeve.py
-      svg_export.py
-    viz/
-      viewer.py
-      worksheet.py
-    storage/
-      db.py
-      export.py
-  cli/
-    process.py
-    compare.py
-    calibrate.py
-  ios/                        # Phase 10
-  scripts/
-    run_one.sh
+        merged.yaml           # Aldrich + dpm measurement definitions
+        aldrich_size_chart_p13.yaml
+      landmarks.py            # SMPL-X vertex landmarks + dynamic searches
+      primitives.py           # planar_slice, geodesic, plumb, hull, …
+      mesh_ops.py             # slice + loop selection helpers
+      seamly_catalog.py       # all 245 Seamly codes
+      recipes.py              # merged.yaml dispatch
+      extractor.py            # merged.yaml runner
+      seamly_extractor.py     # Seamly-catalog runner
+      bent_arm.py             # elbow re-pose
+      extract_bent_arm.py     # CLI wrapper
+      exports.py              # CSV / SMIS / OBJ writers
+      review_viewer.py        # legacy Dash review tool
+      viewer.py               # shared 3D plotly helpers
+      cli.py                  # `python -m tailor_twin.measure.cli`
+    gui/
+      app.py                  # Flask factory + routes
+      cli wiring via __init__:serve()
+      runner.py               # subprocess state machine
+      forms.py                # validate, build_cmd
+      config.py
+      viewer_data.py          # scan listing + polyline compute
+      templates/              # index.html, viewer.html
+      static/                 # styles.css, scan.js, viewer.js, favicon.svg
+  scripts/                    # dev utilities only
+    dump_recipe_table.py      # regenerates docs/catalog_coverage.md
+    export_seamlyme.py        # direct SMIS export from a fit npz
   tests/
+    test_gui_app.py
+    test_gui_forms.py
+    test_gui_viewer.py
+    test_yaiza_snapshot.py    # measurement regression gate
+  docs/
+    recipes.md
+    catalog_coverage.md       # auto-generated
 ```
 
 ## 9. Measurement Spec
@@ -441,24 +449,21 @@ Stop and verify when:
 | Aldrich seated body-rise differs from standing-scan derivation | Calibrate; document expected offset |
 | Bent-arm Aldrich measurements differ from T-pose mesh | Use SMPL-X posed model to virtually bend arm before measuring |
 
-## 14. First Concrete Tasks
+## 14. Bootstrap (historical — phase 0)
 
-1. Create the repo with the layout in Section 8
-2. Drop `SPEC.md` (this file) at the root
-3. Drop `GUARDRAILS.md` (extracted Section 12) at the root
-4. Drop `PROMPT.md` (the kickoff prompt) at the root
-5. Set up `pyproject.toml` with dependencies from Section 15
-6. Place the source materials in `references/` (Section 5)
-7. Place SMPL-X model files in `data/body_models/smplx/`
-8. Run Phase 0 verification: `import smplx; m = smplx.create("data/body_models", model_type="smplx", gender="female"); assert m.faces.shape == (20908, 3)`. Notes:
-   - `smplx.create()` joins `model_path` with `model_type` when `model_path` is a directory, so the path passed must be the **parent** of the `smplx/` subfolder (i.e. `data/body_models`, not `data/body_models/smplx`). The actual model files live in `data/body_models/smplx/`.
-   - The project is single-user, female-target, so the **FEMALE** gendered model is used throughout (better shape space than NEUTRAL — see Section 13 risks).
+Original bootstrap order, kept here for posterity:
+
+1. `pyproject.toml` set up; `pip install -e .` provides the `tailor-twin` CLI
+2. Source materials placed in `references/` (Section 5)
+3. SMPL-X model file in `data/body_models/smplx/SMPLX_FEMALE.npz` (single-user, female-target — see Section 13)
+4. Phase-0 sanity check: `import smplx; m = smplx.create("data/body_models", model_type="smplx", gender="female"); assert m.faces.shape == (20908, 3)`
+   - Note: `smplx.create()` joins `model_path` with `model_type` when given a directory, so pass the **parent** of the `smplx/` subfolder.
 
 ## 15. Dependencies
 
 ```toml
 [project]
-name = "body-scanner"
+name = "tailor-twin"
 # Pinned to 3.12 because Open3D 0.19 (latest as of 2026-05) ships wheels only
 # up to 3.12. Revisit when Open3D supports 3.13+.
 requires-python = ">=3.12,<3.13"

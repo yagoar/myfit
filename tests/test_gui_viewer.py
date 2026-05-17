@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from body_scanner.gui.app import create_app
-from body_scanner.gui.runner import Runner
-from body_scanner.gui.viewer_data import list_scans
+from tailor_twin.gui.app import create_app
+from tailor_twin.gui.runner import Runner
+from tailor_twin.gui.viewer_data import list_scans
 
 
 @pytest.fixture()

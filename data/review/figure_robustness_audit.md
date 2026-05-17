@@ -129,7 +129,7 @@ threshold.
 
 ## G. Bent-arm pose
 
-`body_scanner.measure.bent_arm`:
+`tailor_twin.measure.bent_arm`:
 - `DEFAULT_ELBOW_FLEX_DEG = 80°`
 - `DEFAULT_ELBOW_AXIS = "0,-1,0"` (L_Elbow local frame)
 - `DEFAULT_SHOULDER_FORWARD_DEG = 30°`
@@ -172,11 +172,11 @@ Sections D, E, G, H, I are robust enough to leave alone.
 
 ## How to test on a new figure
 
-1. Fit the new scan to SMPL-X (`body_scanner.fit.cli`).
+1. Fit the new scan to SMPL-X (`tailor_twin.fit.cli`).
 2. Run `scripts/dump_recipe_table.py` against the new fit (point it
    at the new `<name>_seamly_catalog.json`) — get a coverage table.
 3. Run the review viewer:
-   `python -m body_scanner.measure.review_viewer <fit.npz> --port 8051`
+   `python -m tailor_twin.measure.review_viewer <fit.npz> --port 8051`
    and step through the catalog visually.
 4. Flag drifts in `data/review/<name>_notes.json` via the viewer's
    "Add note" button.

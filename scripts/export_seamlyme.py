@@ -2,9 +2,9 @@
 """Emit a SeamlyMe .smis file from a values dict + merged.yaml mapping.
 
 Workflow context:
-  Phase 6-7 of the body-scanner pipeline produces a per-scan dictionary
+  Phase 6-7 of the tailor-twin pipeline produces a per-scan dictionary
   of measurement values keyed by the canonical names used in
-  src/body_scanner/measure/definitions/merged.yaml (e.g.
+  src/tailor_twin/measure/definitions/merged.yaml (e.g.
   ``dpm_bodice_bust: 92.4``). SeamlyMe expects its own naming scheme
   (``bust_circ`` etc.) defined by the reference template at
   ~/seamly2d/templates/all_measurements_template.smis.
@@ -47,7 +47,7 @@ from xml.sax.saxutils import escape as xml_escape
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-MERGED = ROOT / "src" / "body_scanner" / "measure" / "definitions" / "merged.yaml"
+MERGED = ROOT / "src" / "tailor_twin" / "measure" / "definitions" / "merged.yaml"
 TEMPLATE = Path.home() / "seamly2d" / "templates" / "all_measurements_template.smis"
 XSD = ROOT / "references" / "seamly" / "schema" / "individual_measurements_v0.3.4.xsd"
 
@@ -206,7 +206,7 @@ def main() -> int:
     if args.seamly_values:
         # Lazy import to avoid pulling smplx/torch into the export path when
         # the user only has a pre-computed {our_name: value} JSON.
-        from body_scanner.measure.seamly_catalog import CODE_TO_NAME
+        from tailor_twin.measure.seamly_catalog import CODE_TO_NAME
 
         raw_codes = json.loads(args.seamly_values.read_text())
         print(

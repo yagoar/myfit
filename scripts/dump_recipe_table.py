@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from body_scanner.measure.seamly_catalog import (
+from tailor_twin.measure.seamly_catalog import (
     CODE_TO_NAME,
     FORMULAS,
     JUDGMENT_OR_STANDARD,

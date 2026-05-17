@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><title>TailorTwin — 3D Viewer</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
+</head><body><div class="wrap viewer-wrap">
+
+<header>
+  <div class="brand">
+    <h1>Tailor<span class="amp">Twin</span></h1>
+  </div>
+  <nav class="tabs">
+    <a href="{{ url_for('index') }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Scan
+    </a>
+    <a href="{{ url_for('viewer') }}" class="active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      3D Viewer
+    </a>
+  </nav>
+  <div class="header-actions"></div>
+</header>
+
+<div class="viewer-layout">
+
+  <aside class="viewer-sidebar">
+
+    <div class="card">
+      <h2>Source</h2>
+      <div class="grid">
+        <label class="field-label" for="results-dir">Results folder</label>
+        <div class="row" style="display:flex; gap:6px; align-items:center;">
+          <input id="results-dir" type="text"
+                 value="{{ default_results }}" style="flex:1; min-width:0;">
+          <button type="button" id="dir-refresh" class="ghost icon"
+                  title="Reload scans from this folder" aria-label="Reload">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10
+                       M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+        </div>
+
+        <label class="field-label" for="scan-picker">Scan</label>
+        <select id="scan-picker"><option value="">— pick a scan —</option></select>
+      </div>
+      <div class="help" id="dir-status" style="margin-top:8px;">
+        Each scan is a <code>&lt;prefix&gt;_smplx_fit.npz</code> + matching
+        <code>_fit_body.obj</code> pair. Point this anywhere
+        <code>run_scan.py</code>'s <code>--out-prefix</code> wrote to.
+      </div>
+    </div>
+
+    <div class="card measurements-card">
+      <h2>Measurements <span id="meas-count" class="pill counter">0</span></h2>
+      <div class="meas-controls">
+        <input id="meas-filter" type="text" placeholder="Filter…">
+        <button type="button" id="meas-all" class="ghost">All</button>
+        <button type="button" id="meas-none" class="ghost">None</button>
+      </div>
+      <div id="meas-list" class="meas-list">
+        <div class="help">Pick a scan to load measurements.</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="viewer-stage">
+    <div class="canvas-shell">
+      <div id="canvas-host"></div>
+      <div class="cam-presets">
+        {% for n, label in [(1,'Front'),(2,'45° F'),(3,'Side'),(4,'45° B'),(5,'Back')] %}
+          <button type="button" class="cam-btn" data-cam="{{ n }}">
+            <kbd>{{ n }}</kbd> {{ label }}
+          </button>
+        {% endfor %}
+      </div>
+      <div class="hud" id="hud"></div>
+      <div id="loader" class="loader-overlay" hidden>
+        <div class="spinner"></div>
+        <div class="loader-label">Loading scan…</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+</div><!-- /wrap -->
+
+<script type="module" src="{{ url_for('static', filename='viewer.js') }}"></script>
+
+</body></html>

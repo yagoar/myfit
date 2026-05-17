@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from body_scanner.gui.app import create_app
-from body_scanner.gui.runner import Runner
+from tailor_twin.gui.app import create_app
+from tailor_twin.gui.runner import Runner
 
 
 @pytest.fixture()
@@ -25,7 +25,7 @@ def test_index_renders(client) -> None:
     r = client.get("/")
     assert r.status_code == 200
     body = r.get_data(as_text=True)
-    assert "MyFit" in body
+    assert "TailorTwin" in body
     assert 'id="form"' in body
     assert "favicon.svg" in body
     assert "styles.css" in body

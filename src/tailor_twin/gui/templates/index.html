@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><title>TailorTwin — Body Scan</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head><body class="scan-page"><div class="wrap scan-wrap">
+
+<header>
+  <div class="brand">
+    <h1>Tailor<span class="amp">Twin</span></h1>
+  </div>
+  <nav class="tabs">
+    <a href="{{ url_for('index') }}" class="active">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Scan
+    </a>
+    <a href="{{ url_for('viewer') }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      3D Viewer
+    </a>
+  </nav>
+  <div class="header-actions">
+    <button type="button" id="howto-btn" class="ghost">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round"><circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      How to scan
+    </button>
+  </div>
+</header>
+
+<form id="form" class="scan-form">
+  <div class="scan-grid">
+
+    <div class="card">
+      <h2>Capture</h2>
+      <div class="grid">
+        <label class="field-label" for="capture">Stray folder</label>
+        <input id="capture" name="capture" type="text" required
+               placeholder="{{ default_captures }}/<name>">
+
+        <label class="field-label" for="out_prefix">Output prefix</label>
+        <input id="out_prefix" name="out_prefix" type="text">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Person details</h2>
+      <div class="grid two">
+        <label class="field-label" for="person">Name</label>
+        <input id="person" name="person" type="text" required>
+
+        <label class="field-label" for="birthday">Birthday</label>
+        <input id="birthday" name="birthday" type="date">
+
+        <label class="field-label" for="scan_date">Scan date</label>
+        <input id="scan_date" name="scan_date" type="date" value="{{ today }}">
+
+        <label class="field-label" for="gender">Gender</label>
+        <select id="gender" name="gender">
+          {% for v, lbl, enabled in genders %}
+            <option value="{{ v }}"
+                    {% if not enabled %}disabled{% endif %}
+                    {% if enabled and loop.first %}selected{% endif %}>{{ lbl }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Waist band</h2>
+      <div class="grid">
+        <label class="field-label" for="color">Colour</label>
+        <div>
+          <div id="swatches" class="swatch-row" aria-hidden="true"></div>
+          <input id="color" name="color" type="hidden" value="none">
+          <div class="help">Optional. Elastic in this colour overrides
+            the SMPL-X anatomical waist Y.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Export</h2>
+      <div class="grid">
+        <label class="field-label" for="system">Pattern system</label>
+        <select id="system" name="system">
+          {% for v, lbl in systems %}<option value="{{ v }}">{{ lbl }}</option>{% endfor %}
+        </select>
+
+        <label class="field-label">Artifacts</label>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" name="csv" checked> CSV</label>
+          <label class="chip"><input type="checkbox" name="obj" checked> Fitted OBJ</label>
+          <label class="chip"><input type="checkbox" name="smis" checked> SMIS</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="scan-actions">
+    <button type="button" id="log-toggle" class="ghost" aria-expanded="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <span class="log-toggle-label">Show terminal</span>
+    </button>
+    <span class="actions-spacer"></span>
+    <button type="button" id="cancel-btn" disabled>Cancel</button>
+    <button type="submit" id="run-btn" class="primary">
+      <span class="btn-spinner" aria-hidden="true"></span>
+      <span class="btn-label">Run scan</span>
+    </button>
+  </div>
+
+  <div class="card log-card scan-log" id="log-panel" hidden>
+    <div class="log-head">
+      <span class="dots"><span></span><span></span><span></span></span>
+      <span class="title">run_scan.py</span>
+    </div>
+    <pre id="log" class="log"></pre>
+  </div>
+</form>
+
+<!-- How-to modal -->
+<div id="howto" class="modal" hidden>
+  <div class="modal-backdrop"></div>
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h2>How to capture a good scan</h2>
+      <button type="button" id="howto-close" class="ghost icon" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <section>
+        <h3><span class="step">1</span> Prep the room &amp; outfit</h3>
+        <ul>
+          <li>Pick a uniformly lit room — diffuse daylight or a couple of soft lamps. Avoid hard shadows or direct sun stripes.</li>
+          <li>Wear tight, single-colour fitted layers: leggings + tank top, or a swimsuit. Loose fabric = wrong silhouette.</li>
+          <li>Tie a contrast-colour elastic at your natural waist. Cyan or red works best against skin/dark clothing. The GUI's <b>Waist band</b> picker must match.</li>
+          <li>Hair up so the neck and shoulders are visible.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3><span class="step">2</span> Set up the capture</h3>
+        <ul>
+          <li>Use <b>Stray Scanner</b> on an iPhone Pro / Pro Max (LiDAR required).</li>
+          <li>Enable depth + confidence recording in Stray's settings. Frame rate: 60 fps if available.</li>
+          <li>Open space: at least 2.5 m clear around you on all sides.</li>
+          <li>Have someone else hold the phone and walk around you — the operator's job is to keep the camera steady and the distance constant. Self-scanning with an outstretched arm also works but the radius wobbles more.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3><span class="step">3</span> Pose</h3>
+        <ul>
+          <li><b>A-pose</b>: arms relaxed away from the body at ~30°, palms forward, fingers gently splayed.</li>
+          <li>Feet hip-width apart, weight even, gaze straight ahead.</li>
+          <li>Breathe normally. Do not hollow the chest or suck in the waist.</li>
+          <li>Stand <b>still</b> for the entire sweep. Any sway shows up as fit error.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3><span class="step">4</span> Sweep</h3>
+        <ul>
+          <li>Phone height ~1 m. Camera tilted slightly up.</li>
+          <li>Walk a full 360° circle around the person, ~1.2-1.5 m away. Keep distance constant.</li>
+          <li>Take ~30-45 s per loop. Do <b>two</b> loops: one at hip height, one at chest height.</li>
+          <li>Cover every angle. Pay extra attention to armpits, between the legs, under the chin.</li>
+          <li>Stop the recording while still pointed at the subject — don't pan away last second.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3><span class="step">5</span> Transfer &amp; run</h3>
+        <ul>
+          <li>Export the Stray capture folder (rgb.mp4, depth/, confidence/, odometry.csv, camera_matrix.csv) into <code>data/captures/&lt;name&gt;/</code>.</li>
+          <li>Paste that path into <b>Stray folder</b>.</li>
+          <li>Pick the waist colour matching your elastic (or <i>none</i> to fall back to SMPL-X anatomical waist).</li>
+          <li>Pick the pattern system. Aldrich = the 5th-edition size chart; dpm = dresspatternmaking.com drafting; Both writes both CSVs.</li>
+          <li>Hit <b>Run scan</b>. First-time runs take ~3-6 min on Apple Silicon. Watch the log for chamfer ≤ 0.0008 and "extracted" counts.</li>
+        </ul>
+      </section>
+
+      <section class="callout">
+        <h3>Common failure modes</h3>
+        <ul>
+          <li><b>Loose clothing</b> → fit picks up fabric, not the body. Re-scan in tight layers.</li>
+          <li><b>Glossy / black materials</b> → LiDAR returns are weak. Add light or change top.</li>
+          <li><b>Single loop only</b> → upper-body fit suffers. Two loops at different heights matter.</li>
+          <li><b>Wrong elastic colour</b> → waist override fails silently and falls back to anatomical waist. Check the log.</li>
+          <li><b>Moving subject</b> → mesh shows ghosting. Stand still or shorten the sweep.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+
+</div><!-- /wrap -->
+
+<script>
+  window.MYFIT_CFG = {
+    today: {{ today | tojson }},
+    defaultResults: {{ default_results | tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='scan.js') }}"></script>
+
+</body></html>

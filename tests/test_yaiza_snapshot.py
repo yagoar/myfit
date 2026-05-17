@@ -27,7 +27,7 @@ def regen_csv(tmp_path_factory) -> Path:
         pytest.skip(f"baseline missing: {BASELINE_CSV}")
     out = tmp_path_factory.mktemp("yaiza") / "yaiza.csv"
     cmd = [
-        ".venv/bin/python", "-m", "body_scanner.measure.cli", str(FIT_NPZ),
+        ".venv/bin/python", "-m", "tailor_twin.measure.cli", str(FIT_NPZ),
         "--both", "--num-betas", "300", "--save-csv", str(out),
     ]
     subprocess.run(cmd, cwd=REPO_ROOT, check=True, capture_output=True)
@@ -57,13 +57,13 @@ def test_yaiza_csv_byte_identical(regen_csv: Path):
 
 def test_modules_importable():
     """Smoke-test: imports don't crash, surface obvious breakage."""
-    import body_scanner.measure.bent_arm  # noqa: F401
-    import body_scanner.measure.cli  # noqa: F401
-    import body_scanner.measure.exports  # noqa: F401
-    import body_scanner.measure.extractor  # noqa: F401
-    import body_scanner.measure.landmarks  # noqa: F401
-    import body_scanner.measure.primitives  # noqa: F401
-    import body_scanner.measure.recipes  # noqa: F401
-    import body_scanner.measure.regions  # noqa: F401
-    import body_scanner.measure.seamly_catalog  # noqa: F401
-    import body_scanner.measure.seamly_extractor  # noqa: F401
+    import tailor_twin.measure.bent_arm  # noqa: F401
+    import tailor_twin.measure.cli  # noqa: F401
+    import tailor_twin.measure.exports  # noqa: F401
+    import tailor_twin.measure.extractor  # noqa: F401
+    import tailor_twin.measure.landmarks  # noqa: F401
+    import tailor_twin.measure.primitives  # noqa: F401
+    import tailor_twin.measure.recipes  # noqa: F401
+    import tailor_twin.measure.regions  # noqa: F401
+    import tailor_twin.measure.seamly_catalog  # noqa: F401
+    import tailor_twin.measure.seamly_extractor  # noqa: F401

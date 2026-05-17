@@ -1,0 +1,1926 @@
+# Body measurement definitions for the tailor-twin pipeline.
+#
+# Authoritative schema: SPEC.md section 9. Every entry must carry a
+# `sources` list per GUARDRAILS section 5 (no source-less entries).
+#
+# Scope of this file (incremental — populated phase by phase):
+#   - Aldrich items 1-20 + 2a from book p.178-179            DONE
+#   - Aldrich size-chart standard values from book p.13      DONE
+#     (in sibling file aldrich_size_chart_p13.yaml)
+#   - dpm bodice items 1-32 from bodice_measurements + the
+#     drafting-video revisions in bodice_front               DONE
+#   - dpm bodice_back drafting-video revisions               DONE (no
+#     measurement-definition changes; bodice_back reaffirms that
+#     bodice_front is the canonical revision)
+#   - dpm sleeve body measurements from the sleeve drafting
+#     video                                                  DONE
+#   - dpm pants body measurements from pants_1               DONE
+#   - dpm pants_2 / pants_3 / pants_4 / pants_5 review for
+#     additional body measurements + revisions               DONE
+#     (added optional lower_thigh + intermediate_waist
+#      circumference; added curvy-figure tape caveat to low_hip)
+#
+# Anatomical landmark glossary (symbolic names — vertex IDs in SMPL-X
+# are resolved later in Phase 5 by visual verification in Blender, per
+# GUARDRAILS section 3; see references/smplx_vertex_landmarks.md):
+#
+# (Aldrich landmarks)
+#   c7                          7th cervical vertebra ("neck bone at centre back")
+#   front_neck_point            mid centre-front at the neckline base
+#                               (dpm's "hollow of the neck" / "centre front neck")
+#   front_collar_bone           suprasternal notch (jugular notch)
+#   shoulder_neck_left|right    corner where neck meets shoulder
+#                               (dpm's "high neck point" — where a necklace chain rests)
+#   acromion_left|right         outer end of the shoulder bone
+#                               (dpm's "shoulder point" / "shoulder tip" — the
+#                               indent at the shoulder joint visible when the arm
+#                               is raised)
+#   armscye_front_left|right    front intersection of armhole curve with torso
+#   armscye_back_left|right     back intersection of armhole curve with torso
+#   bust_apex_left|right        fullest point of each breast
+#   bust_apex_midpoint          midpoint of left+right bust apex
+#   waist_string                the natural-waist horizontal plane established
+#                               by the user-tied string (Aldrich p.178 item 2,
+#                               dpm bodice_measurements item 7).
+#   waist_cb / waist_cf         centre back / centre front at waist_string level
+#   waist_side_left|right       left/right side at waist_string level
+#   elbow_back_left|right       olecranon (back of elbow) when arm is bent
+#   wrist_ulnar_left|right      ulna styloid (pinky-side wristbone)
+#   ankle_bone_lateral_left|right  lateral malleolus
+#   crotch_lateral              lateral side of the crotch line, used for
+#                               the standing-scan body-rise approximation
+#   floor_cb                    floor point directly below waist_cb
+#
+# (dpm-additional landmarks)
+#   underarm_left|right         the corner of the armpit (the highest point
+#                               where arm flesh meets torso flesh when the arm
+#                               hangs at the side). dpm bodice_front
+#                               transcript.txt:L40-49 corrects bodice_measurements
+#                               by placing the upper-bust horizontal plane at
+#                               this level (NOT 2.5 cm below it as the older
+#                               video instructed).
+#   upper_bust_level            horizontal plane at underarm height (the dpm
+#                               "upper bust elastic" sits here after the revision)
+#   bust_level                  horizontal plane at bust_apex height (parallel
+#                               to the floor; dpm "bust elastic" sits here)
+#   bra_side_seam_left|right    the dpm front/back split landmark at upper-bust
+#                               level. Defined by a well-fitting bra side seam
+#                               or, lacking that, by a point 1.25-1.5 inches
+#                               (~3-4 cm) outboard from where the bra cup ends
+#                               at the underarm, toward the back. See
+#                               bodice_measurements transcript.txt:L100-143.
+#   front_shoulder_centre_left|right
+#                               midpoint of the front shoulder seam, between
+#                               shoulder_neck and acromion. Used by Aldrich #14.
+#   high_hip_level              horizontal plane 4-5 inches below the waist
+#                               (height-dependent — 4" if short, 4.5" if
+#                               medium, 5" if tall; pants_1 transcript.txt
+#                               :L161-164).
+#   low_hip_level               horizontal plane at the widest girth below the
+#                               waist, with two exceptions: if the widest girth
+#                               below the waist is at the high hip level or at
+#                               the crotch level, the dpm rule is to use a
+#                               plane 2.75 inches above the crotch level
+#                               instead (pants_1 transcript.txt:L169-179).
+#   crotch_level                horizontal plane at the crotch line — set by
+#                               the dpm "upper thigh elastic" tied around the
+#                               thigh at the crotch (pants_1:L181).
+#   mid_knee_level              horizontal plane through the middle of the knee
+#   ankle_level                 alias for landmarks.ankle_bone_lateral_*'s height
+#   thigh_at_crotch_left|right  lateral side of the thigh at the crotch level
+#   shoulder_tip_left|right     alias for acromion_left|right (dpm terminology)
+#   high_neck_point_left|right  alias for shoulder_neck_left|right (dpm terminology)
+#   center_front_neck           alias for front_neck_point (dpm terminology)
+#   center_back_neck            alias for c7 (dpm terminology)
+#   bicep_max_right             fullest point of the right biceps (Aldrich's
+#                               #9 measures here with arm bent)
+#
+# Pose references (also symbolic; exact joint angles fixed in Phase 6,
+# per SPEC.md section 16 open questions):
+#
+#   pose.measurement_default    canonical re-pose for most measurements
+#                               (likely "modified T" with arms slightly
+#                               lowered; TBD)
+#   pose.bent_arm_aldrich       hand-on-hip bent-arm pose for Aldrich items 9
+#                               (Top arm) and 20 (Sleeve length)
+#   pose.bent_arm_sleeve_dpm    arm bent at the elbow (free hand, no hip
+#                               placement) used by the dpm sleeve video for
+#                               sleeve length, shoulder-tip-to-elbow, and
+#                               elbow circumference
+#
+# Seamly2D / SeamlyMe cross-walk:
+#
+# Each measurement entry carries an optional `seamly_name:` field that
+# names the equivalent measurement in the SeamlyMe XML schema (see
+# ~/seamly2d/templates/all_measurements_template.smis, pm_system 998,
+# ~260 named slots). 60 of the 72 entries here map to a Seamly name;
+# 12 are `null` because Seamly has no direct equivalent (low_waist
+# below natural waist, derived bust-depth / armhole-depth variants,
+# sleeve cap height, intermediate-waist circumference, centre-back
+# waist-to-floor, and a few user-input / drafting choices). Where the
+# mapping is approximate the inline `# ...` comment beside
+# seamly_name explains the difference.
+#
+# Each mapped entry also carries a `seamly_code:` field (e.g. G04,
+# L01) — the Seamly measurement catalog code from A01-Q03. The code
+# maps to a diagram SVG: code G04 is in group G page 1 → Gp1.svg.
+# Full catalog in references/seamly/README.md; diagram SVGs in
+# references/seamly/diagrams/. Descriptions validated against
+# references/seamly/docs/all_measurements_with_descriptions.pdf.
+#
+# Pipeline workflow:
+#   1. Measurement extractor produces { our_name: value_cm }
+#   2. scripts/export_seamlyme.py joins that with the seamly_name
+#      mapping in this file and emits a SeamlyMe .smis file
+#   3. The .smis loads directly in SeamlyMe / Seamly2D
+#
+# Source-citation conventions:
+#   "references/aldrich_full.pdf p.NNN (PDF page MMM) ..."   — book pages
+#   "references/dpm_videos/<topic>/transcript.txt:LXX-YY"    — line range in
+#                                                              the txt
+#                                                              transcript
+#   "references/dpm_videos/<topic>/transcript.srt:HH:MM:SS"  — timestamp in
+#                                                              the srt
+#                                                              transcript
+#   "references/dpm_videos/<topic>/frame_NNNNNN.jpg"         — single frame
+#
+# Per SPEC.md section 5 the drafting-video revisions take precedence over the
+# measurement-taking video when the two disagree; such entries list the
+# drafting-video citation first under `sources`, populate `superseded_by`
+# with that citation, and explain the revision in `notes`.
+
+measurements:
+
+  # ------------------------------------------------------------------
+  # Aldrich items from book p.178-179 (5th edition).
+  # ------------------------------------------------------------------
+
+  - name: aldrich_bust
+    seamly_name: bust_circ
+    seamly_code: G04
+    aliases: [bust, bust_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_apex_midpoint
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 1 Bust"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 1"
+    notes: |
+      Aldrich text: "Measure the figure at the fullest point of the bust,
+      do not allow the tape to fall at the back."
+      Horizontal slice perpendicular to the body's vertical axis after
+      un-posing, through the midpoint of the left and right bust apex
+      landmarks. Convex-hull perimeter mimics a taut tape (a tape "falls
+      at the back" only if measured along the concave dip of the back;
+      the hull avoids that). Per Aldrich, this single measurement
+      determines the drafting size used as the size-chart lookup row.
+
+  - name: aldrich_waist
+    seamly_name: waist_circ
+    seamly_code: G07
+    aliases: [waist, natural_waist, waist_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.waist_string
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2 Waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 2"
+    notes: |
+      Aldrich text: "Take this measurement round the waist, make sure it
+      is comfortable." Aldrich also instructs the user to tie a string
+      firmly round the waist after measuring; that string defines the
+      reference horizon for items 13, 14, 16, 18. Implementation: the
+      "natural waist" must first be located (open question on the exact
+      rule — Aldrich does not define it geometrically; common practice
+      is the narrowest horizontal slice between ribcage and iliac crest).
+      Convex-hull perimeter as for the bust.
+
+  - name: aldrich_low_waist
+    seamly_name: null        # no direct Seamly equivalent (5cm below natural waist)
+    aliases: [low_waist]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.waist_string
+        offset:
+          along: -pose.measurement_default.vertical_axis
+          distance_cm: 5
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich/IMG_9599.jpg — 6th edition p.214 item 2a Low waist (5cm)"
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 2a Low waist (5th edition: 6cm)"
+    notes: |
+      6th edition (canonical): 5cm below the natural waistline.
+      Changed from 6cm in the 5th edition. Slice plane is at -5 cm
+      along the body-down direction from the waist string.
+
+  - name: aldrich_hips
+    seamly_name: hip_circ
+    seamly_code: G09
+    aliases: [hips, hip_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          search:
+            region: torso
+            range:
+              along: -pose.measurement_default.vertical_axis
+              from_origin: landmarks.waist_string
+              min_cm: 15
+              max_cm: 25
+            metric: maximum_horizontal_girth
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 3 Hips"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 3"
+    notes: |
+      Aldrich text: "Measure the widest part of the hips approx. 21 cm
+      from the waistline. For hips that differ from standard measurement
+      (hips 5 cm larger than bust) see page 188 for dress blocks."
+      Implementation: search the widest horizontal girth in a band roughly
+      15-25 cm below the waist string. If the resulting hips are more
+      than 5 cm larger than the bust, the dress-block alteration on
+      Aldrich book p.188 applies (handled in Phase 9, not here).
+
+  - name: aldrich_back_width
+    seamly_name: across_back_b        # Aldrich pins height at 15cm below C7; Seamly leaves the level unspecified
+    seamly_code: I08
+    aliases: [back_width]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.c7
+          distance_cm: 15
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_back_left
+        end: landmarks.armscye_back_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 4 Back width"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 4"
+    notes: |
+      Aldrich text: "Measure the back width 15 cm down from the neck bone
+      at the centre back. Measure from armscye to armscye." Width segment,
+      not a circumference. The slice is taken 15 cm vertically below C7
+      and the arc is clipped to the back half between the two back
+      armscye landmarks. Output is the arc length along the back surface
+      slice, not the chord. See SPEC.md section 16 open question on
+      whether dpm #31 "Across Back" uses the same 15 cm offset.
+
+  - name: aldrich_chest
+    seamly_name: across_chest_f        # Aldrich pins height at 7cm below front neck point; Seamly leaves the level unspecified
+    seamly_code: I03
+    aliases: [chest, across_chest]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.front_neck_point
+          distance_cm: 7
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_front_left
+        end: landmarks.armscye_front_right
+        side: front
+      output: arc_length_front
+    sources:
+      - "references/aldrich_full.pdf p.178 (PDF page 181) item 5 Chest"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 5"
+    notes: |
+      Aldrich text: "Measure the chest 7 cm down from the neck point at
+      the centre front (armscye to armscye)." Width segment on the front,
+      mirror of item 4 but at a 7 cm offset rather than 15 cm. The "neck
+      point" here is the centre-front-neck landmark, not C7.
+
+  - name: aldrich_shoulder
+    seamly_name: shoulder_length
+    seamly_code: I01
+    aliases: [shoulder, shoulder_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.shoulder_neck_right
+        - landmarks.acromion_right
+      side: right
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 6 Shoulder"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 6"
+    notes: |
+      Aldrich text: "Measure from neck to the shoulder bone." Surface
+      geodesic from the shoulder-neck corner to the acromion. Right side
+      chosen arbitrarily; left side is symmetric and only computed if
+      asymmetry calibration requires it.
+
+  - name: aldrich_neck_size
+    seamly_name: neck_circ
+    seamly_code: G02
+    aliases: [neck_size, neck_base_circumference]
+    type: contoured_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      closed_loop_through:
+        - landmarks.front_collar_bone
+        - landmarks.shoulder_neck_right
+        - landmarks.c7
+        - landmarks.shoulder_neck_left
+      output: closed_geodesic_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 7 Neck size"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 7"
+    notes: |
+      Aldrich text: "Measure the base of neck touching front collar bone."
+      Closed surface loop around the neck base passing through the
+      suprasternal notch (front collar bone) at the front and the C7
+      vertebra at the back, with shoulder-neck waypoints to constrain
+      the loop to the neck base rather than slipping up the neck.
+
+  - name: aldrich_dart
+    seamly_name: dart_width_bust        # from Aldrich size chart (standard), not measured on body
+    seamly_code: Q02
+    aliases: [dart]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: dart
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 8 Dart (\"Standard measurement.\")"
+      - "src/tailor_twin/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
+    notes: |
+      Aldrich text: "Standard measurement." Not measured on the body;
+      pulled from the size chart on book p.13 indexed by the row that
+      matches the rounded bust size. Size-chart contents will be
+      transcribed in a follow-up pass and stored as a separate YAML
+      under measure/definitions/.
+
+  - name: aldrich_top_arm
+    seamly_name: arm_upper_circ        # Aldrich measures with arm bent; Seamly uses straight-arm by default
+    seamly_code: L11
+    aliases: [top_arm, biceps]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: bent_arm_aldrich
+      plane:
+        origin: landmarks.biceps_max_right
+        normal: pose.bent_arm_aldrich.upper_arm_axis_right
+      region_mask: upper_arm_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 9 Top arm"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 9"
+    notes: |
+      Aldrich text: "The arm must be bent, measure the biceps."
+      Requires the SMPL-X model to be re-posed into Aldrich's bent-arm
+      pose before measuring (hand-on-hip; the diagram on p.179 shows the
+      left arm in this position). The slice is taken perpendicular to
+      the upper-arm axis in that pose, at the biceps' maximum girth.
+      Cross-reference: SPEC.md section 16 lists the joint angles for
+      this pose as an open Phase 6 decision.
+
+  - name: aldrich_wrist
+    seamly_name: arm_wrist_circ
+    seamly_code: L15
+    aliases: [wrist]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.wrist_ulnar_right
+        normal: pose.measurement_default.forearm_axis_right
+      region_mask: forearm_right
+      output: convex_hull_perimeter
+      ease_cm: 0
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 10 Wrist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 10"
+    notes: |
+      Aldrich text: "Take the wrist measurement with slight ease." The
+      "slight ease" is a tape-measurement convention (the tape is not
+      pulled taut). On a 3D mesh the convex-hull perimeter is already
+      taut; the ease term is left at 0 here and handled in the block
+      drafting code rather than at measurement time. If calibration
+      shows the scan systematically under-reports vs tape, revisit.
+
+  - name: aldrich_ankle
+    seamly_name: leg_ankle_circ
+    seamly_code: M09
+    aliases: [ankle]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.ankle_bone_lateral_right
+        normal: pose.measurement_default.shin_axis_right
+      region_mask: shin_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 11 Ankle"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 11"
+    notes: |
+      Aldrich text: "Measure around the ankle over ankle bone." Plane is
+      taken at the level of the lateral malleolus, perpendicular to the
+      shin axis.
+
+  - name: aldrich_high_ankle
+    seamly_name: leg_ankle_high_circ
+    seamly_code: M08
+    aliases: [high_ankle]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: pose.measurement_default.shin_axis_right
+          from_origin: landmarks.ankle_bone_lateral_right
+          distance_cm: 5
+        normal: pose.measurement_default.shin_axis_right
+      region_mask: shin_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 12 High ankle"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 12"
+    notes: |
+      Aldrich text: "Measure around leg just above the ankle." Aldrich
+      does not specify the exact offset; an open question is logged in
+      SPEC.md section 16. Provisional offset of 5 cm above the ankle
+      bone — revisit at calibration (Phase 7) against a tape reading.
+
+  - name: aldrich_nape_to_waist
+    seamly_name: neck_back_to_waist_b
+    seamly_code: H19
+    aliases: [nape_to_waist, centre_back_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.c7
+        - landmarks.waist_cb
+      side: back
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 13 Nape to waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 13"
+    notes: |
+      Aldrich text: "Measure from the neck bone at the centre back to
+      the string tied around the waist." Surface geodesic down the back,
+      from C7 to the centre-back point on the waist horizon.
+
+  - name: aldrich_front_shoulder_to_waist
+    seamly_name: neck_side_to_waist_bustpoint_f        # Aldrich starts at front-shoulder midpoint; Seamly starts at neck-side
+    seamly_code: H06
+    aliases: [front_shoulder_to_waist, full_length_front_via_apex]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.front_shoulder_mid_right
+        - landmarks.bust_apex_right
+        - landmarks.waist_cf
+      side: front
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 14 Front shoulder to waist"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 14"
+    notes: |
+      Aldrich text: "Measure from the centre of the front shoulder over
+      the bust point to waist." Surface path forced through the apex
+      waypoint. "Centre of the front shoulder" is interpreted as the
+      midpoint of the shoulder seam on the front side, between the
+      shoulder-neck corner and the acromion. Right side chosen by
+      convention; left side computed only if asymmetry calibration
+      requires it.
+
+  - name: aldrich_armscye_depth
+    seamly_name: armscye_length
+    seamly_code: L20
+    aliases: [armscye_depth, scye_depth]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: armscye_depth
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 15 Armscye depth (\"Standard measurement.\")"
+      - "src/tailor_twin/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
+    notes: |
+      Aldrich text: "Standard measurement." Body-derived value can be
+      computed in parallel for comparison (vertical from neck base to
+      armscye base on the back, see diagram annotation 15), but the
+      canonical value is the size-chart row.
+
+  - name: aldrich_skirt_length
+    seamly_name: null        # user-input, not a body measurement
+    aliases: [skirt_length, hem_length]
+    type: user_input
+    source_classification: derived
+    parameters:
+      description: |
+        User-supplied distance from the waist string at the side of the
+        body down to the desired skirt hem level.
+      balance_check:
+        method: planar_slice_height_diff
+        front_landmark: landmarks.waist_cf
+        back_landmark: landmarks.waist_cb
+        warn_if_diff_cm_gt: 1.0
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 16 Skirt length"
+    notes: |
+      Aldrich text: "Measure the skirt length from the string at the
+      waist down to the required hem length. Note: Measure from the
+      waist to floor at the back and front to check that the balance
+      of the figure is even." Not a body measurement; user supplies the
+      hem distance. The waist-balance note is realised as an automatic
+      check on the height of waist_cf vs waist_cb after un-posing.
+
+  - name: aldrich_waist_to_hip
+    seamly_name: waist_to_hip_side
+    seamly_code: H35
+    aliases: [waist_to_hip]
+    type: table_lookup
+    source_classification: standard
+    parameters:
+      chart: aldrich_size_chart_p13
+      indexed_by: bust_size
+      column: waist_to_hip
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 17 Waist to hip (\"Standard measurement.\")"
+      - "src/tailor_twin/measure/definitions/aldrich_size_chart_p13.yaml (transcribed from references/aldrich_full.pdf p.13, PDF page 16)"
+    notes: |
+      Aldrich text: "Standard measurement." Body-derived equivalent is
+      the height difference between landmarks.waist_string and the hip
+      slice plane; computed for comparison but not canonical.
+
+  - name: aldrich_waist_to_floor
+    seamly_name: null        # Aldrich measures at centre back; Seamly only has leg_waist_side_to_floor
+    aliases: [waist_to_floor]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.waist_cb
+        - landmarks.floor_cb
+      side: back
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 18 Waist to floor"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 18"
+    notes: |
+      Aldrich text: "Measure from waist to floor at the centre back."
+      Surface path down the centre back. The floor landmark is the
+      vertical projection of waist_cb onto the ground plane in
+      measurement-pose coordinates.
+
+  - name: aldrich_body_rise
+    seamly_name: rise_length_side_sitting
+    seamly_code: N04
+    aliases: [body_rise]
+    type: derived
+    source_classification: derived
+    parameters:
+      expression: |
+        height(landmarks.waist_side_right) - height(landmarks.crotch_lateral)
+      sample_side: right
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 19 Body rise"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 19 (seated inset)"
+    notes: |
+      Aldrich text: "The subject should sit on a hard chair. Take the
+      measurement at the side from the waist to the chair." Aldrich's
+      definition is seated; the standing-scan derivation is the
+      vertical drop from the waist line (at the side of the body) to
+      the crotch level (at the side). Per SPEC.md section 13 risks,
+      expect a 1-2 cm offset versus a real tape measurement; calibrate
+      and document the offset in references/calibration_log.md.
+
+  - name: aldrich_sleeve_length
+    seamly_name: arm_shoulder_tip_to_wrist_bent
+    seamly_code: L01
+    aliases: [sleeve_length, sleeve_length_bent]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: bent_arm_aldrich
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.elbow_back_right
+        - landmarks.wrist_ulnar_right
+      side: outer_arm
+    sources:
+      - "references/aldrich_full.pdf p.179 (PDF page 182) item 20 Sleeve length"
+      - "references/aldrich_full.pdf p.179 (PDF page 182) diagram annotation 20"
+    notes: |
+      Aldrich text: "Place the hand on hip so that the arm is bent.
+      Measure from the shoulder bone over the elbow to the wristbone
+      above the little finger." Surface path along the outer arm in
+      Aldrich's bent-arm pose, forced through the back-of-elbow waypoint
+      (olecranon) so the geodesic does not shortcut along the inner arm.
+      The wrist endpoint is the ulna styloid (pinky side) per Aldrich.
+      Note: Seamly L01 specifies "radial Wrist bone" (thumb side) —
+      we follow Aldrich's ulnar endpoint. See SPEC.md section 16 for
+      the open question on the exact bent-arm joint angles.
+
+  # ------------------------------------------------------------------
+  # dpm bodice items 1-32 (dresspatternmaking.com bodice block series).
+  #
+  # Primary source: references/dpm_videos/bodice_measurements/transcript.txt
+  #   ("Taking Measurements to Draft the Bodice Block", Part 6 of the
+  #   Bodice Block Essentials series).
+  #
+  # Revisions: references/dpm_videos/bodice_front/transcript.txt:L1-49
+  #   (the revised March 2022 drafting video begins by correcting two
+  #   measurement instructions from the older measurements video — the
+  #   upper-bust level and the side-seam length both belong at the
+  #   underarm, not 2.5 cm below it). Affected entries list both
+  #   sources, with the drafting-video citation first, and populate
+  #   `superseded_by`.
+  # ------------------------------------------------------------------
+
+  - name: dpm_bodice_upper_bust
+    seamly_name: highbust_circ
+    seamly_code: G03
+    aliases: [upper_bust, upper_bust_circumference]
+    type: geodesic_loop
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      # The dpm "upper bust elastic" sits across the chest under the armpit
+      # and around the back at the same level. Real-tape behaviour is a
+      # shortest-path closed loop touching all four armfold landmarks — NOT
+      # a horizontal planar slice (which fails in A-pose where the slice
+      # crosses the chest-arm junction). See extraction_audit.md G03.
+      waypoints:
+        - landmarks.armfold_front_left
+        - landmarks.armfold_back_left
+        - landmarks.armfold_back_right
+        - landmarks.armfold_front_right
+    sources:
+      - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (revised: at the underarm)"
+      - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — captioned side-by-side comparison: \"Incorrect\" (old upper-bust placement, ~1 inch below underarm) vs \"Corrected\" (at the underarm)"
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L87-92 (deprecated 1-inch-below-underarm ruler trick)"
+      - "references/dpm_videos/bodice_measurements/frame_00h08m45s.jpg — ruler placed against the underarm on both body forms, with the upper-bust line marked at the ruler's bottom edge ~1 inch below the underarm (deprecated method)"
+    superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
+    notes: |
+      The dpm bodice_measurements video instructs to place the upper-bust
+      elastic 1 inch (the width of a ruler) below the underarm flesh.
+      The dpm bodice_front video (March 2022 revision) corrects this:
+      the body-measurement upper-bust level is right at the underarm
+      (against the underarm), and the 2.5 cm / 1 inch offset was for the
+      sleeved-block placement, not the body. The horizontal plane is set
+      by landmarks.upper_bust_level. Per dpm bodice_measurements
+      transcript.txt:L64-70, the whole-body circumference may differ
+      slightly from the sum of the front + back arcs because the upper-
+      bust line is not exactly parallel to the floor across the back —
+      the circumference is documented for completeness but the arcs
+      (front and back) are what the block drafting uses.
+
+  - name: dpm_bodice_upper_bust_front_arc
+    seamly_name: highbust_arc_f
+    seamly_code: G11
+    aliases: [upper_bust_front_arc, ubf_arc]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.upper_bust_level
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.bra_side_seam_left
+        end: landmarks.bra_side_seam_right
+        side: front
+      output: arc_length_front
+    sources:
+      - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
+      - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — \"Incorrect\" vs \"Corrected\" side-by-side comparison: the front-arc lives on the upper-bust horizontal plane, so this revision moves the arc's height up to the underarm (the arc length itself is taken from side seam to side seam at the new level)"
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L93-148 (front-arc and side-seam definition)"
+      - "references/dpm_videos/bodice_measurements/frame_00h09m51s.jpg — well-fitting underwire bra examples (front view and a comparison slide showing DD's bra fit) used to anchor the bra-side-seam landmark"
+      - "references/dpm_videos/bodice_measurements/frame_00h14m30s.jpg — \"2. Upper Bust Arc Front\" slide: body photo on the left with the front-arc highlighted, block diagram on the right showing the front-arc as a horizontal line at upper-bust level from front side seam to front side seam (slide content still applies after the revision; only the height of the plane changed)"
+    superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
+    notes: |
+      Front-arc segment from left bra-side-seam landmark to right bra-
+      side-seam landmark, taken at landmarks.upper_bust_level. The dpm
+      drafting code halves this value to draft the half-front block
+      (bodice_front transcript.txt:L111-117). The bra_side_seam landmark
+      is per dpm's instructions: the side seam of a well-fitting bra,
+      or, lacking one, 1.25-1.5 inches (~3-4 cm) outboard of where the
+      bra cup ends at the underarm.
+
+  - name: dpm_bodice_upper_bust_back_arc
+    seamly_name: highbust_arc_b
+    seamly_code: G27
+    aliases: [upper_bust_back_arc, ubb_arc]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.upper_bust_level
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.bra_side_seam_left
+        end: landmarks.bra_side_seam_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (upper-bust level revised)"
+      - "references/dpm_videos/bodice_front/frame_00h03m30s.jpg — \"Incorrect\" vs \"Corrected\" side-by-side comparison: the back-arc lives on the upper-bust horizontal plane, so this revision moves the arc's height up to the underarm as well"
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L144-147"
+      - "references/dpm_videos/bodice_measurements/frame_00h10m33s.jpg — \"3. Upper Bust Arc Back\" slide: body photos from two angles with arrows marking the side-seam endpoints on the back (slide content still applies after the revision; only the height of the plane changed)"
+    superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
+    notes: |
+      Back-arc segment, mirror of the front arc but on the back side of
+      the torso. Uses the same bra_side_seam landmarks so that front +
+      back arcs share the side-seam reference.
+
+  - name: dpm_bodice_bust
+    seamly_name: bust_circ
+    seamly_code: G04
+    aliases: [bust, dpm_bust]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_level
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L148-150"
+      - "references/dpm_videos/bodice_measurements/frame_00h14m45s.jpg — \"4. Bust\" slide: \"Around the fullest part of the bust / Straight across from Apex to Apex then continuing in a straight line around the circumference of the body (parallel to the floor)\"; body photos from front and side angles with bust-line highlighted"
+    notes: |
+      Bust circumference, around the fullest part. The tape crosses both
+      bust apexes and the dpm rule is for the bust plane to be parallel
+      to the floor (the "bust elastic" is checked against this from
+      front, back, and side per bodice_measurements:L79-87). Cross-
+      reference: the bust front-arc + back-arc must sum exactly to this
+      circumference per bodice_measurements:L68-70 (unlike upper bust).
+
+  - name: dpm_bodice_bust_front_arc
+    seamly_name: bust_arc_f
+    seamly_code: G12
+    aliases: [bust_front_arc, bf_arc]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_level
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.bra_side_seam_left
+        end: landmarks.bra_side_seam_right
+        side: front
+      output: arc_length_front
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L151-158"
+      - "references/dpm_videos/bodice_measurements/frame_00h15m06s.jpg — \"5. Bust Arc Front\" slide: \"From the side seam around the front to the other side seam at the Bust level (fullest part of the bust, will cross the apex)\"; body photo on the left and the same on the right with arrows marking the side-seam endpoints"
+
+  - name: dpm_bodice_bust_back_arc
+    seamly_name: bust_arc_b
+    seamly_code: G28
+    aliases: [bust_back_arc, bb_arc]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_level
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.bra_side_seam_left
+        end: landmarks.bra_side_seam_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L158-163"
+
+  - name: dpm_bodice_waist
+    seamly_name: waist_circ
+    seamly_code: G07
+    aliases: [waist, dpm_waist]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.waist_string
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L163-167"
+      - "references/dpm_videos/bodice_measurements/frame_00h16m09s.jpg — \"7. Waist — Circumference of the body around the waist / the smallest part of the torso\"; body photos from front and side with the waist line highlighted by a red arrow"
+    notes: |
+      "around the smallest part of the torso". The dpm worksheet halves
+      this value (÷4 for the quarter) when drafting. Same body landmark
+      as aldrich_waist; the dpm naming is preserved as a separate entry
+      because the dpm worksheet schema is independent.
+
+  - name: dpm_bodice_shoulder_length
+    seamly_name: shoulder_length
+    seamly_code: I01
+    aliases: [shoulder_length, dpm_shoulder]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.shoulder_neck_right        # dpm "high neck point"
+        - landmarks.acromion_right             # dpm "shoulder point"
+      side: right
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L167-177"
+      - "references/dpm_videos/bodice_measurements/frame_00h16m27s.jpg — \"8. Shoulder Length — From High Neck Point to Shoulder Point\"; close-up of the shoulder area showing the pink shoulder line from the corner of the neck along the shoulder seam to the acromion, with an arrow pointing at the high neck point"
+    notes: |
+      "from the high neck point to the shoulder point". dpm defines the
+      high neck point as where a necklace chain rests at the side of the
+      neck (== Aldrich's shoulder-neck corner). The shoulder point is
+      the indent at the shoulder joint visible when the arm is lifted
+      (== Aldrich's acromion). dpm recommends marking both with painter's
+      tape so the same reference points are used by full-length-front
+      and shoulder-slope measurements.
+
+  - name: dpm_bodice_side_length
+    seamly_name: armpit_to_waist_side
+    seamly_code: H03
+    aliases: [side_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.underarm_right
+        - landmarks.waist_side_right
+      side: right
+    sources:
+      - "references/dpm_videos/bodice_front/transcript.txt:L40-49 (revised: starts at the underarm, not 2.5 cm below)"
+      - "references/dpm_videos/bodice_front/frame_00h03m40s.jpg — \"Taking Measurement: Upper Bust & The Side Seam\" slide showing the revised method: a clear ruler held against the underarm with the side-length tape running down from the underarm corner to the waist (the dashed measurement starts at the underarm, not at the upper-bust elastic)"
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L177-183 (deprecated start at upper-bust elastic)"
+      - "references/dpm_videos/bodice_measurements/frame_00h17m54s.jpg — deprecated \"9. Side Length — Armhole Depth Point to waist\" slide, showing the side-length measurement starting at the upper-bust elastic (\"armhole depth point\") rather than the underarm — this is the definition that bodice_front later corrects"
+    superseded_by: "references/dpm_videos/bodice_front/transcript.txt:L40-49"
+    notes: |
+      Body-measurement side seam length, from the underarm corner down
+      to the waist at the side. The dpm bodice_measurements video
+      defined this as starting at the upper-bust elastic (which it
+      placed 1 inch below the underarm) — that was wrong for the body
+      measurement and corrected in bodice_front:L29-39: the body
+      measurement starts right at the underarm; the 1.5 cm armhole
+      lowering is added later when drafting the sleeved block, not at
+      measurement time.
+
+  - name: dpm_bodice_full_length_front
+    seamly_name: neck_side_to_waist_bustpoint_f
+    seamly_code: H06
+    aliases: [full_length_front, flf]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.shoulder_neck_right
+        - landmarks.bust_apex_right
+        - landmarks.waist_cf
+      side: front
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L183-186"
+    notes: |
+      "from the high neck point to the waist in a straight line down the
+      front" — passes over the bust, equivalent path to Aldrich
+      #14 Front shoulder to waist but starting at shoulder_neck (high
+      neck point) rather than the front-shoulder centre.
+
+  - name: dpm_bodice_center_front_length
+    seamly_name: neck_front_to_waist_f
+    seamly_code: H01
+    aliases: [center_front_length, cf_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.front_neck_point
+        - landmarks.waist_cf
+      side: front
+      output: straight_surface_distance
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L186-192"
+    notes: |
+      "from the hollow in the neck to the waist in a straight line".
+      Straight line down the centre front, from the suprasternal hollow
+      to the waist. dpm reminds users to be consistent about whether
+      they take the top or bottom edge of the waist elastic as the
+      reference.
+
+  - name: dpm_bodice_across_shoulder_front
+    seamly_name: shoulder_tip_to_shoulder_tip_half_f        # dpm value is the half-block measurement
+    seamly_code: I05
+    aliases: [across_shoulder_front]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.front_neck_point
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.acromion_left
+        end: landmarks.acromion_right
+        side: front
+      output: arc_length_front
+      degenerate_figure_note: |
+        For figures with rounded upper back / forward-jutting neck, the
+        horizontal-from-CF-neck rule will underestimate the across-
+        shoulder; dpm recommends taking it a bit lower on the chest
+        with the tape angled outward to the shoulder point. The exact
+        offset is figure-dependent and tuned at calibration.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L190-203"
+      - "references/dpm_videos/bodice_front/transcript.txt:L127-135"
+    notes: |
+      Width across the front at front_neck_point height, from acromion
+      to acromion. dpm's instruction is "from the centre front neck to
+      the shoulder point". For a standard figure the CF neck and the
+      shoulder points sit at the same height, so the measurement is
+      a horizontal width segment; for non-standard figures it must be
+      measured slightly lower (see degenerate_figure_note). Output is
+      reduced to half-width when drafting the half-block.
+
+  - name: dpm_bodice_shoulder_slope_front
+    seamly_name: shoulder_tip_to_waist_front
+    seamly_code: K01
+    aliases: [shoulder_slope_front, ssf]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.waist_cf
+      side: front
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L203-207"
+      - "references/dpm_videos/bodice_front/transcript.txt:L135-141"
+    notes: |
+      "from the shoulder point to the waist passing over the bust" —
+      surface geodesic from acromion to centre-front waist. dpm notes
+      that for some figures the path crosses the apex; for others the
+      apex sits to the side of the path. The measurement does NOT
+      force the path through the apex.
+
+  - name: dpm_bodice_bust_depth_a_on_ss
+    seamly_name: null        # derived on shoulder-slope path; no Seamly equivalent
+    aliases: [bust_depth_a, bust_depth_on_ss]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_shoulder_slope_front
+      sample_at: bust_level
+      description: |
+        Measurement taken on the SSF tape, reading the value at the
+        crossing point with the bust elastic. Equivalent to the
+        partial geodesic from acromion_right down the SSF path until
+        it crosses bust_level.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L207-212"
+      - "references/dpm_videos/bodice_front/transcript.txt:L141-149"
+
+  - name: dpm_bodice_bust_depth_b_on_cf
+    seamly_name: neck_front_to_bust_f
+    seamly_code: H09
+    aliases: [bust_depth_b]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_center_front_length
+      sample_at: bust_level
+      description: |
+        Vertical distance from front_neck_point to bust_level, measured
+        in a straight line down the centre front.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L212-216"
+      - "references/dpm_videos/bodice_front/transcript.txt:L145-148"
+
+  - name: dpm_bodice_bust_depth_c_on_flf
+    seamly_name: null        # derived along full-length-front path; no Seamly equivalent
+    aliases: [bust_depth_c]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_full_length_front
+      sample_at: bust_level
+      description: |
+        Distance along the FLF geodesic from its start (shoulder_neck)
+        to where it crosses bust_level.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L216-218"
+      - "references/dpm_videos/bodice_front/transcript.txt:L148-151"
+
+  - name: dpm_bodice_bust_depth_at_side_seam
+    seamly_name: null        # upper-bust to bust along side seam; no Seamly equivalent
+    aliases: [bust_depth_at_ss]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      expression: |
+        height(landmarks.upper_bust_level @ side_right)
+          - height(landmarks.bust_level @ side_right)
+      description: |
+        Vertical drop from upper_bust_level to bust_level, sampled at
+        the side seam (right side).
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L218-221"
+
+  - name: dpm_bodice_bust_span
+    seamly_name: bustpoint_to_bustpoint
+    seamly_code: J01
+    aliases: [bust_span, apex_to_apex]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_level
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.bust_apex_left
+        end: landmarks.bust_apex_right
+        side: chord
+      output: chord_distance
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L221-223"
+      - "references/dpm_videos/bodice_front/transcript.txt:L151-156"
+    notes: |
+      Apex-to-apex distance. dpm worksheet halves this value when
+      drafting the half block. Output is the straight-line chord (apex
+      to apex through air), not the body-surface arc, because dpm
+      drafting code uses the chord to place the H3 / bust point.
+
+  - name: dpm_bodice_front_armhole_depth_a_flf
+    seamly_name: shoulder_center_to_highbust_f        # approximate; dpm uses high-neck-point as the start, Seamly uses shoulder-centre
+    seamly_code: H16
+    aliases: [front_armhole_depth_a]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_full_length_front
+      sample_at: upper_bust_level
+      description: |
+        Partial FLF geodesic from shoulder_neck_right to where the FLF
+        path crosses upper_bust_level.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L223-225"
+      - "references/dpm_videos/bodice_front/transcript.txt:L166-172"
+
+  - name: dpm_bodice_front_armhole_depth_b_cf
+    seamly_name: neck_front_to_highbust_f
+    seamly_code: H07
+    aliases: [front_armhole_depth_b]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_center_front_length
+      sample_at: upper_bust_level
+      description: |
+        Vertical distance from front_neck_point to upper_bust_level
+        along the centre front.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L225-226"
+      - "references/dpm_videos/bodice_front/transcript.txt:L175-179"
+
+  - name: dpm_bodice_front_armhole_depth_c_ss
+    seamly_name: null        # derived along shoulder-slope-front path; no Seamly equivalent
+    aliases: [front_armhole_depth_c]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_shoulder_slope_front
+      sample_at: upper_bust_level
+      description: |
+        Partial SSF geodesic from acromion_right down the SSF path
+        until it crosses upper_bust_level.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L226-229"
+      - "references/dpm_videos/bodice_front/transcript.txt:L177-179"
+
+  - name: dpm_bodice_across_chest
+    seamly_name: across_chest_f
+    seamly_code: I03
+    aliases: [across_chest]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.front_neck_point
+          distance:
+            expression: "0.667 * cf_to_upper_bust_vertical"
+            default_fraction_of_cf_to_upper_bust: 0.667
+            allowed_range: [0.5, 0.75]
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_front_left
+        end: landmarks.armscye_front_right
+        side: front
+      output: arc_length_front
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L229-240"
+      - "references/dpm_videos/bodice_front/transcript.txt:L216-222"
+    notes: |
+      Front-armhole-to-armhole width segment at a fraction of the
+      front_neck_point-to-upper_bust_level vertical distance. dpm
+      bodice_measurements suggests "either half or two thirds"; the
+      bodice_front drafting video refines this for the meilage to
+      ~2/3 down ("a little bit lower than that for DD"). Per dpm's
+      figure-dependence note, the rule is a starting heuristic, not a
+      universal constant — calibrate per figure.
+
+  - name: dpm_bodice_full_length_back
+    seamly_name: neck_side_to_waist_b
+    seamly_code: H18
+    aliases: [full_length_back, flb]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.shoulder_neck_right
+        - landmarks.waist_cb
+      side: back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L240-244"
+      - "references/dpm_videos/bodice_measurements/frame_00h24m00s.jpg — \"23. Full Length Back — From High Neck Point to Back Waist\"; back-view body photo with red vertical line from the high neck point straight down to the waist string, plus the back-block diagram showing the same line"
+    notes: |
+      "from the high neck point to the back waist". dpm recommends
+      verifying by also measuring the full body length (front waist up
+      through high neck to back waist) and checking flf + flb sums to
+      that total.
+
+  - name: dpm_bodice_center_back_length
+    seamly_name: neck_back_to_waist_b
+    seamly_code: H19
+    aliases: [center_back_length, cb_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.c7
+        - landmarks.waist_cb
+      side: back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L244-246"
+    notes: |
+      Same physical path as Aldrich #13 Nape to waist. The dpm naming
+      is preserved as a separate entry for worksheet parity.
+
+  - name: dpm_bodice_across_shoulder_back
+    seamly_name: shoulder_tip_to_shoulder_tip_b
+    seamly_code: I07
+    aliases: [across_shoulder_back]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.c7
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.acromion_left
+        end: landmarks.acromion_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L246-250"
+    notes: |
+      Width across the back at C7 height, from acromion to acromion.
+      dpm halves this for the half-block.
+
+  - name: dpm_bodice_shoulder_slope_back
+    seamly_name: shoulder_tip_to_waist_back
+    seamly_code: K04
+    aliases: [shoulder_slope_back, ssb]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.waist_cb
+      side: back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L250-254"
+    notes: |
+      "from the shoulder point to the back waist" — surface geodesic
+      from acromion to centre-back waist. dpm recommends verifying via
+      the front waist + shoulder + back waist combined measurement
+      compared against ssf + ssb.
+
+  - name: dpm_bodice_back_armhole_depth_a_ssb
+    seamly_name: null        # derived along shoulder-slope-back path; no Seamly equivalent
+    aliases: [back_armhole_depth_a]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_shoulder_slope_back
+      sample_at: upper_bust_level
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L254-258"
+    notes: |
+      dpm bodice_measurements states explicitly that this back-armhole
+      depth is not used to draft the block (the drafting derives the
+      armhole from other measurements) — it is a cross-check value.
+
+  - name: dpm_bodice_back_armhole_depth_b_cf
+    seamly_name: neck_back_to_highbust_b
+    seamly_code: H21
+    aliases: [back_armhole_depth_b]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_center_back_length
+      sample_at: upper_bust_level
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L258-260"
+
+  - name: dpm_bodice_back_armhole_depth_c_flb
+    seamly_name: null        # derived along full-length-back path; no Seamly equivalent
+    aliases: [back_armhole_depth_c]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      derive_from: dpm_bodice_full_length_back
+      sample_at: upper_bust_level
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L260-261"
+
+  - name: dpm_bodice_back_neck
+    seamly_name: neck_arc_half_b
+    seamly_code: G34
+    aliases: [back_neck]
+    type: contoured_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      closed_loop_through:
+        - landmarks.shoulder_neck_left
+        - landmarks.c7
+        - landmarks.shoulder_neck_right
+      side: back
+      output: arc_length_back
+      tape_below_neckline: true
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L261-267"
+      - "references/dpm_videos/bodice_measurements/frame_00h26m00s.jpg — \"30. Back Neck — From CB Neck to High Neck Point\"; two stacked close-ups of the same shoulder/neck corner with X (incorrect, tape held above the neckline) and ✓ (correct, tape held below the neckline) markings, plus the back-block diagram with a small purple arrow segment from CB to HNP"
+    notes: |
+      Back half of the neck circumference, from one high_neck_point
+      (shoulder_neck) around C7 to the other high_neck_point. dpm
+      offers an equivalent: measure all the way around (HNP -> CB ->
+      HNP, full back-half loop) and divide by two only if measuring
+      one HNP-to-C7 leg directly is awkward. The tape must run below
+      the neckline ridge, not above it (dpm shows the smaller-than-
+      expected result if the tape sits above).
+
+  - name: dpm_bodice_across_back
+    seamly_name: across_back_b
+    seamly_code: I08
+    aliases: [across_back]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.c7
+          distance:
+            expression: "0.5 * c7_to_upper_bust_vertical"
+            default_fraction_of_c7_to_upper_bust: 0.5
+        normal: pose.measurement_default.vertical_axis
+      clip:
+        start: landmarks.armscye_back_left
+        end: landmarks.armscye_back_right
+        side: back
+      output: arc_length_back
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L267-269"
+    notes: |
+      Back-armhole-to-armhole width segment at half the C7-to-upper-bust
+      vertical distance. dpm states "the depth at which you measure
+      that is about half the back neck to the upper bust distance".
+      Resolves the SPEC.md section 16 open question on Aldrich #4 vs
+      dpm #31: Aldrich uses a fixed 15 cm below C7, dpm uses half of
+      C7-to-upper-bust which is figure-dependent. The two
+      measurements are therefore at different heights and should not
+      be aliased to a single body landmark.
+
+  - name: dpm_bodice_dart_placement_back
+    seamly_name: null        # drafting choice, not a body measurement
+    aliases: [dart_placement_back, back_waist_dart]
+    type: derived
+    source_classification: derived
+    parameters:
+      pose: measurement_default
+      description: |
+        Distance from waist_cb to the desired back-dart position along
+        the waist line. dpm explicitly notes this is a personal-
+        preference value; default placement = position that yields the
+        easiest princess shoulder line for the figure, refined at the
+        toile stage.
+    sources:
+      - "references/dpm_videos/bodice_measurements/transcript.txt:L269-275"
+    notes: |
+      Not a body measurement; a drafting choice. Listed for worksheet
+      parity (dpm worksheet item 32).
+
+  # ------------------------------------------------------------------
+  # dpm sleeve body measurements.
+  #
+  # Source: references/dpm_videos/sleeve/transcript.txt, in particular
+  # the section starting at L15 listing the seven sleeve-block inputs.
+  # Two of those seven are derived from the bodice blocks (front and
+  # back armhole lengths), so only the five body measurements appear
+  # here.
+  # ------------------------------------------------------------------
+
+  - name: dpm_sleeve_length_bent
+    seamly_name: arm_shoulder_tip_to_wrist_bent
+    seamly_code: L01
+    aliases: [sleeve_length, sleeve_length_dpm]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: bent_arm_sleeve_dpm
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.elbow_back_right
+        - landmarks.wrist_ulnar_right
+      side: outer_arm
+    sources:
+      - "references/dpm_videos/sleeve/transcript.txt:L15-22"
+    notes: |
+      "the length of the sleeve from the shoulder tip to the wrist with
+      the arm bent". Same physical path as Aldrich #20 Sleeve length
+      but dpm describes the pose as "arm bent" without requiring the
+      hand-on-hip placement, so the joint angles differ slightly.
+      Kept as a separate entry for source fidelity; calibration may
+      collapse it onto aldrich_sleeve_length if the values agree.
+
+  - name: dpm_sleeve_shoulder_to_elbow
+    seamly_name: arm_shoulder_tip_to_elbow_bent
+    seamly_code: L02
+    aliases: [shoulder_to_elbow]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: bent_arm_sleeve_dpm
+      waypoints:
+        - landmarks.acromion_right
+        - landmarks.elbow_back_right
+      side: outer_arm
+    sources:
+      - "references/dpm_videos/sleeve/transcript.txt:L18-21"
+    notes: |
+      Surface length from acromion to back-of-elbow with the arm bent.
+      Used together with sleeve_length_bent to position the elbow
+      dart on the sleeve block.
+
+  - name: dpm_sleeve_elbow_circumference
+    seamly_name: arm_elbow_circ_bent
+    seamly_code: L04
+    aliases: [elbow_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: bent_arm_sleeve_dpm
+      plane:
+        origin: landmarks.elbow_back_right
+        normal: pose.bent_arm_sleeve_dpm.forearm_axis_right
+      region_mask: forearm_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/sleeve/transcript.txt:L18-22"
+    notes: |
+      "around the elbow with the arm bent". Pose-dependent; the
+      circumference is larger than the corresponding straight-arm
+      slice because skin stretches over the olecranon.
+
+  - name: dpm_sleeve_bicep
+    seamly_name: arm_upper_circ
+    seamly_code: L11
+    aliases: [bicep, bicep_at_armhole_level]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          intersection_of:
+            - landmarks.upper_bust_level
+            - upper_arm_centerline_right
+        normal: upper_arm_axis_right
+      region_mask: upper_arm_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/sleeve/transcript.txt:L23-31"
+    notes: |
+      "around your bicep at the armhole level". dpm specifies the slice
+      level by reference to the bodice armhole (upper_bust_level)
+      rather than the biceps maximum girth. This differs from
+      aldrich_top_arm which measures the biceps at its fullest with
+      the arm bent. The two are correlated but not equal.
+
+  - name: dpm_sleeve_cap_height
+    seamly_name: null        # no direct Seamly equivalent; derived in drafting
+    aliases: [cap_height, sleeve_cap_height]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      expression: |
+        height(landmarks.acromion_right) - height(landmarks.upper_bust_level)
+      sample_side: right
+    sources:
+      - "references/dpm_videos/sleeve/transcript.txt:L23-31"
+      - "references/dpm_videos/sleeve/transcript.txt:L43-65 (cap-height vs bicep relationship)"
+    notes: |
+      "from the shoulder tip to the bicep level" — vertical drop from
+      acromion to upper_bust_level (the level used as "bicep level" in
+      the dpm sleeve block). dpm notes that on a standard figure with
+      upright posture, the relationship between cap_height and bicep
+      circumference plus 2-inch ease works out without further
+      adjustment; on non-standard figures the relationship is the
+      single biggest source of fitted-sleeve drafting trouble.
+
+  # ------------------------------------------------------------------
+  # dpm pants body measurements.
+  #
+  # Source: references/dpm_videos/pants_1/transcript.txt
+  # ("Drafting the Pants Block: Part 1, Introduction & Measurements").
+  # Maria's pants-drafting system uses more measurements than most
+  # other pants drafting methods so that non-standard figures fit
+  # without major toile alterations. Each measurement here is the
+  # one she lists in the "go through the measurements we need" section.
+  # ------------------------------------------------------------------
+
+  - name: dpm_pants_waist_to_ankle
+    seamly_name: leg_waist_side_to_ankle
+    seamly_code: M13
+    aliases: [waist_to_ankle]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.waist_side_right
+        - landmarks.ankle_bone_lateral_right
+      side: right
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L157-159"
+    notes: |
+      "Measure your waist to ankle down the side of your body, not the
+      center front or the center back." Side-of-body surface path.
+      An alternative is waist_to_floor (aldrich_waist_to_floor); dpm
+      uses waist_to_ankle for the pants block.
+
+  - name: dpm_pants_waist_to_high_hip
+    seamly_name: waist_to_highhip_side
+    seamly_code: H32
+    aliases: [waist_to_high_hip]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      side: right
+      depth_cm_short: 10.2     # 4 inches
+      depth_cm_medium: 11.4    # 4.5 inches
+      depth_cm_tall: 12.7      # 5 inches
+      description: |
+        Vertical drop from waist_side_right to high_hip_level, taken at
+        the side of the body. dpm rule: pick the depth from height:
+        4 inches if the user is short, 4.5 inches if medium, 5 inches
+        if tall (pants_1 transcript.txt:L161-164).
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L161-164"
+
+  - name: dpm_pants_high_hip
+    seamly_name: highhip_circ        # Seamly: where abdomen protrusion is greatest; dpm: fixed depth below waist (4-5 in)
+    seamly_code: G08
+    aliases: [high_hip, high_hip_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.high_hip_level
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L160-164"
+    notes: |
+      Circumference at high_hip_level (set by waist_to_high_hip).
+
+  - name: dpm_pants_waist_to_low_hip
+    seamly_name: waist_to_hip_side
+    seamly_code: H35
+    aliases: [waist_to_low_hip]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      side: right
+      description: |
+        Vertical drop from waist_side_right to low_hip_level. low_hip
+        is the widest girth below the waist UNLESS the widest girth
+        is at high_hip_level or at crotch_level, in which case the
+        rule is to use a plane 2.75 inches (~7 cm) above crotch_level
+        (pants_1:L169-179).
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L165-179"
+
+  - name: dpm_pants_low_hip
+    seamly_name: hip_circ
+    seamly_code: G09
+    aliases: [low_hip, low_hip_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          search:
+            region: torso
+            range:
+              along: -pose.measurement_default.vertical_axis
+              from_origin: landmarks.waist_string
+              exclude_levels:
+                - landmarks.high_hip_level
+                - landmarks.crotch_level
+            metric: maximum_horizontal_girth
+            fallback_above_crotch_cm: 7.0    # 2.75 inches
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L165-179"
+      - "references/dpm_videos/pants_3/transcript.txt:L220-233 (curvy-figure tape caveat)"
+    notes: |
+      Widest girth below the waist. dpm rule: exclude high_hip and
+      crotch levels from the search; if the unconstrained widest
+      girth would land on either of those, use 2.75 inches above
+      crotch instead. This guarantees the pants block has at least
+      two width measurements between waist and crotch (high hip + low
+      hip).
+
+      pants_3 caveat for very curvy figures: a tape measure wants to
+      sit flat and will ride away from the body at the back, so a
+      measurement that looks correct can underestimate the true body
+      perimeter at that level. The tailor-twin pipeline is not
+      subject to that tape behaviour (the convex hull of the planar
+      slice already gives the taut-perimeter equivalent), but the
+      calibration step in Phase 7 should account for the difference
+      between tape readings and convex-hull perimeters at this level
+      for curvy figures.
+
+  - name: dpm_pants_crotch_depth
+    seamly_name: rise_length_side
+    seamly_code: N08
+    aliases: [crotch_depth, waist_to_crotch]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      side: right
+      description: |
+        Vertical drop from waist_side_right to crotch_level (where
+        the dpm "upper thigh elastic" sits, tied parallel to the
+        floor at the crotch).
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L180-183"
+
+  - name: dpm_pants_upper_thigh
+    seamly_name: leg_thigh_upper_circ
+    seamly_code: M03
+    aliases: [upper_thigh, thigh_at_crotch_level]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          intersection_of:
+            - landmarks.crotch_level
+            - thigh_centerline_right
+        normal: thigh_axis_right
+      region_mask: thigh_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L31-32"
+      - "references/dpm_videos/pants_1/transcript.txt:L121-133"
+      - "references/dpm_videos/pants_1/transcript.txt:L180-184"
+      - "references/dpm_videos/pants_1/frame_00h17m00s.jpg — pants-block reference overview: female figure standing, with the body horizons labelled (Waist, High Hip, Low Hip, Crotch, Knee, Ankle) and the upper-thigh region marked with both a vertical \"depth\" arrow (from waist down to crotch level) and a horizontal \"circumference\" loop around the thigh at crotch level"
+    notes: |
+      Circumference of the right thigh at crotch_level. dpm makes this
+      a primary measurement (rather than deriving the crotch
+      extensions from the hip-as-proportion) so that non-standard
+      figures end up with correct thigh ease and crotch length.
+
+  - name: dpm_pants_waist_to_knee
+    seamly_name: leg_waist_side_to_knee
+    seamly_code: M14
+    aliases: [waist_to_knee]
+    type: derived
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      side: right
+      description: |
+        Vertical drop from waist_side_right to mid_knee_level, taken
+        at the side of the body.
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L184"
+
+  - name: dpm_pants_knee
+    seamly_name: leg_knee_circ_bent
+    seamly_code: M10
+    aliases: [knee, knee_circumference_bent]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: knee_bent
+      plane:
+        origin: landmarks.mid_knee_level
+        normal: pose.knee_bent.shin_axis_right
+      region_mask: knee_right
+      output: convex_hull_perimeter
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L184-186"
+    notes: |
+      "make sure your knee is fully bent so you can sit comfortably in
+      the pants". Pose-dependent; the bent-knee circumference is
+      larger than the straight-knee one. Knee_bent pose is a separate
+      pose name; joint angles TBD in Phase 6.
+
+  - name: dpm_pants_crotch_length_total
+    seamly_name: crotch_length
+    seamly_code: N01
+    aliases: [crotch_length, total_crotch_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.waist_cf
+        - landmarks.crotch_centre
+        - landmarks.waist_cb
+      side: midline
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L186-193"
+      - "references/dpm_videos/pants_1/frame_00h21m30s.jpg — the dpm \"sumo nappy\" tester: a horizontal black-elastic loop sized to the waist with a red twill-tape strip sewn at the centre back, looping down through the legs and back up to the centre front, used to physically verify the total crotch length and the front/back split by wearing the device for 10 minutes"
+    notes: |
+      "from your center front through your legs up to the center back".
+      Surface path along the body midline through the crotch. dpm
+      stresses this measurement is critical for fit and notoriously
+      unreliable when taken once; recommends building a personal
+      "sumo nappy" tester from elastic and twill tape and wearing it
+      for 10 minutes to validate (pants_1:L196-231).
+
+  - name: dpm_pants_crotch_length_front
+    seamly_name: crotch_length_f
+    seamly_code: N03
+    aliases: [front_crotch_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.waist_cf
+        - landmarks.crotch_centre
+      side: front_midline
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L186-188"
+      - "references/dpm_videos/pants_1/transcript.txt:L221-229"
+      - "references/dpm_videos/pants_1/frame_00h21m30s.jpg — the dpm sumo-nappy tester (same device as crotch_length_total); after wearing, the front/back split is marked on the twill tape between the legs and the front segment is measured separately"
+    notes: |
+      Front half of the total crotch length. dpm explicitly: "it's not
+      just the full crotch length divided by two" — the front and
+      back differ (Maria's own example: back is ~4.5 inches longer
+      than front). The dpm tester (sumo-nappy method) is what
+      establishes where the front/back split sits, which the body-
+      scanner pipeline must replicate via the crotch_centre landmark
+      (the point on the midline between landmarks.thigh_at_crotch_left
+      and landmarks.thigh_at_crotch_right where a vertical seam
+      naturally sits).
+
+  - name: dpm_pants_crotch_length_back
+    seamly_name: crotch_length_b
+    seamly_code: N02
+    aliases: [back_crotch_length]
+    type: geodesic_path
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      waypoints:
+        - landmarks.crotch_centre
+        - landmarks.waist_cb
+      side: back_midline
+    sources:
+      - "references/dpm_videos/pants_1/transcript.txt:L186-188"
+      - "references/dpm_videos/pants_1/transcript.txt:L221-229"
+      - "references/dpm_videos/pants_1/frame_00h21m30s.jpg — the dpm sumo-nappy tester (same device as crotch_length_total); after wearing, the back segment from CB through the legs to the front/back split point is measured separately"
+    notes: |
+      Back half of the total crotch length. Generally longer than the
+      front half. See crotch_length_front notes on the crotch_centre
+      landmark.
+
+  # ------------------------------------------------------------------
+  # Optional dpm pants measurements. These do not appear on the
+  # core pants_1 measurement list but are introduced later in the
+  # drafting series for specific figure types or extra shaping help.
+  # Marked optional in `notes`. They are body measurements and obey
+  # the same source-citation rules as the rest.
+  # ------------------------------------------------------------------
+
+  - name: dpm_pants_lower_thigh
+    seamly_name: leg_thigh_mid_circ        # Seamly's mid-thigh roughly matches dpm's "~20cm above knee"
+    seamly_code: M04
+    aliases: [lower_thigh, thigh_above_knee]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: pose.measurement_default.thigh_axis_right
+          from_origin: landmarks.mid_knee_level
+          distance_cm:
+            default_cm: 20         # ~7.5-8 inches above the knee
+            allowed_range: [18, 22]
+        normal: pose.measurement_default.thigh_axis_right
+      region_mask: thigh_right
+      output: convex_hull_perimeter
+      optional: true
+    sources:
+      - "references/dpm_videos/pants_4/transcript.txt:L126-130"
+      - "references/dpm_videos/pants_5/transcript.txt:L269-271"
+    notes: |
+      Optional. dpm bodice_measurements + pants_1 do not list it; it is
+      introduced in the drafting tutorials for Jane (pants_4) and Anne
+      (pants_5) as an additional measurement used to draw a better
+      leg-curve from the crotch level down through the knee. Maria's
+      verbal definition: "the lower thigh about 8 inches above the
+      knee" (~20 cm). Take the planar slice perpendicular to the thigh
+      axis at that level, perimeter via convex hull as for upper_thigh
+      and knee.
+
+  - name: dpm_pants_intermediate_waist_circumference
+    seamly_name: null        # no Seamly equivalent; figure-specific shaping aid
+    aliases: [waist_minus_1p5in, anne_intermediate_circumference]
+    type: planar_slice
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin:
+          along: -pose.measurement_default.vertical_axis
+          from_origin: landmarks.waist_string
+          distance_cm:
+            default_cm: 3.8        # 1.5 inches
+            allowed_range: [2.5, 7.5]
+        normal: pose.measurement_default.vertical_axis
+      region_mask: torso
+      output: convex_hull_perimeter
+      optional: true
+    sources:
+      - "references/dpm_videos/pants_5/transcript.txt:L98-103"
+    notes: |
+      Optional. Introduced in pants_5 (drafting for the apple-shape
+      figure "Anne") to help with waist shaping when the standard
+      waist-to-high-hip transition is too steep or too shallow.
+      Maria's verbal definition: "I've taken that measurement 1 1/2
+      inches below the waist" — a planar circumference between the
+      waist and the high hip. The exact offset is figure-dependent;
+      default 3.8 cm (1.5") with the allowed range covering the
+      typical "between waist and high hip" band.
+
+  # ------------------------------------------------------------------
+  # Seamly-compatibility geometric measurements.
+  #
+  # Not measured by Aldrich's p.178 list or by any dpm video. Added so
+  # the `aldrich_women_template.smis` slots and its custom @M_* formulas
+  # have real values when we ship the SeamlyMe export. Scan-extractable
+  # as straight landmark-pair distances; primary source is the Seamly2D
+  # measurement catalog rather than a sewing textbook.
+  #
+  # Unprefixed names (no `aldrich_` / `dpm_` prefix) signal that these
+  # are system-agnostic geometric helpers — both per-system exports use
+  # them.
+  # ------------------------------------------------------------------
+
+  - name: bustpoint_to_waist
+    seamly_name: bustpoint_to_waist
+    seamly_code: J04
+    aliases: [bust_apex_to_waist, bp_to_waist]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      plane:
+        origin: landmarks.bust_apex_midpoint
+        normal: pose.measurement_default.lateral_axis        # vertical plane through the apex midpoint
+      clip:
+        start: landmarks.bust_apex_midpoint
+        end: landmarks.waist_string        # closest point on the waist plane directly below the apex
+        side: chord
+      output: chord_distance
+    sources:
+      - "references/seamly/README.md J04 bustpoint_to_waist (diagram Jp1)"
+    notes: |
+      Vertical distance from the bust apex midpoint down to the waist
+      plane. Used by the SeamlyMe `aldrich_women_template.smis` slot
+      `bustpoint_to_waist` (line 29) and by the custom @M_1 "Front
+      Shoulder to Waist" formula. Not in Aldrich's p.178 list nor in
+      the dpm bodice-measurements video — added purely so the Aldrich
+      Seamly template evaluates with real numbers. Scan-extractable as
+      the chord between bust_apex_midpoint and the waist_string plane
+      along the body's vertical axis.
+
+  - name: bustpoint_to_shoulder_center
+    seamly_name: bustpoint_to_shoulder_center
+    seamly_code: J10
+    aliases: [bp_to_shoulder_centre, bust_apex_to_shoulder_midpoint]
+    type: planar_segment
+    source_classification: body
+    parameters:
+      pose: measurement_default
+      clip:
+        start: landmarks.bust_apex_right
+        end: landmarks.front_shoulder_centre_right
+        side: chord
+      output: chord_distance
+    sources:
+      - "references/seamly/README.md J10 bustpoint_to_shoulder_center (diagram Jp6)"
+    notes: |
+      Straight-line distance from the right bust apex to the right
+      front-shoulder-centre landmark (midpoint of the front shoulder
+      seam between shoulder_neck and acromion). Aldrich's item 15
+      "Front shoulder to waist" measures the *path* shoulder-midpoint →
+      bust apex → waist as one quantity; this entry separates out the
+      shoulder-midpoint → bust apex segment for the SeamlyMe
+      `bustpoint_to_shoulder_center` slot (line 39 of
+      `aldrich_women_template.smis`) and for the revised @M_1 formula
+      (`bustpoint_to_shoulder_center + bustpoint_to_waist`). Not
+      independently measured by Aldrich or dpm. Right-side is the
+      convention; the half-block draft is mirrored.

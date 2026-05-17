@@ -1,4 +1,4 @@
-"""Unit tests for ``body_scanner.gui.forms`` and the Runner state machine."""
+"""Unit tests for ``tailor_twin.gui.forms`` and the Runner state machine."""
 from __future__ import annotations
 
 import time
@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from body_scanner.gui.config import PIPELINE_PY, RUN_SCAN
-from body_scanner.gui.forms import (
+from tailor_twin.gui.config import PIPELINE_PY, RUN_SCAN_ARGS
+from tailor_twin.gui.forms import (
     build_cmd,
     slugify,
     split_person_name,
     validate,
 )
-from body_scanner.gui.runner import Runner
+from tailor_twin.gui.runner import Runner
 
 
 # ---------------------------------------------------------------------------
@@ -142,8 +142,9 @@ def test_build_cmd_minimal(tmp_path: Path) -> None:
         csv="on", obj="", smis="",
     ))
     assert cmd[0] == PIPELINE_PY
-    assert cmd[1] == str(RUN_SCAN)
-    assert cmd[2] == str(tmp_path)
+    # ``python -m tailor_twin.scan`` flag pair, then the capture folder.
+    assert tuple(cmd[1:3]) == RUN_SCAN_ARGS
+    assert cmd[3] == str(tmp_path)
     assert "--out-prefix" in cmd
     assert "--pattern-system" in cmd
     assert "--export-csv" in cmd
