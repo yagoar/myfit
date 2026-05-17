@@ -66,8 +66,20 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         raise FileNotFoundError(f"fit npz not found: {npz}")
 
     cache_path = results_dir / f"{name}_viewer_payload.json"
+    # Invalidate disk cache if the fit npz OR any measure-module file
+    # is newer than the cached payload. Code-mtime check catches
+    # behavioural changes (e.g. hip_level landmark rewrite) that would
+    # otherwise produce stale numbers without a schema bump.
+    cache_floor = npz.stat().st_mtime
+    try:
+        from tailor_twin import measure as _measure_pkg
+        measure_dir = Path(_measure_pkg.__file__).parent
+        for py in measure_dir.glob("*.py"):
+            cache_floor = max(cache_floor, py.stat().st_mtime)
+    except Exception:  # noqa: BLE001
+        pass
     if (cache_path.is_file()
-            and cache_path.stat().st_mtime >= npz.stat().st_mtime):
+            and cache_path.stat().st_mtime >= cache_floor):
         try:
             persisted = json.loads(cache_path.read_text())
             if persisted.get("schema_version") == _SCHEMA_VERSION:
