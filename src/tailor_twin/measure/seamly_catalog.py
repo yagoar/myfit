@@ -198,6 +198,11 @@ RECIPES = {
         axis_from="joint.neck",
         axis_to="joint.head",
         regions=(),
+        # Bound the slice to the neck tube. Without this, the
+        # perpendicular cut on male figures sweeps into the trapezius
+        # cap and inflates G01 ~17% above the actual neck circumference
+        # (see Oscar). 8cm radius covers neck girths up to ~50cm.
+        radius_m=0.08,
     ),
     # G02 neck_circ: geodesic loop through the four anchor points
     # (c7, SN_L, FNP, SN_R). Each consecutive pair is a body-surface
@@ -334,7 +339,11 @@ RECIPES = {
     "H28": SurfacePlumb("shoulder_neck_left", "armfold_front_left",
                          side="back"),
     # H29 …_scapula removed — user dropped (scapula location unknown)
-    "H30": Geodesic(("waist_cf", "high_hip_level")),
+    # H30 waist_to_highhip_f: front-surface geodesic from waist_cf down
+    # to high-hip Y. Endpoint snapped to waist_cf's X/Z to force the
+    # path to stay on the front (high_hip_level centroid sits midline
+    # and can pull the nearest-vertex pick onto the back).
+    "H30": Geodesic(("waist_cf", "waist_cf_at_highhip_y")),
     "H31": Geodesic(("waist_cf", "hip_level")),
     # H32 waist_to_highhip_side: down the side seam (waist_side X/Z) to
     # G08 (high_hip Y) — straight plumb chord on the side.

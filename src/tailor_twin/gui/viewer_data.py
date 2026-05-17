@@ -21,7 +21,7 @@ _CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 # Bump when the payload shape changes (new fields, renamed fields,
 # different unit conventions). Older persisted payloads are recomputed.
-_SCHEMA_VERSION = 7
+_SCHEMA_VERSION = 10
 
 
 def _vertical_ruler(anchor_floor, anchor_top, body_v, offset: float = 0.10):
@@ -39,6 +39,32 @@ def _vertical_ruler(anchor_floor, anchor_top, body_v, offset: float = 0.10):
     leaders = [
         [[ax, y_floor, az], [bar_x, y_floor, az]],
         [[ax, y_top, az], [bar_x, y_top, az]],
+    ]
+    return bar, leaders
+
+
+def _vertical_drop_ruler(p_landmark, p_target, body_v,
+                          offset: float = 0.08):
+    """Off-body vertical bar for VerticalDrop recipes (H37, H39, ...).
+
+    `p_landmark` is the recipe's primary anchor (full XYZ). `p_target`
+    is the second landmark in its full XYZ; only its Y is anatomically
+    constrained — the bar takes its bottom from p_target.y and its top
+    from p_landmark.y (or vice versa). The bar parks on whichever side
+    of the body the primary anchor lives on.
+    """
+    side_x = float(p_landmark[0])
+    bar_x = (float(body_v[:, 0].max()) + offset if side_x >= 0
+             else float(body_v[:, 0].min()) - offset)
+    bar_z = float(p_landmark[2])
+    ay = float(p_landmark[1])
+    by = float(p_target[1])
+    bar = [[bar_x, ay, bar_z], [bar_x, by, bar_z]]
+    leaders = [
+        [[float(p_landmark[0]), ay, float(p_landmark[2])],
+         [bar_x, ay, bar_z]],
+        [[float(p_target[0]), by, float(p_target[2])],
+         [bar_x, by, bar_z]],
     ]
     return bar, leaders
 
@@ -149,6 +175,7 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     from tailor_twin.measure.primitives import (
         Height,
         LateralChord,
+        VerticalDrop,
         drape_polyline_on_body,
         recipe_polyline,
         should_drape,
@@ -242,6 +269,18 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         if poly is None or len(poly) < 2:
             continue
         is_horiz_chord = code in HORIZONTAL_RULER_LANDMARKCHORDS
+        if isinstance(recipe, VerticalDrop):
+            # Bar offset to the body side that the primary anchor lives
+            # on, spanning from the landmark Y to the target landmark Y;
+            # leaders point to each anchor's actual XYZ (not the
+            # projected pair in `_endpoints`).
+            p_lm = lm_eval[recipe.landmark]
+            p_tg = lm_eval[recipe.target_y_landmark]
+            bar, leads = _vertical_drop_ruler(p_lm, p_tg, body_v)
+            polylines[code] = bar
+            leaders[code] = leads
+            polyline_pose[code] = "bent_arm" if use_bent else "a_pose"
+            continue
         if isinstance(recipe, (Height, LateralChord)) or is_horiz_chord:
             # Ruler-style render: bar offset from body + dashed leaders
             # pointing to the anatomical anchors. Skip drape/normal-offset

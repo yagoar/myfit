@@ -110,7 +110,10 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
     # `underbust_crease_left` dynamic landmark finds the inframammary
     # fold directly from the fitted mesh.
     "lowbust_level": ("alias", ["underbust_crease_left"]),
-    "mid_neck_level": ("alias", ["mid_neck_front"]),
+    # Verified vid 5616 ("mid_neck_front") sits at ~20-30% up the neck
+    # axis (throat hollow), not 50%. Use a true 50% lerp between the
+    # SMPL-X neck and head joints so G01 lands on the actual mid-neck.
+    "mid_neck_level": ("lerp_joint", ["neck", "head", "0.5"]),
     # neck_base_level: front_neck_point sits at the throat hollow. At +2.5cm
     # the slice grazed the trapezius (truth diff +27%); at +5cm it overshoot
     # into the upper neck (−10%). +4cm is the sweet spot for the base of
@@ -140,6 +143,12 @@ COMPOUND_LANDMARKS: dict[str, tuple[str, list[str]]] = {
                                    ["waist_side_left", "floor_anchor"]),
     "waist_side_left_at_highhip_y": ("snap_y_landmark",
                                        ["waist_side_left", "high_hip_level"]),
+    # high_hip_level resolves to the slice centroid (body-interior),
+    # so Geodesic's nearest-vertex pick can land on the back. Snap the
+    # waist front centre's X/Z to the high-hip Y so H30's endpoint is
+    # forced onto the front body surface.
+    "waist_cf_at_highhip_y": ("snap_y_landmark",
+                                ["waist_cf", "high_hip_level"]),
     "armfold_back_left_at_waist_y": ("snap_y_landmark",
                                        ["armfold_back_left", "waist_cb"]),
     "underarm_left_at_bust_y": ("snap_y_landmark",
