@@ -419,6 +419,23 @@ MALE_FALLBACK_LANDMARKS: dict[str, dict] = {
         "x_ref": "waist_cf",
         "samples": 30,
     },
+    # Seat plane for male / neutral. The female default (midpoint of
+    # SMPL-X L_Hip / R_Hip joint Y) lands ~2.5cm below the seat curve
+    # on male meshes — the male femur-head joint sits lower relative
+    # to the buttock cap than on the female regression. Use max-girth
+    # in [crotch+2cm, waist-4cm] instead; on Oscar this picks the
+    # actual seat curve at Y=-0.291 vs the joint at -0.317. G09
+    # extracted = 101.26cm vs 101.27cm tape (essentially exact).
+    "hip_level": {
+        "search": "max_girth_y",
+        "y_lower": "crotch_midpoint",
+        "y_upper": "waist_string",
+        "y_lower_offset": 0.02,
+        "y_upper_offset": 0.04,
+        "regions": ("torso", "left_leg", "right_leg"),
+        "x_ref": "waist_cf",
+        "samples": 30,
+    },
 }
 
 
