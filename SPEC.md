@@ -37,7 +37,7 @@ After calibration against tape measurements:
 
 - iPhone 12 Pro / Pro Max or newer Pro, OR iPad Pro 2020+ (must have LiDAR)
 - Mac (Apple Silicon sufficient)
-- ~2.5m clear floor space, plain wall, even diffuse lighting
+- ~1.2m clear radius around the subject (≈2.5m total diameter), plain wall, even diffuse lighting
 - Compression wear, bralette without molded cups
 - Tailor's tape measure
 - Chalk or skin-safe marker
@@ -312,7 +312,7 @@ Total to working scan-to-worksheet pipeline: **~6 weeks part-time**. +1-2 weeks 
 
 Repeat identically every scan:
 
-1. Clear ~2.5m space. Plain wall. Even diffuse lighting, no window backlight.
+1. Clear ~1.2m radius around the subject (≈2.5m total diameter). Plain wall. Even diffuse lighting, no window backlight.
 2. Compression wear. Hair tied back. Bralette without molded cups.
 3. Stand on a marked spot on the floor (taped X).
 4. A-pose: arms ~40° from body, palms forward, feet shoulder-width.
