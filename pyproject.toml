@@ -27,6 +27,18 @@ dependencies = [
   "typer>=0.12",
   "jinja2>=3.1",
   "svgwrite>=1.4",
+  "flask>=3.0",
+]
+
+[tool.hatch.build]
+include = [
+  "src/body_scanner/**/*.py",
+  "src/body_scanner/**/*.html",
+  "src/body_scanner/**/*.css",
+  "src/body_scanner/**/*.js",
+  "src/body_scanner/**/*.svg",
+  "src/body_scanner/**/*.yaml",
+  "src/body_scanner/**/*.json",
 ]
 
 [project.optional-dependencies]
