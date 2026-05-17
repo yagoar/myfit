@@ -21,7 +21,7 @@ _CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 
 # Bump when the payload shape changes (new fields, renamed fields,
 # different unit conventions). Older persisted payloads are recomputed.
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
 
 
 def list_scans(results_dir: Path) -> list[dict[str, str]]:
@@ -113,7 +113,37 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
     )
     body_normals = _vertex_normals(body_verts, body_faces)
 
+    # Bent-arm codes need to be rendered against an elbow-flexed body,
+    # not the A-pose. Repose once here and use the bent verts for both
+    # the polyline compute and the OBJ that the viewer swaps in when
+    # any L01/L02/L04 polyline is toggled visible.
+    BENT_ARM_CODES = ("L01", "L02", "L04")
+    bent_verts = None
+    bent_body_path = npz.with_name(f"{name}_bent_arm_body.obj")
+    try:
+        import smplx
+        from tailor_twin.measure.bent_arm import repose_bent_arm
+        from tailor_twin.measure.exports import write_obj
+        body_model = smplx.create(
+            model_path="data/body_models", model_type="smplx",
+            gender=gender, num_betas=300, use_pca=False, batch_size=1,
+        )
+        fit_data = np.load(npz)
+        pose = repose_bent_arm(fit_data, body_model)
+        bent_verts = pose.verts
+        bent_landmarks = build_landmark_set(
+            bent_verts, joints=pose.joints, faces=faces, gender=gender,
+        )
+        # Always rewrite — fast (no torch optim) and keeps the OBJ
+        # in sync with the latest fit. mtime check is handled by the
+        # outer payload cache.
+        write_obj(bent_verts, faces, bent_body_path)
+        bent_normals = _vertex_normals(bent_verts, faces)
+    except Exception:  # noqa: BLE001
+        bent_verts = None  # pipeline runs without bent-arm if smplx unavailable
+
     polylines: dict[str, list[list[float]]] = {}
+    polyline_pose: dict[str, str] = {}  # code -> "a_pose" | "bent_arm"
     for code, recipe in RECIPES.items():
         # Skip codes the extractor dropped (female-only on male fits,
         # judgment-only, non-finite recipe output). No value -> no
@@ -122,18 +152,25 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         # toggles a curve with no number.
         if code not in report.values:
             continue
+        use_bent = bent_verts is not None and code in BENT_ARM_CODES
+        v_eval = bent_verts if use_bent else verts
+        lm_eval = bent_landmarks if use_bent else landmarks
+        body_v = bent_verts if use_bent else body_verts
+        body_n = bent_normals if use_bent else body_normals
+        body_f = faces if use_bent else body_faces
         try:
-            poly = recipe_polyline(recipe, verts, faces, landmarks)
+            poly = recipe_polyline(recipe, v_eval, faces, lm_eval)
         except Exception:  # noqa: BLE001 — recipe may fail on any figure.
             poly = None
         if poly is None or len(poly) < 2:
             continue
         if should_drape(recipe):
             poly = drape_polyline_on_body(
-                poly, body_verts, body_normals, faces=body_faces)
+                poly, body_v, body_n, faces=body_f)
         else:
-            poly = _offset_along_normals(poly, body_verts, body_normals)
+            poly = _offset_along_normals(poly, body_v, body_n)
         polylines[code] = np.asarray(poly, dtype=float).tolist()
+        polyline_pose[code] = "bent_arm" if use_bent else "a_pose"
 
     measurements = []
     for code in sorted(set(polylines) | set(report.values)):
@@ -156,10 +193,15 @@ def scan_payload(results_dir: Path, name: str) -> dict[str, Any]:
         "name": name,
         "gender": gender,
         "obj_url": f"/api/scan/{name}/obj" if obj.is_file() else "",
+        "bent_arm_obj_url": (
+            f"/api/scan/{name}/bent-arm-obj"
+            if bent_body_path.is_file() else ""
+        ),
         "centroid": centroid,
         "extent": extent,
         "measurements": measurements,
         "polylines": polylines,
+        "polyline_pose": polyline_pose,
     }
     try:
         cache_path.write_text(json.dumps(payload))

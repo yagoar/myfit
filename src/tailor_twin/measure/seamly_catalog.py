@@ -139,7 +139,7 @@ JUDGMENT_OR_STANDARD: dict[str, str] = {
     "H38": "shoulder_slope_neck_back_angle — convention",
     "H40": "shoulder_slope_shoulder_tip_angle — convention",
     # N
-    "N04": "rise_length_side_sitting — needs seated pose",
+    # N04 moved to FORMULAS — approximated as standing rise + thigh radius.
     "N05": "rise_length_diag — needs seated pose",
     # O natural waist
     "O02": "halter line — drafting convention",
@@ -654,6 +654,15 @@ FORMULAS = {
     "N06": Formula("N02"),                        # rise back = back portion of crotch
     "N07": Formula("N03"),                        # rise front
     "N08": Formula("A05 - M01"),                  # rise_length_side = waist_side height − inseam
+    # N04 rise_length_side_sitting — Aldrich's seated body rise (item 19,
+    # p.179). Proper definition needs a seated re-pose (chair-surface
+    # plane). Approximated here as standing rise + thigh radius:
+    # the seated seat sits ~one thigh radius below the crotch level
+    # because the thigh underside rests on the chair. Yaiza extracted
+    # 34.81 cm vs 32.5 cm Aldrich tape (+7 %). Good enough for Aldrich
+    # block drafting; upgrade to seated re-pose if a tape calibration
+    # shows material drift. (2 * π ≈ 6.283185307)
+    "N04": Formula("N08 + M03 / 6.283185307"),
 }
 
 

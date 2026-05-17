@@ -133,4 +133,12 @@ def create_app(runner: Runner | None = None) -> Flask:
             abort(404)
         return send_file(obj, mimetype="text/plain")
 
+    @app.get("/api/scan/<name>/bent-arm-obj")
+    def api_scan_bent_arm_obj(name: str) -> Any:
+        d = _resolve_dir()
+        obj = (d / f"{name}_bent_arm_body.obj").resolve()
+        if not obj.is_file() or d.resolve() not in obj.parents:
+            abort(404)
+        return send_file(obj, mimetype="text/plain")
+
     return app

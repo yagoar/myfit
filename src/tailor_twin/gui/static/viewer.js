@@ -79,6 +79,33 @@ let polylines = {};    // { code: [[x,y,z],...] }
 let polyObjects = {};  // { code: THREE.Line }
 let measurementMeta = [];
 let activeCam = 1;
+// Codes the user has toggled on. Persists across scan switches so a
+// G09 visible on Eric stays visible after picking Oscar (re-applied
+// when the new scan finishes loading, if that scan also has G09).
+const selectedCodes = new Set();
+// Bent-arm pose tracking. The viewer ships two body meshes per scan
+// (A-pose + elbow-flexed); polylines are tagged with which pose they
+// were computed against. When any bent-arm polyline becomes visible
+// the body mesh swaps so the curve lands on the right surface.
+let aPoseMesh = null;
+let bentArmMesh = null;
+const polylinePose = {};  // code -> "a_pose" | "bent_arm"
+let currentPose = "a_pose";
+
+function recomputeActivePose() {
+  for (const code of selectedCodes) {
+    if (polylinePose[code] === "bent_arm") return "bent_arm";
+  }
+  return "a_pose";
+}
+
+function applyPose(newPose) {
+  if (newPose === currentPose) return;
+  if (newPose === "bent_arm" && !bentArmMesh) return;
+  if (aPoseMesh) aPoseMesh.visible = newPose === "a_pose";
+  if (bentArmMesh) bentArmMesh.visible = newPose === "bent_arm";
+  currentPose = newPose;
+}
 
 function showLoader(visible, label = "Loading scan…") {
   const el = $("loader");
@@ -138,18 +165,24 @@ window.addEventListener("keydown", (e) => {
 
 // ---- Mesh loading -----------------------------------------------------
 
+function disposeMesh(m) {
+  if (!m) return;
+  scene.remove(m);
+  m.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach((mat) => mat.dispose());
+    }
+  });
+}
+
 function clearBody() {
-  if (bodyMesh) {
-    scene.remove(bodyMesh);
-    bodyMesh.traverse((o) => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) {
-        const m = Array.isArray(o.material) ? o.material : [o.material];
-        m.forEach((mat) => mat.dispose());
-      }
-    });
-    bodyMesh = null;
-  }
+  disposeMesh(aPoseMesh);
+  disposeMesh(bentArmMesh);
+  aPoseMesh = null;
+  bentArmMesh = null;
+  bodyMesh = null;
   Object.values(polyObjects).forEach((l) => scene.remove(l));
   polyObjects = {};
 }
@@ -200,10 +233,17 @@ async function loadObjFromUrl(url) {
 }
 
 
-function showBody(group) {
+function showBody(aPoseGroup, bentArmGroup) {
   clearBody();
-  bodyMesh = group;
-  scene.add(bodyMesh);
+  aPoseMesh = aPoseGroup;
+  scene.add(aPoseMesh);
+  if (bentArmGroup) {
+    bentArmMesh = bentArmGroup;
+    bentArmMesh.visible = false;
+    scene.add(bentArmMesh);
+  }
+  bodyMesh = aPoseMesh;
+  currentPose = "a_pose";
   frameToBody();
 }
 
@@ -240,7 +280,9 @@ function buildPolylines() {
     geom.setPositions(flat);
     const line = new Line2(geom, makeLineMaterial());
     line.computeLineDistances();
-    line.visible = false;
+    // Re-apply persistent selection so a code that was visible on the
+    // previous scan stays visible on this one (when both have it).
+    line.visible = selectedCodes.has(code);
     line.userData.code = code;
     scene.add(line);
     polyObjects[code] = line;
@@ -248,8 +290,11 @@ function buildPolylines() {
 }
 
 function setPolylineVisible(code, visible) {
+  if (visible) selectedCodes.add(code);
+  else selectedCodes.delete(code);
   const l = polyObjects[code];
   if (l) l.visible = visible;
+  applyPose(recomputeActivePose());
 }
 
 // ---- Measurement sidebar ----------------------------------------------
@@ -277,9 +322,11 @@ function renderMeasList() {
     row.title = title;
     const fxBadge = m.formula
       ? `<span class="fx" title="formula: ${m.formula}">fx</span>` : "";
+    const checkedAttr = (m.has_polyline && selectedCodes.has(m.code))
+      ? "checked" : "";
     row.innerHTML = `
       <input type="checkbox" data-code="${m.code}"
-             ${m.has_polyline ? "" : "disabled"}>
+             ${m.has_polyline ? "" : "disabled"} ${checkedAttr}>
       <span class="code">${m.code}</span>
       <span class="label">${m.name || "—"}</span>
       ${fxBadge}
@@ -380,16 +427,27 @@ async function loadScan(name) {
   showLoader(true, `Loading ${name}…`);
   try {
     const q = dirQuery();
-    const [payload, group] = await Promise.all([
-      fetch(`/api/scan/${name}${q}`).then((r) => r.json()),
-      loadObjFromUrl(`/api/scan/${name}/obj${q}`),
-    ]);
-    showBody(group);
+    const payload = await fetch(`/api/scan/${name}${q}`).then((r) => r.json());
+    const aPoseGroup = await loadObjFromUrl(`/api/scan/${name}/obj${q}`);
+    let bentGroup = null;
+    if (payload.bent_arm_obj_url) {
+      try {
+        bentGroup = await loadObjFromUrl(payload.bent_arm_obj_url + q);
+      } catch (e) {
+        // Bent-arm mesh optional — viewer falls back to A-pose only.
+        console.warn("bent-arm mesh missing:", e);
+      }
+    }
+    showBody(aPoseGroup, bentGroup);
     polylines = payload.polylines || {};
+    Object.assign(polylinePose, {});  // reset
+    for (const k of Object.keys(polylinePose)) delete polylinePose[k];
+    Object.assign(polylinePose, payload.polyline_pose || {});
     measurementMeta = payload.measurements || [];
     buildPolylines();
     renderMeasList();
     renderHud(name);
+    applyPose(recomputeActivePose());
   } catch (err) {
     console.error(err);
     setHud(`<b style="color:#ff8484">error:</b> ${err.message || err}`);
