@@ -10,7 +10,14 @@ import re
 from pathlib import Path
 from typing import Mapping
 
-from .config import PIPELINE_PY, RUN_SCAN, VALID_PATTERN_SYSTEMS, WAIST_COLORS
+from .config import (
+    ENABLED_GENDERS,
+    PIPELINE_PY,
+    RUN_SCAN,
+    VALID_GENDERS,
+    VALID_PATTERN_SYSTEMS,
+    WAIST_COLORS,
+)
 
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
@@ -65,6 +72,13 @@ def validate(form: Mapping[str, str]) -> str | None:
     if system not in VALID_PATTERN_SYSTEMS:
         return f"Unknown pattern system: {system!r}"
 
+    gender = (form.get("gender") or "female").strip()
+    if gender not in VALID_GENDERS:
+        return f"Unknown gender: {gender!r}"
+    if gender not in ENABLED_GENDERS:
+        return (f"Gender {gender!r} is not currently supported "
+                "(no SMPL-X model file present).")
+
     bday = (form.get("birthday") or "").strip()
     if bday and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", bday):
         return f"Birthday must be yyyy-mm-dd: {bday!r}"
@@ -85,10 +99,12 @@ def build_cmd(form: Mapping[str, str]) -> list[str]:
     obj_flag = "--export-obj" if form.get("obj") else "--no-export-obj"
     smis_flag = "--export-smis" if form.get("smis") else "--no-export-smis"
 
+    gender = (form.get("gender") or "female").strip()
     cmd: list[str] = [
         PIPELINE_PY, str(RUN_SCAN), capture,
         "--out-prefix", out_prefix,
         "--pattern-system", form.get("system") or "all",
+        "--gender", gender,
         csv_flag, obj_flag, smis_flag,
     ]
     color = (form.get("color") or "none").strip()

@@ -68,6 +68,7 @@ def _good(tmp_path: Path, **overrides) -> dict[str, str]:
         "color": "none",
         "birthday": "1990-05-17",
         "scan_date": "2026-05-17",
+        "gender": "female",
     }
     base.update(overrides)
     return base
@@ -116,6 +117,20 @@ def test_validate_empty_birthday_is_ok(tmp_path: Path) -> None:
     assert validate(_good(tmp_path, birthday="")) is None
 
 
+def test_validate_unknown_gender(tmp_path: Path) -> None:
+    err = validate(_good(tmp_path, gender="other"))
+    assert err and "gender" in err.lower()
+
+
+def test_validate_male_gender_disabled(tmp_path: Path) -> None:
+    err = validate(_good(tmp_path, gender="male"))
+    assert err and "not currently supported" in err.lower()
+
+
+def test_validate_female_gender_ok(tmp_path: Path) -> None:
+    assert validate(_good(tmp_path, gender="female")) is None
+
+
 # ---------------------------------------------------------------------------
 # build_cmd
 # ---------------------------------------------------------------------------
@@ -139,6 +154,11 @@ def test_build_cmd_minimal(tmp_path: Path) -> None:
     assert "--person-given-name" in cmd
     assert cmd[cmd.index("--person-given-name") + 1] == "Yaiza"
     assert "--person-family-name" not in cmd  # single-token name
+
+
+def test_build_cmd_passes_gender(tmp_path: Path) -> None:
+    cmd = build_cmd(_good(tmp_path, gender="female"))
+    assert cmd[cmd.index("--gender") + 1] == "female"
 
 
 def test_build_cmd_full(tmp_path: Path) -> None:

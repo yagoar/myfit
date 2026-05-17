@@ -33,3 +33,18 @@ PATTERN_SYSTEMS: tuple[tuple[str, str], ...] = (
     ("seamly_only", "Seamly catalog only"),
 )
 VALID_PATTERN_SYSTEMS: frozenset[str] = frozenset(v for v, _ in PATTERN_SYSTEMS)
+
+# Gender values match SeamlyMe (Seamly2D/src/libs/vformat/measurements.cpp):
+# {"male", "female", "unknown"}. Only "female" is currently usable
+# because we ship only SMPLX_FEMALE.npz under data/body_models/smplx/.
+# The HTML disables the others; ``VALID_GENDERS`` here mirrors what the
+# backend accepts so the SMIS export keeps working if a future scan
+# enables them.
+GENDERS: tuple[tuple[str, str, bool], ...] = (
+    # (value, label, enabled?)
+    ("female",  "Female",  True),
+    ("male",    "Male — SMPL-X model not present", False),
+    ("unknown", "Unknown — SMPL-X model not present", False),
+)
+VALID_GENDERS: frozenset[str] = frozenset(v for v, _, _ in GENDERS)
+ENABLED_GENDERS: frozenset[str] = frozenset(v for v, _, e in GENDERS if e)

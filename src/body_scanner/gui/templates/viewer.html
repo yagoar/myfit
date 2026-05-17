@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><title>MyFit — 3D Viewer</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
+</head><body><div class="wrap viewer-wrap">
+
+<header>
+  <div class="brand">
+    <h1>My<span class="amp">Fit</span></h1>
+    <span class="tag">3D Viewer</span>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('index') }}" class="ghost btn-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to scan
+    </a>
+    <span id="viewer-status" class="pill">idle</span>
+  </div>
+</header>
+
+<div class="viewer-layout">
+
+  <aside class="viewer-sidebar">
+
+    <div class="card">
+      <h2>Source</h2>
+      <div class="grid">
+        <label class="field-label" for="scan-picker">Scan</label>
+        <select id="scan-picker"><option value="">— pick a scan —</option></select>
+
+        <label class="field-label" for="upload">Or upload OBJ</label>
+        <div>
+          <label for="upload" class="ghost btn-link upload-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose file
+          </label>
+          <input id="upload" type="file" accept=".obj" hidden>
+          <div class="help" id="upload-name">No file selected.
+            Without a backing fit npz, measurements are unavailable.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card measurements-card">
+      <h2>Measurements <span id="meas-count" class="pill counter">0</span></h2>
+      <div class="meas-controls">
+        <input id="meas-filter" type="text" placeholder="Filter…">
+        <button type="button" id="meas-all" class="ghost">All</button>
+        <button type="button" id="meas-none" class="ghost">None</button>
+      </div>
+      <div id="meas-list" class="meas-list">
+        <div class="help">Pick a scan to load measurements.</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="viewer-stage">
+    <div class="canvas-shell">
+      <div id="canvas-host"></div>
+      <div class="cam-presets">
+        {% for n, label in [(1,'Front'),(2,'45° F'),(3,'Side'),(4,'45° B'),(5,'Back')] %}
+          <button type="button" class="cam-btn" data-cam="{{ n }}">
+            <kbd>{{ n }}</kbd> {{ label }}
+          </button>
+        {% endfor %}
+      </div>
+      <div class="hud" id="hud"></div>
+    </div>
+  </main>
+
+</div>
+
+</div><!-- /wrap -->
+
+<script type="module" src="{{ url_for('static', filename='viewer.js') }}"></script>
+
+</body></html>

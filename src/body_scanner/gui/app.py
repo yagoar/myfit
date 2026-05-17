@@ -6,17 +6,27 @@ import json
 import queue
 from typing import Any
 
-from flask import Flask, Response, jsonify, render_template, request
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    render_template,
+    request,
+    send_file,
+)
 
 from .config import (
     DEFAULT_CAPTURES_DIR,
     DEFAULT_RESULTS_DIR,
+    GENDERS,
     PATTERN_SYSTEMS,
     REPO_ROOT,
     WAIST_COLORS,
 )
 from .forms import build_cmd, validate
 from .runner import Runner
+from .viewer_data import list_scans, scan_payload
 
 
 def create_app(runner: Runner | None = None) -> Flask:
@@ -32,6 +42,7 @@ def create_app(runner: Runner | None = None) -> Flask:
             today=dt.date.today().isoformat(),
             colors=WAIST_COLORS,
             systems=PATTERN_SYSTEMS,
+            genders=GENDERS,
             default_captures=str(DEFAULT_CAPTURES_DIR),
             default_results=str(DEFAULT_RESULTS_DIR),
         )
@@ -77,5 +88,32 @@ def create_app(runner: Runner | None = None) -> Flask:
             gen(), mimetype="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
+
+    # -----------------------------------------------------------------
+    # 3D viewer
+    # -----------------------------------------------------------------
+
+    @app.get("/viewer")
+    def viewer() -> str:
+        return render_template("viewer.html", today=dt.date.today().isoformat())
+
+    @app.get("/api/scans")
+    def api_scans() -> Any:
+        return jsonify(scans=list_scans(DEFAULT_RESULTS_DIR))
+
+    @app.get("/api/scan/<name>")
+    def api_scan(name: str) -> Any:
+        try:
+            payload = scan_payload(DEFAULT_RESULTS_DIR, name)
+        except FileNotFoundError as e:
+            abort(404, description=str(e))
+        return jsonify(payload)
+
+    @app.get("/api/scan/<name>/obj")
+    def api_scan_obj(name: str) -> Any:
+        obj = (DEFAULT_RESULTS_DIR / f"{name}_fit_body.obj").resolve()
+        if not obj.is_file() or DEFAULT_RESULTS_DIR.resolve() not in obj.parents:
+            abort(404)
+        return send_file(obj, mimetype="text/plain")
 
     return app

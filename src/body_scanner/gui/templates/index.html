@@ -14,6 +14,15 @@
     <span class="tag">Body Scan Pipeline</span>
   </div>
   <div class="header-actions">
+    <a href="{{ url_for('viewer') }}" class="ghost btn-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      3D viewer
+    </a>
     <button type="button" id="howto-btn" class="ghost">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
            stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -52,9 +61,13 @@
       <label class="field-label" for="scan_date">Scan date</label>
       <input id="scan_date" name="scan_date" type="date" value="{{ today }}">
 
-      <label class="field-label" for="system">Pattern system</label>
-      <select id="system" name="system">
-        {% for v, lbl in systems %}<option value="{{ v }}">{{ lbl }}</option>{% endfor %}
+      <label class="field-label" for="gender">Gender</label>
+      <select id="gender" name="gender">
+        {% for v, lbl, enabled in genders %}
+          <option value="{{ v }}"
+                  {% if not enabled %}disabled{% endif %}
+                  {% if enabled and loop.first %}selected{% endif %}>{{ lbl }}</option>
+        {% endfor %}
       </select>
     </div>
   </div>
@@ -75,6 +88,11 @@
   <div class="card">
     <h2>Export</h2>
     <div class="grid">
+      <label class="field-label" for="system">Pattern system</label>
+      <select id="system" name="system">
+        {% for v, lbl in systems %}<option value="{{ v }}">{{ lbl }}</option>{% endfor %}
+      </select>
+
       <label class="field-label">Artifacts</label>
       <div class="chips">
         <label class="chip"><input type="checkbox" name="csv" checked> CSV</label>
