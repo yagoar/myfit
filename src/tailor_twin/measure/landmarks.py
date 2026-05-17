@@ -404,18 +404,19 @@ MALE_FALLBACK_LANDMARKS: dict[str, dict] = {
     # Chest-fullest plane for male / neutral. The female bust_apex
     # midpoint sits ~4cm above the male armpit on the SMPL-X mesh and
     # produces an empty torso slice, so PlanarGirth at bust_level
-    # fails (NaN G04). Use the same max_front_z_y search we use for
-    # high_hip_level, restricted to the chest band between waist and
-    # armfold-front, midline X filter to ignore arm bulges.
+    # fails outright. max_front_z_y on this band degenerated to belly
+    # midline (abdomen fat protrudes more than the male chest centre).
+    # max-girth on the torso slice does the right thing: peak girth
+    # in [waist+8cm, armfold-1.5cm] lands at the nipple line on
+    # Oscar (Y≈0.09 above waist) and matches tape truth within ~1%.
     "bust_level": {
-        "search": "max_front_z_y",
+        "search": "max_girth_y",
         "y_lower": "waist_string",
         "y_upper": "armfold_front_left",
-        "y_lower_offset": 0.10,
-        "y_upper_offset": 0.02,
+        "y_lower_offset": 0.08,
+        "y_upper_offset": 0.015,
         "regions": ("torso",),
-        "x_midline_ref": "waist_cf",
-        "x_midline_band": 0.05,
+        "x_ref": "waist_cf",
         "samples": 30,
     },
 }
@@ -938,6 +939,70 @@ def _search_intersect_line_with_recipe(
     return sub[int(np.argmin(d))]
 
 
+def _search_girth_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+    pick: str,
+) -> np.ndarray:
+    """Shared girth-extremum scan. ``pick`` is ``"min"`` or ``"max"``."""
+    from .mesh_ops import (
+        _build_loops, _convex_hull_perimeter, _loop_xz,
+        _pick_loop_near_point, slice_mesh,
+    )
+    from .regions import region_vertex_mask
+
+    if lm.faces is None:
+        raise KeyError(f"{name!r}: faces required")
+    y_lo = float(lm[spec["y_lower"]][1])
+    y_hi = float(lm[spec["y_upper"]][1])
+    span = y_hi - y_lo
+    y_start = y_lo + float(spec.get("y_lower_offset", 0.0))
+    if "y_upper_frac_of_span" in spec:
+        y_end = y_lo + float(spec["y_upper_frac_of_span"]) * span
+    else:
+        y_end = y_hi - float(spec.get("y_upper_offset", 0.0))
+    if y_start >= y_end:
+        raise KeyError(f"{name!r}: empty Y range "
+                       f"[{y_start:.3f}, {y_end:.3f}]")
+
+    samples = int(spec.get("samples", 25))
+    regions = tuple(spec.get("regions", ()))
+    region_mask = region_vertex_mask(regions) if regions else None
+    x_ref_pt = lm[spec["x_ref"]] if "x_ref" in spec else None
+    y_axis = np.array([0.0, 1.0, 0.0])
+
+    best_y: float | None = None
+    best_centroid: np.ndarray | None = None
+    if pick == "min":
+        best_girth = np.inf
+        improved = lambda g, b: g < b  # noqa: E731
+    else:
+        best_girth = -np.inf
+        improved = lambda g, b: g > b  # noqa: E731
+
+    for y in np.linspace(y_start, y_end, samples):
+        origin = np.array([0.0, float(y), 0.0])
+        segs = slice_mesh(lm.verts, lm.faces, origin, y_axis,
+                          vertex_mask=region_mask)
+        loops = _build_loops(segs)
+        if not loops:
+            continue
+        loop = (_pick_loop_near_point(loops, x_ref_pt)
+                if x_ref_pt is not None else loops[0])
+        if loop is None or len(loop) < 3:
+            continue
+        g = float(_convex_hull_perimeter(_loop_xz(loop, y_axis)))
+        if improved(g, best_girth):
+            best_girth = g
+            best_y = float(y)
+            best_centroid = loop.mean(axis=0)
+    if best_y is None:
+        raise KeyError(f"{name!r}: no slices found in window")
+    if x_ref_pt is not None:
+        return np.array([x_ref_pt[0], best_y, x_ref_pt[2]])
+    assert best_centroid is not None
+    return np.array([best_centroid[0], best_y, best_centroid[2]])
+
+
 def _search_min_girth_y(
     lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
 ) -> np.ndarray:
@@ -967,61 +1032,22 @@ def _search_min_girth_y(
                              (and used to disambiguate when multiple loops
                              survive — e.g. both legs in a torso slice).
     """
-    from .mesh_ops import (
-        _build_loops, _convex_hull_perimeter, _loop_xz,
-        _pick_loop_near_point, slice_mesh,
-    )
-    from .regions import region_vertex_mask
+    return _search_girth_y(lm, name, spec, mask, pick="min")
 
-    if lm.faces is None:
-        raise KeyError(f"min_girth_y {name!r}: faces required")
 
-    y_lo = float(lm[spec["y_lower"]][1])
-    y_hi = float(lm[spec["y_upper"]][1])
-    span = y_hi - y_lo
-    y_start = y_lo + float(spec.get("y_lower_offset", 0.0))
-    if "y_upper_frac_of_span" in spec:
-        y_end = y_lo + float(spec["y_upper_frac_of_span"]) * span
-    else:
-        y_end = y_hi - float(spec.get("y_upper_offset", 0.0))
-    if y_start >= y_end:
-        raise KeyError(f"min_girth_y {name!r}: empty Y range "
-                       f"[{y_start:.3f}, {y_end:.3f}]")
+def _search_max_girth_y(
+    lm: LandmarkSet, name: str, spec: dict, mask: np.ndarray,
+) -> np.ndarray:
+    """Y of the widest convex-hull slice in a vertical window.
 
-    samples = int(spec.get("samples", 25))
-    regions = tuple(spec.get("regions", ()))
-    region_mask = region_vertex_mask(regions) if regions else None
-
-    x_ref_pt = lm[spec["x_ref"]] if "x_ref" in spec else None
-    y_axis = np.array([0.0, 1.0, 0.0])
-
-    best_y: float | None = None
-    best_girth = np.inf
-    best_centroid: np.ndarray | None = None
-    for y in np.linspace(y_start, y_end, samples):
-        origin = np.array([0.0, float(y), 0.0])
-        segs = slice_mesh(lm.verts, lm.faces, origin, y_axis,
-                          vertex_mask=region_mask)
-        loops = _build_loops(segs)
-        if not loops:
-            continue
-        loop = (_pick_loop_near_point(loops, x_ref_pt)
-                if x_ref_pt is not None else loops[0])
-        if loop is None or len(loop) < 3:
-            continue
-        xy = _loop_xz(loop, y_axis)
-        g = float(_convex_hull_perimeter(xy))
-        if g < best_girth:
-            best_girth = g
-            best_y = float(y)
-            best_centroid = loop.mean(axis=0)
-    if best_y is None:
-        raise KeyError(f"min_girth_y {name!r}: no slices found in window")
-
-    if x_ref_pt is not None:
-        return np.array([x_ref_pt[0], best_y, x_ref_pt[2]])
-    assert best_centroid is not None
-    return np.array([best_centroid[0], best_y, best_centroid[2]])
+    Mirror of `_search_min_girth_y`. Used for `bust_level` on male /
+    neutral fits — picks the chest-fullest Y where horizontal girth
+    peaks. On Oscar this lands at the nipple line (Y ~0.09 above
+    waist), giving G04 ≈ 106 cm vs 106.25 cm tape (-0.3 %). The
+    max-front-Z fallback we tried first picked the belly midline
+    because abdomen fat sticks out more than the male chest centre.
+    """
+    return _search_girth_y(lm, name, spec, mask, pick="max")
 
 
 def _scan_slices(lm, spec):
@@ -1194,6 +1220,7 @@ DYNAMIC_SEARCHES: dict[str, Callable[
     "body_at_xy": _search_body_at_xy,
     "intersect_line_with_recipe": _search_intersect_line_with_recipe,
     "min_girth_y": _search_min_girth_y,
+    "max_girth_y": _search_max_girth_y,
     "max_front_z_y": _search_max_front_z_y,
     "max_lateral_x_y": _search_max_lateral_x_y,
     "underbust_crease": _search_underbust_crease,
