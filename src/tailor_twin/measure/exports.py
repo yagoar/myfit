@@ -1,13 +1,13 @@
 """Artifact writers for the measurement pipeline.
 
-Four outputs from a single fit + extract run:
-  - .smis      (SeamlyMe / Seamly2D)
+Three outputs from a single fit + extract run:
+  - .smis      (SeamlyMe / Seamly2D) — formula-derived codes are
+                written as Seamly2D-evaluable expressions in the
+                ``value`` attribute (e.g. ``value="(neck_circ - neck_arc_f)"``),
+                so editing a primary in SeamlyMe re-derives all
+                dependents the next time the .smis is loaded.
   - .csv       (code, seamly_name, value_cm)        — Seamly catalog
-  - .csv       (name, value_cm) named-CSV variant   — Aldrich / dpm
   - .obj       (fitted SMPL-X body mesh — CLO3D-importable)
-
-The SMIS writer mirrors scripts/export_seamlyme.py's render_smis but is
-importable so the measure CLI can produce the .smis directly.
 """
 from __future__ import annotations
 
@@ -20,7 +20,40 @@ from xml.sax.saxutils import escape as xml_escape
 
 import numpy as np
 
-from .seamly_catalog import CODE_TO_NAME
+from .seamly_catalog import CODE_TO_NAME, FORMULAS
+
+
+# Seamly code pattern: capital letter + two digits. Used to translate
+# the FORMULAS dict expressions (which reference codes like ``G02``)
+# into Seamly2D-evaluable formulas referencing names like ``neck_circ``.
+_CODE_REF = re.compile(r"\b([A-Z]\d{2})\b")
+
+
+def _formula_to_seamly(expr: str) -> str:
+    """Replace every ``<code>`` in an arithmetic expression with the
+    matching Seamly measurement name. Codes without a known name (e.g.
+    the literal ``0`` in the ``A23`` placeholder) are left alone, so a
+    formula like ``"A02 - 0"`` survives the substitution untouched."""
+
+    def repl(m: re.Match[str]) -> str:
+        return CODE_TO_NAME.get(m.group(1), m.group(1))
+
+    return _CODE_REF.sub(repl, expr)
+
+
+def _build_formula_strings() -> dict[str, str]:
+    """Map Seamly *name* → formula expression in Seamly *names*.
+
+    Keyed by name (not code) because the SMIS XML uses names. Only
+    formula codes that have a registered Seamly name are emitted —
+    others are dropped (they'd be unreachable from the SMIS anyway)."""
+    out: dict[str, str] = {}
+    for code, formula in FORMULAS.items():
+        name = CODE_TO_NAME.get(code)
+        if name is None:
+            continue
+        out[name] = f"({_formula_to_seamly(formula.expr)})"
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -148,9 +181,18 @@ def render_smis(
     template_order: list[str],
     personal: PersonalInfo | None = None,
     pm_system: str = _PM_SYSTEM_DEFAULT,
+    formulas: dict[str, str] | None = None,
 ) -> str:
-    """Same XML shape as scripts/export_seamlyme.py::render_smis.
-    seamly_values is keyed by SEAMLY NAME (e.g. 'bust_circ'), not code."""
+    """Render an .smis XML string.
+
+    ``seamly_values`` is keyed by SEAMLY NAME (e.g. 'bust_circ').
+    ``formulas`` maps a name to a Seamly2D-evaluable expression (in
+    Seamly names, not codes) — names appearing here are written with
+    the formula in the ``value`` attribute so SeamlyMe re-derives
+    them at load time instead of carrying our precomputed number.
+    Names absent from ``formulas`` use the numeric value as before.
+    """
+    formulas = formulas or {}
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     head = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -164,19 +206,27 @@ def render_smis(
         + _personal_block(personal)
         + "    <body-measurements>\n"
     )
-    rows: list[str] = []
-    seen: set[str] = set()
-    for name in template_order:
+
+    def _value_attr(name: str) -> str:
+        if name in formulas:
+            return xml_escape(formulas[name])
         val = seamly_values.get(name, 0)
         if isinstance(val, float) and val.is_integer():
             val = int(val)
-        rows.append(f'        <m name="{xml_escape(name)}" value="{val}"/>')
+        return str(val)
+
+    rows: list[str] = []
+    seen: set[str] = set()
+    for name in template_order:
+        rows.append(
+            f'        <m name="{xml_escape(name)}" value="{_value_attr(name)}"/>'
+        )
         seen.add(name)
-    for name in sorted(set(seamly_values) - seen):
-        val = seamly_values[name]
-        if isinstance(val, float) and val.is_integer():
-            val = int(val)
-        rows.append(f'        <m name="{xml_escape(name)}" value="{val}"/>')
+    extras = sorted((set(seamly_values) | set(formulas)) - seen)
+    for name in extras:
+        rows.append(
+            f'        <m name="{xml_escape(name)}" value="{_value_attr(name)}"/>'
+        )
     tail = "\n    </body-measurements>\n</smis>\n"
     return head + "\n".join(rows) + tail
 
@@ -189,12 +239,25 @@ def write_smis_from_catalog(
     pm_system: str = _PM_SYSTEM_DEFAULT,
 ) -> None:
     """Convert {code: value} -> {seamly_name: value} via CODE_TO_NAME, render
-    XML, write to disk. ``personal`` populates the SMIS <personal> block."""
+    XML, write to disk. Formula codes (entries in ``FORMULAS``) are
+    written as Seamly2D expressions in the ``value`` attribute so
+    SeamlyMe re-derives them when the .smis is loaded — primary
+    edits propagate to dependents without re-running the pipeline.
+    ``personal`` populates the SMIS <personal> block.
+    """
+    formula_strings = _build_formula_strings()
+    formula_names = set(formula_strings)
+
     by_name: dict[str, float] = {}
     for code, val in catalog_values.items():
         name = CODE_TO_NAME.get(code)
-        if name:
-            by_name[name] = float(val)
+        if not name:
+            continue
+        # Skip formula values — they'll be emitted as Seamly2D
+        # expressions, not precomputed numbers.
+        if name in formula_names:
+            continue
+        by_name[name] = float(val)
 
     template_order: list[str] = []
     if template_path and Path(template_path).is_file():
@@ -205,44 +268,7 @@ def write_smis_from_catalog(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
         render_smis(by_name, template_order,
-                    personal=personal, pm_system=pm_system))
+                    personal=personal, pm_system=pm_system,
+                    formulas=formula_strings))
 
 
-# ---------------------------------------------------------------------------
-# Named CSV (Aldrich / dpm — merged.yaml output)
-# ---------------------------------------------------------------------------
-
-
-# Name-prefix → pattern-making system. Used to filter merged.yaml output
-# when the GUI / CLI asks for a single-system CSV export.
-SYSTEM_PREFIXES: dict[str, tuple[str, ...]] = {
-    "all": (),
-    "aldrich": ("aldrich_",),
-    "dpm": ("dpm_", "bustpoint_"),
-}
-
-
-def filter_by_system(
-    values: dict[str, float], system: str,
-) -> dict[str, float]:
-    """Keep only entries whose name starts with one of SYSTEM_PREFIXES[system].
-
-    ``system='all'`` returns the input dict unchanged. Unknown systems
-    raise KeyError so typos surface early."""
-    prefixes = SYSTEM_PREFIXES[system]
-    if not prefixes:
-        return dict(values)
-    return {k: v for k, v in values.items() if k.startswith(prefixes)}
-
-
-def write_named_csv(
-    values: dict[str, float], out_path: Path,
-) -> None:
-    """Emit ``name, value_cm`` rows ordered alphabetically. ``values`` is
-    keyed by the merged.yaml entry name (e.g. 'aldrich_bust')."""
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["name", "value_cm"])
-        for k in sorted(values):
-            w.writerow([k, f"{float(values[k]):.4f}"])

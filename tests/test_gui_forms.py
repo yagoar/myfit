@@ -64,7 +64,6 @@ def _good(tmp_path: Path, **overrides) -> dict[str, str]:
         "csv": "on",
         "obj": "on",
         "smis": "on",
-        "system": "aldrich",
         "color": "none",
         "birthday": "1990-05-17",
         "scan_date": "2026-05-17",
@@ -101,11 +100,6 @@ def test_validate_no_export(tmp_path: Path) -> None:
 def test_validate_bad_color(tmp_path: Path) -> None:
     err = validate(_good(tmp_path, color="hotpink"))
     assert err and "colour" in err.lower()
-
-
-def test_validate_bad_system(tmp_path: Path) -> None:
-    err = validate(_good(tmp_path, system="burda"))
-    assert err and "pattern system" in err.lower()
 
 
 def test_validate_bad_birthday(tmp_path: Path) -> None:
@@ -146,7 +140,7 @@ def test_build_cmd_minimal(tmp_path: Path) -> None:
     assert tuple(cmd[1:3]) == RUN_SCAN_ARGS
     assert cmd[3] == str(tmp_path)
     assert "--out-prefix" in cmd
-    assert "--pattern-system" in cmd
+    assert "--pattern-system" not in cmd
     assert "--export-csv" in cmd
     assert "--no-export-obj" in cmd
     assert "--no-export-smis" in cmd
@@ -165,7 +159,7 @@ def test_build_cmd_passes_gender(tmp_path: Path) -> None:
 def test_build_cmd_full(tmp_path: Path) -> None:
     cmd = build_cmd(_good(
         tmp_path, color="cyan", birthday="1990-05-17",
-        person="Yaiza Gomez Perez", system="all",
+        person="Yaiza Gomez Perez",
     ))
     assert ["--waist-color", "cyan"] == [
         cmd[cmd.index("--waist-color")],
@@ -177,7 +171,7 @@ def test_build_cmd_full(tmp_path: Path) -> None:
     ]
     assert cmd[cmd.index("--person-given-name") + 1] == "Yaiza"
     assert cmd[cmd.index("--person-family-name") + 1] == "Gomez Perez"
-    assert cmd[cmd.index("--pattern-system") + 1] == "all"
+    assert "--pattern-system" not in cmd
 
 
 # ---------------------------------------------------------------------------

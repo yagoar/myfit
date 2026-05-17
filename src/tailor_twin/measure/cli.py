@@ -1,10 +1,8 @@
-"""CLI: run extractor on a fit.npz, print measurements + skipped reasons.
+"""CLI: run the Seamly catalog extractor on a fit.npz.
 
-Two modes:
-  default        — run the merged.yaml extractor (Aldrich + dpm subset)
-  --seamly       — run the Seamly catalog extractor (all 245 codes,
-                   per references/seamly/extraction_audit.md)
-  --both         — run both and label output
+Runs every recipe in ``RECIPES`` + ``FORMULAS``, optionally re-poses
+the bent-arm codes (L01/L02/L04 and the L03 formula), and writes any
+combination of CSV / JSON / SMIS / OBJ artifacts.
 """
 from __future__ import annotations
 
@@ -23,14 +21,10 @@ from .bent_arm import (
 )
 from .exports import (
     PersonalInfo,
-    SYSTEM_PREFIXES,
-    filter_by_system,
     write_csv,
-    write_named_csv,
     write_obj,
     write_smis_from_catalog,
 )
-from .extractor import extract
 from .landmarks import build_landmark_set
 from .seamly_catalog import RECIPES
 from .seamly_extractor import extract_catalog
@@ -39,7 +33,7 @@ from .seamly_extractor import extract_catalog
 BENT_ARM_CODES: tuple[str, ...] = ("L01", "L02", "L04")
 
 
-def _print_table(values: dict, label: str = "measurement", unit: str = "cm") -> None:
+def _print_table(values: dict, label: str = "seamly_code", unit: str = "cm") -> None:
     print(f"{label:<40} {'value (' + unit + ')':>10}")
     print("-" * 52)
     for k in sorted(values):
@@ -52,10 +46,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--model-folder", default="data/body_models")
     p.add_argument("--gender", default="female")
     p.add_argument("--num-betas", type=int, default=100)
-    p.add_argument("--seamly", action="store_true",
-                   help="Run the Seamly catalog extractor (all codes).")
-    p.add_argument("--both", action="store_true",
-                   help="Run both extractors.")
     p.add_argument("--show-skipped", action="store_true")
     p.add_argument(
         "--save-seamly-json",
@@ -76,20 +66,6 @@ def main(argv: list[str] | None = None) -> int:
         "--save-smis",
         type=Path,
         help="Write SeamlyMe .smis directly (no intermediate JSON)",
-    )
-    p.add_argument(
-        "--save-named-csv",
-        type=Path,
-        help="Write 'name,value_cm' CSV from the merged.yaml extractor. "
-             "Filtered by --named-filter.",
-    )
-    p.add_argument(
-        "--named-filter",
-        default="all",
-        choices=sorted(SYSTEM_PREFIXES),
-        help="System filter for --save-named-csv: 'aldrich' keeps "
-             "aldrich_* entries, 'dpm' keeps dpm_*/bustpoint_*, 'all' "
-             "keeps everything (default).",
     )
     p.add_argument(
         "--person-given-name", default="",
@@ -126,8 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         help="World-frame Y (metres) of the detected waist-string elastic. "
              "Overrides the SMPL-X anatomical waist Y for every waist-"
              "anchored landmark (waist_cf, waist_cb, waist_side_left/right "
-             "and everything that derives from them). Source: "
-             "`scripts/run_scan.py` writes `<prefix>_waist_y.json`.",
+             "and everything that derives from them).",
     )
     p.add_argument(
         "--waist-y-from", type=Path, default=None,
@@ -180,83 +155,60 @@ def main(argv: list[str] | None = None) -> int:
     )
     faces = np.asarray(bm.faces, dtype=np.int32)
 
-    run_named = not args.seamly or args.both or args.save_named_csv is not None
-    run_seamly = args.seamly or args.both
-
-    if run_named:
-        rep = extract(verts, faces, joints=joints,
-                      waist_y_override=waist_y_override)
-        print("=" * 52)
-        print("merged.yaml (Aldrich + dpm) extractor")
-        print("=" * 52)
-        _print_table(rep.values)
-        print(f"\n{len(rep.values)} extracted   {len(rep.skipped)} skipped")
-        if args.show_skipped:
-            print("\nSkipped:")
-            for k, reason in sorted(rep.skipped.items()):
-                print(f"  {k}: {reason}")
-        if args.save_named_csv:
-            filtered = filter_by_system(rep.values, args.named_filter)
-            write_named_csv(filtered, args.save_named_csv)
-            print(f"saved {args.save_named_csv} "
-                  f"({len(filtered)} rows, filter={args.named_filter})")
-
-    if run_seamly:
-        cat = extract_catalog(verts, faces, joints=joints,
-                              waist_y_override=waist_y_override)
-        # Bent-arm override: L01/L02/L04 (and the L03 formula) need an
-        # elbow-flexed mesh. Re-pose the SMPL-X body, recompute those
-        # codes on the bent verts, then overwrite the A-pose values.
-        if not args.no_bent_arm and "body_pose" in fit.files:
-            try:
-                pose = repose_bent_arm(
-                    fit, bm,
-                    elbow_flex_deg=args.bent_elbow_flex_deg,
-                    elbow_axis=args.bent_elbow_axis,
-                    shoulder_forward_deg=args.bent_shoulder_forward_deg,
-                )
-                bent_landmarks = build_landmark_set(
-                    pose.verts, joints=pose.joints, faces=faces,
-                    waist_y_override=waist_y_override,
-                )
-                for code in BENT_ARM_CODES:
-                    try:
-                        cat.values[code] = float(
-                            RECIPES[code].compute(
-                                pose.verts, faces, bent_landmarks))
-                    except Exception as e:  # noqa: BLE001
-                        print(f"bent {code}: {e}")
-                if "L01" in cat.values and "L02" in cat.values:
-                    cat.values["L03"] = cat.values["L01"] - cat.values["L02"]
-            except Exception as e:  # noqa: BLE001
-                print(f"bent-arm override skipped: {e}")
-        if run_named:
-            print()
-        print("=" * 52)
-        print("Seamly catalog extractor")
-        print("=" * 52)
-        _print_table(cat.values, label="seamly_code")
-        print(f"\n{len(cat.values)} extracted   {len(cat.skipped)} skipped")
-        if args.show_skipped:
-            print("\nSkipped:")
-            for k, reason in sorted(cat.skipped.items()):
-                print(f"  {k}: {reason}")
-        if args.save_seamly_json:
-            args.save_seamly_json.parent.mkdir(parents=True, exist_ok=True)
-            args.save_seamly_json.write_text(
-                json.dumps({k: float(v) for k, v in cat.values.items()}, indent=2)
+    cat = extract_catalog(verts, faces, joints=joints,
+                          waist_y_override=waist_y_override)
+    # Bent-arm override: L01/L02/L04 (and the L03 formula) need an
+    # elbow-flexed mesh. Re-pose the SMPL-X body, recompute those
+    # codes on the bent verts, then overwrite the A-pose values.
+    if not args.no_bent_arm and "body_pose" in fit.files:
+        try:
+            pose = repose_bent_arm(
+                fit, bm,
+                elbow_flex_deg=args.bent_elbow_flex_deg,
+                elbow_axis=args.bent_elbow_axis,
+                shoulder_forward_deg=args.bent_shoulder_forward_deg,
             )
-            print(f"\nsaved {args.save_seamly_json}")
-        if args.save_csv:
-            write_csv(cat.values, args.save_csv)
-            print(f"saved {args.save_csv}")
-        if args.save_smis:
-            template = (args.smis_template
-                        if args.smis_template and args.smis_template.is_file()
-                        else None)
-            write_smis_from_catalog(
-                cat.values, args.save_smis, template, personal=personal)
-            print(f"saved {args.save_smis}")
+            bent_landmarks = build_landmark_set(
+                pose.verts, joints=pose.joints, faces=faces,
+                waist_y_override=waist_y_override,
+            )
+            for code in BENT_ARM_CODES:
+                try:
+                    cat.values[code] = float(
+                        RECIPES[code].compute(
+                            pose.verts, faces, bent_landmarks))
+                except Exception as e:  # noqa: BLE001
+                    print(f"bent {code}: {e}")
+            if "L01" in cat.values and "L02" in cat.values:
+                cat.values["L03"] = cat.values["L01"] - cat.values["L02"]
+        except Exception as e:  # noqa: BLE001
+            print(f"bent-arm override skipped: {e}")
+
+    print("=" * 52)
+    print("Seamly catalog extractor")
+    print("=" * 52)
+    _print_table(cat.values)
+    print(f"\n{len(cat.values)} extracted   {len(cat.skipped)} skipped")
+    if args.show_skipped:
+        print("\nSkipped:")
+        for k, reason in sorted(cat.skipped.items()):
+            print(f"  {k}: {reason}")
+    if args.save_seamly_json:
+        args.save_seamly_json.parent.mkdir(parents=True, exist_ok=True)
+        args.save_seamly_json.write_text(
+            json.dumps({k: float(v) for k, v in cat.values.items()}, indent=2)
+        )
+        print(f"\nsaved {args.save_seamly_json}")
+    if args.save_csv:
+        write_csv(cat.values, args.save_csv)
+        print(f"saved {args.save_csv}")
+    if args.save_smis:
+        template = (args.smis_template
+                    if args.smis_template and args.smis_template.is_file()
+                    else None)
+        write_smis_from_catalog(
+            cat.values, args.save_smis, template, personal=personal)
+        print(f"saved {args.save_smis}")
 
     if args.save_obj:
         write_obj(verts, faces, args.save_obj)

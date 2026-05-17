@@ -28,7 +28,7 @@ def regen_csv(tmp_path_factory) -> Path:
     out = tmp_path_factory.mktemp("yaiza") / "yaiza.csv"
     cmd = [
         ".venv/bin/python", "-m", "tailor_twin.measure.cli", str(FIT_NPZ),
-        "--both", "--num-betas", "300", "--save-csv", str(out),
+        "--num-betas", "300", "--save-csv", str(out),
     ]
     subprocess.run(cmd, cwd=REPO_ROOT, check=True, capture_output=True)
     return out

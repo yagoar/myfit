@@ -29,15 +29,6 @@ WAIST_COLORS: tuple[str, ...] = (
     "magenta", "yellow", "blue", "orange",
 )
 
-# Label → run_scan --pattern-system value. Order is the dropdown order.
-PATTERN_SYSTEMS: tuple[tuple[str, str], ...] = (
-    ("aldrich", "Aldrich (6th ed.)"),
-    ("dpm", "dpm (dresspatternmaking.com)"),
-    ("all", "Both (Aldrich + dpm)"),
-    ("seamly_only", "Seamly catalog only"),
-)
-VALID_PATTERN_SYSTEMS: frozenset[str] = frozenset(v for v, _ in PATTERN_SYSTEMS)
-
 # Gender values match SeamlyMe (Seamly2D/src/libs/vformat/measurements.cpp):
 # {"male", "female", "unknown"}. Only "female" is currently usable
 # because we ship only SMPLX_FEMALE.npz under data/body_models/smplx/.

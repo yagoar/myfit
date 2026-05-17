@@ -47,17 +47,6 @@ def test_run_rejects_missing_capture(client) -> None:
     assert "capture" in j["error"].lower()
 
 
-def test_run_rejects_unknown_system(client, tmp_path: Path) -> None:
-    r = client.post("/run", data={
-        "capture": str(tmp_path), "person": "Y",
-        "out_prefix": str(tmp_path / "p"),
-        "csv": "on", "system": "burda",
-    })
-    j = r.get_json()
-    assert j["ok"] is False
-    assert "system" in j["error"].lower()
-
-
 def test_cancel_idle_returns_ok(client) -> None:
     r = client.post("/cancel")
     assert r.get_json() == {"ok": True}

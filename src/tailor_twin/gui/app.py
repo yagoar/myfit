@@ -21,7 +21,6 @@ from .config import (
     DEFAULT_CAPTURES_DIR,
     DEFAULT_RESULTS_DIR,
     GENDERS,
-    PATTERN_SYSTEMS,
     REPO_ROOT,
     WAIST_COLORS,
 )
@@ -42,7 +41,6 @@ def create_app(runner: Runner | None = None) -> Flask:
             "index.html",
             today=dt.date.today().isoformat(),
             colors=WAIST_COLORS,
-            systems=PATTERN_SYSTEMS,
             genders=GENDERS,
             default_captures=str(DEFAULT_CAPTURES_DIR),
             default_results=str(DEFAULT_RESULTS_DIR),

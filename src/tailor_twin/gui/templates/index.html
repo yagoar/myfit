@@ -96,11 +96,6 @@
     <div class="card">
       <h2>Export</h2>
       <div class="grid">
-        <label class="field-label" for="system">Pattern system</label>
-        <select id="system" name="system">
-          {% for v, lbl in systems %}<option value="{{ v }}">{{ lbl }}</option>{% endfor %}
-        </select>
-
         <label class="field-label">Artifacts</label>
         <div class="chips">
           <label class="chip"><input type="checkbox" name="csv" checked> CSV</label>
@@ -200,7 +195,6 @@
           <li>Export the Stray capture folder (rgb.mp4, depth/, confidence/, odometry.csv, camera_matrix.csv) into <code>data/captures/&lt;name&gt;/</code>.</li>
           <li>Paste that path into <b>Stray folder</b>.</li>
           <li>Pick the waist colour matching your elastic (or <i>none</i> to fall back to SMPL-X anatomical waist).</li>
-          <li>Pick the pattern system. Aldrich = the 6th-edition size chart; dpm = dresspatternmaking.com drafting; Both writes both CSVs.</li>
           <li>Hit <b>Run scan</b>. First-time runs take ~3-6 min on Apple Silicon. Watch the log for chamfer ≤ 0.0008 and "extracted" counts.</li>
         </ul>
       </section>

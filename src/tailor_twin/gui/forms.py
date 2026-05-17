@@ -15,7 +15,6 @@ from .config import (
     PIPELINE_PY,
     RUN_SCAN_ARGS,
     VALID_GENDERS,
-    VALID_PATTERN_SYSTEMS,
     WAIST_COLORS,
 )
 
@@ -46,8 +45,7 @@ def validate(form: Mapping[str, str]) -> str | None:
 
     Mirrors run_scan.py's prerequisites: capture folder must exist on
     disk; person name + output prefix non-empty; at least one export
-    artifact selected; waist colour & pattern system inside the
-    allowed sets.
+    artifact selected; waist colour inside the allowed set.
     """
     capture = (form.get("capture") or "").strip()
     person = (form.get("person") or "").strip()
@@ -67,10 +65,6 @@ def validate(form: Mapping[str, str]) -> str | None:
     color = (form.get("color") or "none").strip()
     if color not in WAIST_COLORS:
         return f"Unknown waist colour: {color!r}"
-
-    system = (form.get("system") or "all").strip()
-    if system not in VALID_PATTERN_SYSTEMS:
-        return f"Unknown pattern system: {system!r}"
 
     gender = (form.get("gender") or "female").strip()
     if gender not in VALID_GENDERS:
@@ -103,7 +97,6 @@ def build_cmd(form: Mapping[str, str]) -> list[str]:
     cmd: list[str] = [
         PIPELINE_PY, *RUN_SCAN_ARGS, capture,
         "--out-prefix", out_prefix,
-        "--pattern-system", form.get("system") or "all",
         "--gender", gender,
         csv_flag, obj_flag, smis_flag,
     ]
