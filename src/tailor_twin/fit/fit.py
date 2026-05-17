@@ -112,6 +112,12 @@ class FitResult:
     # in the fit npz so the viewer + bent-arm re-pose pick the matching
     # SMPL-X model file at load time (legacy fits without this key
     # fall back to female).
+    # Subject identity (persisted in the npz so the SMIS export can fill
+    # the <personal> block without re-passing --person-* args every time
+    # the measure CLI runs). Empty strings round-trip as missing fields.
+    person_given_name: str = ""
+    person_family_name: str = ""
+    person_birth_date: str = ""  # ISO yyyy-mm-dd
 
 
 def _set_requires_grad(body_model, transl, z, d, names: tuple[str, ...]):
@@ -388,7 +394,25 @@ def save_fit(result: FitResult, out_path: Path) -> None:
                       else np.zeros((result.smplx_vertices.shape[0], 3),
                                     dtype=np.float32)),
         gender=np.array(result.gender),
+        person_given_name=np.array(result.person_given_name),
+        person_family_name=np.array(result.person_family_name),
+        person_birth_date=np.array(result.person_birth_date),
     )
+
+
+def fit_person_info(fit: dict | "np.lib.npyio.NpzFile") -> dict[str, str]:
+    """Read persisted subject identity (given_name / family_name /
+    birth_date) from a fit npz mapping. Returns empty strings for any
+    field missing in legacy npz files saved before the field landed."""
+    out: dict[str, str] = {}
+    for key in ("person_given_name", "person_family_name",
+                "person_birth_date"):
+        if key not in getattr(fit, "files", fit):
+            out[key] = ""
+            continue
+        v = fit[key]
+        out[key] = str(v.item() if hasattr(v, "item") else v)
+    return out
 
 
 def fit_gender(fit: dict | "np.lib.npyio.NpzFile") -> str:

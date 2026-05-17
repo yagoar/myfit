@@ -8,6 +8,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 from pathlib import Path
 
 import numpy as np
@@ -58,6 +59,18 @@ def main(argv: list[str] | None = None) -> int:
         help="Open an interactive heatmap viewer after fitting",
     )
     p.add_argument("--quiet", action="store_true")
+    p.add_argument(
+        "--person-given-name", default="",
+        help="Subject given name, persisted in the fit npz.",
+    )
+    p.add_argument(
+        "--person-family-name", default="",
+        help="Subject family name, persisted in the fit npz.",
+    )
+    p.add_argument(
+        "--person-birth-date", default="",
+        help="Subject birth date (yyyy-mm-dd), persisted in the fit npz.",
+    )
     args = p.parse_args(argv)
 
     scan_v, scan_f = _load_scan(args.scan)
@@ -73,7 +86,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     result = fit_scan(scan_v, cfg=cfg, verbose=not args.quiet,
                       scan_faces=scan_f)
-    save_fit(result, args.out)
+    # Patch identity fields onto the result before saving — fit_scan
+    # doesn't know about subject metadata.
+    result_with_id = dataclasses.replace(
+        result,
+        person_given_name=args.person_given_name,
+        person_family_name=args.person_family_name,
+        person_birth_date=args.person_birth_date,
+    )
+    save_fit(result_with_id, args.out)
     print(f"saved {args.out}")
     print(f"final chamfer (sum of bidirectional means) = {result.final_chamfer:.6f}")
 

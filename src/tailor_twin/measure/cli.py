@@ -72,21 +72,25 @@ def main(argv: list[str] | None = None) -> int:
         help="Write SeamlyMe .smis directly (no intermediate JSON)",
     )
     p.add_argument(
-        "--person-given-name", default="",
-        help="Sewer given name for the SMIS <personal> block.",
+        "--person-given-name", default=None,
+        help="Sewer given name for the SMIS <personal> block. "
+             "Defaults to the value persisted in the fit npz.",
     )
     p.add_argument(
-        "--person-family-name", default="",
-        help="Sewer family name for the SMIS <personal> block.",
+        "--person-family-name", default=None,
+        help="Sewer family name for the SMIS <personal> block. "
+             "Defaults to the value persisted in the fit npz.",
     )
     p.add_argument(
-        "--person-birth-date", default="",
-        help="ISO date yyyy-mm-dd for the SMIS <personal> block.",
+        "--person-birth-date", default=None,
+        help="ISO date yyyy-mm-dd for the SMIS <personal> block. "
+             "Defaults to the value persisted in the fit npz.",
     )
     p.add_argument(
-        "--person-gender", default="",
+        "--person-gender", default=None,
         help="Sewer gender for the SMIS <personal> block "
-             "(female / male / unknown).",
+             "(female / male / unknown). Defaults to the fit npz's "
+             "gender field.",
     )
     p.add_argument(
         "--smis-template",
@@ -133,13 +137,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
 
-    personal = PersonalInfo(
-        given_name=args.person_given_name,
-        family_name=args.person_family_name,
-        birth_date=args.person_birth_date,
-        gender=args.person_gender or "unknown",
-    )
-
     # Resolve waist-Y override (CLI value > JSON file > none).
     waist_y_override: float | None = args.waist_y
     if waist_y_override is None and args.waist_y_from is not None:
@@ -152,8 +149,22 @@ def main(argv: list[str] | None = None) -> int:
     verts = fit["smplx_vertices"].astype(np.float32)
     joints = (fit["smplx_joints"].astype(np.float32)
               if "smplx_joints" in fit.files else None)
-    from ..fit.fit import fit_gender
+    from ..fit.fit import fit_gender, fit_person_info
     gender = args.gender or fit_gender(fit)
+
+    npz_person = fit_person_info(fit)
+    personal = PersonalInfo(
+        given_name=(args.person_given_name
+                    if args.person_given_name is not None
+                    else npz_person["person_given_name"]),
+        family_name=(args.person_family_name
+                     if args.person_family_name is not None
+                     else npz_person["person_family_name"]),
+        birth_date=(args.person_birth_date
+                    if args.person_birth_date is not None
+                    else npz_person["person_birth_date"]),
+        gender=(args.person_gender if args.person_gender else gender),
+    )
     bm = smplx.create(
         model_path=args.model_folder, model_type="smplx",
         gender=gender, num_betas=args.num_betas,
