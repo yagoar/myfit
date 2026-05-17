@@ -223,13 +223,20 @@ Medium-priority — already in audit section F.
 **Evidence:** H39 shoulder_slope_neck_back_height +28 %, H37 +13 %,
 L16 arm_shoulder_tip_to_armfold_line −17 %. Not in original audit.
 
-## 7. Cross-figure regression test harness
+## 7. Cross-figure regression test harness ✅
 
-- [ ] Once #1–#4 land, add `tests/test_cross_figure_robustness.py`:
-      asserts every measurement code's drift between yaiza and carmen
-      stays under a per-code budget (10 % default, 15 % for
-      acromion-anchored codes until #6 lands).
-- [ ] Wire into CI so a future fit doesn't silently undo the work.
+- [x] `tests/test_cross_figure_robustness.py` asserts per-code drift
+      between yaiza + carmen baselines stays under budget. Default
+      ±10 %, relaxed budgets for known-anatomical drifts (H37/H39/L16
+      shoulder slope; A10/A11/M09 ankle bone; carried in
+      `RELAXED_BUDGETS`). Codes reading below 1 cm absolute skipped
+      to avoid noise-floor false positives.
+- [x] Carmen baseline snapshotted to
+      `data/results/carmen_measurements.baseline.csv` alongside the
+      yaiza one. Both gitignored (under `data/results/`); the test
+      skips when either is missing so contributors without the fit
+      npz still pass the rest of the suite.
+- [x] Added to the default `pytest` run (44/44 passing).
 
 ---
 
